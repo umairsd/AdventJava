@@ -1,7 +1,8 @@
 # Advent of Code 2021
-# Day 1
-def advent01a(fileName):
-  print("**Advent of Code - 01a")
+# Day 1, Problem 1
+
+
+def getCountIncreasing(fileName):
   count = 0
   with open(fileName) as file:
     prev = None
@@ -15,5 +16,9 @@ def advent01a(fileName):
   return count
 
 
-count = advent01a('advent01a.txt')
-print(count)
+def advent01a():
+  print("**Advent of Code - 01a")
+  count = getCountIncreasing('advent01a.txt')
+  print(count)
+
+advent01a()
