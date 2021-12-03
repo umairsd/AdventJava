@@ -34,40 +34,12 @@ def calculate(counts):
     if num > 0:
       gamma += '1'
       epsilon += '0'
-
     elif num < 0:
       gamma += '0'
       epsilon += '1'
 
-
   result = int(gamma, base=2) * int(epsilon, base=2)
   return result
-
-
-
-
-
-
-
-  # aim = 0
-  # horizontal = 0
-  # depth = 0
-
-  # with open(fileName) as file:
-  #   for line in file:
-  #     tokens = line.split(" ")
-  #     direction = tokens[0]
-  #     value = int(tokens[1])
-
-  #     if direction == 'forward':
-  #       horizontal += value
-  #       depth += aim * value
-  #     elif direction == 'up':
-  #       aim -= value
-  #     elif direction == 'down':
-  #       aim += value
-
-  # return horizontal * depth
 
 
 def advent03a():
