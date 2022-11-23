@@ -7,6 +7,8 @@ public abstract class Day {
 
   private static final String RESOURCES_PATH_PREFIX = "./resources";
   private static final String PATH_SEPARATOR = "/";
+  private static final String FILE_NAME_PREFIX = "day";
+  private static final String FILE_NAME_SUFFIX = "-data";
   private static final String FILE_EXTENSION = ".txt";
 
   protected int dayNumber = 0;
@@ -43,15 +45,11 @@ public abstract class Day {
 
   protected abstract List<String> readData(String filename);
 
-  protected String part1Filename() {
-    return filenameForPart(1);
-  }
+  protected abstract String part1Filename();
 
-  protected String part2Filename() {
-    return filenameForPart(2);
-  }
+  protected abstract String part2Filename();
 
-  private String filenameForPart(int part) {
+  protected String filenameForPart(int part) {
     DecimalFormat dayFormat = new DecimalFormat("00");
     DecimalFormat yearFormat = new DecimalFormat("0000");
 
@@ -61,9 +59,9 @@ public abstract class Day {
     builder.append(PATH_SEPARATOR);
     builder.append(yearFormat.format(year));
     builder.append(PATH_SEPARATOR);
-    builder.append("day");
+    builder.append(FILE_NAME_PREFIX);
     builder.append(dayFormat.format(dayNumber));
-    builder.append("-part");
+    builder.append(FILE_NAME_SUFFIX);
     builder.append(part);
     builder.append(FILE_EXTENSION);
 
