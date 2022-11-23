@@ -28,7 +28,25 @@ class Y2021Day01: Day {
   }
   
   func part2(_ lines: [String]) -> String {
-    return Constants.notImplemented
+    guard !lines.isEmpty else {
+      return Constants.emptyInput
+    }
+
+    let data: [Int] = lines.compactMap { Int($0) }
+
+    var previous = data.prefix(3).reduce(0, +)
+    var current = 0
+    var count = 0
+
+    for i in 1...(data.count - 3)  {
+      current = data.dropFirst(i).prefix(3).reduce(0, +)
+      if current > previous {
+        count += 1
+      }
+      previous = current
+    }
+
+    return "\(count)"
   }
   
   func part1Filename() -> String {
@@ -36,7 +54,7 @@ class Y2021Day01: Day {
   }
   
   func part2Filename() -> String {
-    return "day01-data1"
+    return "day01-data2"
   }
 
 }
