@@ -65,11 +65,11 @@ public class Day01 extends Day {
   @Override
   protected String part1Filename() {
     // E.g. day01-data1.txt
-    return filenameForPart(2);
+    return filenameFromDataFileNumber(2);
   }
 
   @Override
   protected String part2Filename() {
-    return filenameForPart(2);
+    return filenameFromDataFileNumber(2);
   }
 }

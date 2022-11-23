@@ -53,7 +53,7 @@ public abstract class Day {
     return FileUtils.readLinesFromFile(filename);
   }
 
-  protected String filenameForPart(int part) {
+  protected String filenameFromDataFileNumber(int part) {
     DecimalFormat dayFormat = new DecimalFormat("00");
     DecimalFormat yearFormat = new DecimalFormat("0000");
 

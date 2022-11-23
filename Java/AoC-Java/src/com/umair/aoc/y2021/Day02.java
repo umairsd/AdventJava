@@ -74,12 +74,12 @@ public class Day02 extends Day {
 
   @Override
   protected String part1Filename() {
-    return filenameForPart(2);
+    return filenameFromDataFileNumber(2);
   }
 
   @Override
   protected String part2Filename() {
-    return filenameForPart(2);
+    return filenameFromDataFileNumber(2);
   }
 
   private static Movement parseLine(String line) {
