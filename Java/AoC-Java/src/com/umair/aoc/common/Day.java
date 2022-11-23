@@ -11,8 +11,8 @@ public abstract class Day {
   private static final String FILE_NAME_SUFFIX = "-data";
   private static final String FILE_EXTENSION = ".txt";
 
-  protected int dayNumber = 0;
-  protected int year = 0;
+  protected int dayNumber;
+  protected int year;
 
   public Day(int day, int year) {
     this.dayNumber = day;

@@ -14,7 +14,7 @@ public class Runner {
   }
 
   public void run(int year) {
-    System.out.printf("-- Running Tests for the year %s%n", yearFormat.format(year));
+    System.out.printf("== Running Tests for the year %s ==%n", yearFormat.format(year));
 
     try {
       // Note: This line is not working.
@@ -31,6 +31,7 @@ public class Runner {
         }
 
         Day dayInstance = (Day) c.getDeclaredConstructor().newInstance();
+        System.out.printf("-- Tests for day %s%n", day);
         dayInstance.solvePart1();
         dayInstance.solvePart2();
       }

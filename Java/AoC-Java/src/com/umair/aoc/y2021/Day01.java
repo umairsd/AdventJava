@@ -3,10 +3,7 @@ package com.umair.aoc.y2021;
 import com.umair.aoc.common.Day;
 import com.umair.aoc.util.FileUtils;
 
-import java.util.ArrayDeque;
-import java.util.Deque;
 import java.util.List;
-import java.util.stream.Collectors;
 
 public class Day01 extends Day {
 
@@ -46,7 +43,7 @@ public class Day01 extends Day {
         .skip(0)
         .limit(3)
         .map(Long::parseLong)
-        .collect(Collectors.summingLong(Long::longValue));
+        .reduce(0L, Long::sum);
 
     for (int i = 1; i < lines.size(); i++) {
       current = lines
@@ -54,7 +51,7 @@ public class Day01 extends Day {
           .skip(i)
           .limit(3)
           .map(Long::parseLong)
-          .collect(Collectors.summingLong(Long::longValue));
+          .reduce(0L, Long::sum);
 
       if (current > previous) {
         count += 1;
