@@ -18,7 +18,7 @@ public class Runner {
 
     try {
       // Note: This line is not working.
-      String packageName = this.getClass().getPackageName();
+      // String packageName = this.getClass().getPackageName();
 
       for (int day = 1; day <= 25; day++) {
         // E.g. com.umair.aoc.y2021.Day01
@@ -31,7 +31,7 @@ public class Runner {
         }
 
         Day dayInstance = (Day) c.getDeclaredConstructor().newInstance();
-        System.out.printf("-- Tests for day %s%n", day);
+        System.out.printf("-- Tests for day %s:%n", day);
         dayInstance.solvePart1();
         dayInstance.solvePart2();
       }

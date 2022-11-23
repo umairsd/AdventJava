@@ -1,5 +1,7 @@
 package com.umair.aoc.common;
 
+import com.umair.aoc.util.FileUtils;
+
 import java.text.DecimalFormat;
 import java.util.List;
 
@@ -43,11 +45,13 @@ public abstract class Day {
 
   protected abstract String part2(List<String> lines);
 
-  protected abstract List<String> readData(String filename);
-
   protected abstract String part1Filename();
 
   protected abstract String part2Filename();
+
+  protected List<String> readData(String filename) {
+    return FileUtils.readLinesFromFile(filename);
+  }
 
   protected String filenameForPart(int part) {
     DecimalFormat dayFormat = new DecimalFormat("00");

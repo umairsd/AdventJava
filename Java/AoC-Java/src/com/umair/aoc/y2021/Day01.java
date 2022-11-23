@@ -1,7 +1,7 @@
 package com.umair.aoc.y2021;
 
+import com.umair.aoc.common.Constants;
 import com.umair.aoc.common.Day;
-import com.umair.aoc.util.FileUtils;
 
 import java.util.List;
 
@@ -14,7 +14,7 @@ public class Day01 extends Day {
   @Override
   protected String part1(List<String> lines) {
     if (lines.isEmpty()) {
-      return "Input is empty";
+      return Constants.INPUT_EMPTY;
     }
 
     int count = 0;
@@ -34,7 +34,7 @@ public class Day01 extends Day {
   @Override
   protected String part2(List<String> lines) {
     if (lines.isEmpty()) {
-      return "Input is empty";
+      return Constants.INPUT_EMPTY;
     }
 
     int count = 0;
@@ -60,11 +60,6 @@ public class Day01 extends Day {
     }
 
     return Integer.toString(count);
-  }
-
-  @Override
-  protected List<String> readData(String filename) {
-    return FileUtils.readLinesFromFile(filename);
   }
 
   @Override
