@@ -24,15 +24,9 @@ public class Day02 extends Day {
       Movement m = parseLine(line);
 
       switch (m.direction) {
-        case UP:
-          depth -= m.magnitude;
-          break;
-        case DOWN:
-          depth += m.magnitude;
-          break;
-        case FORWARD:
-          horizontal += m.magnitude;
-          break;
+        case UP -> depth -= m.magnitude;
+        case DOWN -> depth += m.magnitude;
+        case FORWARD -> horizontal += m.magnitude;
       }
     }
 
@@ -55,16 +49,12 @@ public class Day02 extends Day {
       Movement m = parseLine(line);
 
       switch (m.direction) {
-        case UP:
-          aim -= m.magnitude;
-          break;
-        case DOWN:
-          aim += m.magnitude;
-          break;
-        case FORWARD:
+        case UP -> aim -= m.magnitude;
+        case DOWN -> aim += m.magnitude;
+        case FORWARD -> {
           horizontal += m.magnitude;
           depth += (aim * m.magnitude);
-          break;
+        }
       }
     }
 
