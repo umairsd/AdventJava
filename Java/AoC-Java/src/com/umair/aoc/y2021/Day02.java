@@ -20,21 +20,18 @@ public class Day02 extends Day {
     long horizontal = 0;
     long depth = 0;
 
-    // Go line by line, and parse into a `Movement` object.
     for (String line : lines) {
-      String[] tokens = line.split(" ");
-      Direction d = Direction.valueOf(tokens[0].toUpperCase());
-      long magnitude = Long.parseLong(tokens[1]);
+      Movement m = parseLine(line);
 
-      switch (d) {
+      switch (m.direction) {
         case UP:
-          depth -= magnitude;
+          depth -= m.magnitude;
           break;
         case DOWN:
-          depth += magnitude;
+          depth += m.magnitude;
           break;
         case FORWARD:
-          horizontal += magnitude;
+          horizontal += m.magnitude;
           break;
       }
     }
@@ -45,22 +42,57 @@ public class Day02 extends Day {
 
   @Override
   protected String part2(List<String> lines) {
-    return Constants.NOT_IMPLEMENTED;
+    if (lines.isEmpty()) {
+      return Constants.INPUT_EMPTY;
+    }
+
+    long horizontal = 0;
+    long depth = 0;
+    long aim = 0;
+
+    // Go line by line, and parse into a `Movement` object.
+    for (String line : lines) {
+      Movement m = parseLine(line);
+
+      switch (m.direction) {
+        case UP:
+          aim -= m.magnitude;
+          break;
+        case DOWN:
+          aim += m.magnitude;
+          break;
+        case FORWARD:
+          horizontal += m.magnitude;
+          depth += (aim * m.magnitude);
+          break;
+      }
+    }
+
+    long result = horizontal * depth;
+    return Long.toString(result);
   }
 
   @Override
   protected String part1Filename() {
-    return filenameForPart(1);
+    return filenameForPart(2);
   }
 
   @Override
   protected String part2Filename() {
-    return filenameForPart(1);
+    return filenameForPart(2);
+  }
+
+  private static Movement parseLine(String line) {
+    String[] tokens = line.split(" ");
+    Movement m = new Movement();
+    m.direction = Direction.valueOf(tokens[0].toUpperCase());
+    m.magnitude = Long.parseLong(tokens[1]);
+    return m;
   }
 
   private static class Movement {
     Direction direction;
-    int magnitude;
+    long magnitude;
   }
 
   private enum Direction {

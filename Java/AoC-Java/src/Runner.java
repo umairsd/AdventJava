@@ -34,6 +34,7 @@ public class Runner {
         System.out.printf("-- Tests for day %s:%n", day);
         dayInstance.solvePart1();
         dayInstance.solvePart2();
+        System.out.println();
       }
     } catch (InstantiationException ie) {
       ie.printStackTrace();
