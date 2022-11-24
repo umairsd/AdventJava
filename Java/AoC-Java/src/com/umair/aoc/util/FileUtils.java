@@ -7,16 +7,18 @@ import java.util.stream.Collectors;
 
 public class FileUtils {
 
-  public static List<Long> readLongFromFile(String fileName) {
-    List<String> stringList = readLinesFromFile(fileName);
-    List<Long> result = stringList.stream().map(Long::parseLong).collect(Collectors.toList());
-    return result;
+  public static List<String> readAllLinesFromFile(String filename) {
+    File f = new File(filename);
+    return readFileLineByLine(f);
   }
 
   public static List<String> readLinesFromFile(String filename) {
-    File f = new File(filename);
-    List<String> result = readFileLineByLine(f);
-    return result;
+    List<String> lines = readAllLinesFromFile(filename);
+    lines = lines
+        .stream()
+        .filter(l -> !l.isEmpty() && !l.isBlank())
+        .collect(Collectors.toList());
+    return lines;
   }
 
   private static List<String> readFileLineByLine(File file) {
@@ -27,11 +29,7 @@ public class FileUtils {
         BufferedReader br = new BufferedReader(fr)
     ) {
       while (br.ready()) {
-        String line = br.readLine();
-        if (line.isBlank()) {
-          continue;
-        }
-        result.add(line);
+        result.add(br.readLine());
       }
     } catch (IOException ioe) {
       System.out.printf("Exception when reading file %s%n", file.getName());

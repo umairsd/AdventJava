@@ -50,7 +50,7 @@ public abstract class Day {
   protected abstract String part2Filename();
 
   protected List<String> readData(String filename) {
-    return FileUtils.readLinesFromFile(filename);
+    return FileUtils.readAllLinesFromFile(filename);
   }
 
   protected String filenameFromDataFileNumber(int part) {
