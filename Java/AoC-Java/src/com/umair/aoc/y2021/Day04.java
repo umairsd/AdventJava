@@ -18,7 +18,7 @@ public class Day04 extends Day {
   protected String part1(List<String> lines) {
     Context gameContext = buildContext(lines);
 
-    GridNode[][] grid = new GridNode[0][0];
+    int winningGridId = -1;
     int winningMove = -1;
 
     for (int move : gameContext.moves) {
@@ -27,10 +27,11 @@ public class Day04 extends Day {
       boolean foundBingo = false;
       // Update each grid address that contains this move.
       for (Address address : addresses) {
-        grid = gameContext.grids.get(address.gridId);
-        grid[address.row][address.column].visited = true;
+        GridNode[][] g = gameContext.grids.get(address.gridId);
+        g[address.row][address.column].visited = true;
 
-        if (isBingo(grid, address.row, address.column)) {
+        if (isBingo(g, address.row, address.column)) {
+          winningGridId = address.gridId;
           winningMove = move;
           foundBingo = true;
           break;
@@ -40,18 +41,9 @@ public class Day04 extends Day {
       if (foundBingo) { break; }
     }
 
-    // Generate sum of unvisited nodes
-    long sumOfUnvisited = 0;
-    for (GridNode[] gridRow : grid) {
-      for (GridNode gridNode : gridRow) {
-        if (!gridNode.visited) {
-          sumOfUnvisited += gridNode.value;
-        }
-      }
-    }
-
-    long result = sumOfUnvisited * winningMove;
-    return Long.toString(result);
+    long sumOfUnvisited = sumUnvisited(gameContext.grids.get(winningGridId));
+    long score = sumOfUnvisited * winningMove;
+    return Long.toString(score);
   }
 
   /**
