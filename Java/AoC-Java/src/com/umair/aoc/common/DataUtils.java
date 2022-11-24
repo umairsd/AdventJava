@@ -6,10 +6,9 @@ import java.util.stream.Collectors;
 public class DataUtils {
 
   public static List<String> removeBlank(List<String> lines) {
-    List<String> filteredLines = lines
+    return lines
         .stream()
         .filter(l -> !l.isEmpty() && !l.isBlank())
         .collect(Collectors.toList());
-    return filteredLines;
   }
 }
