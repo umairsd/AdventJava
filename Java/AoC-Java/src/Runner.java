@@ -3,6 +3,7 @@ import com.umair.aoc.common.Day;
 import java.lang.reflect.InvocationTargetException;
 import java.text.DecimalFormat;
 
+@SuppressWarnings("rawtypes")
 public class Runner {
   private static final DecimalFormat dayFormat = new DecimalFormat("00");
   private static final DecimalFormat yearFormat = new DecimalFormat("0000");
@@ -31,27 +32,21 @@ public class Runner {
         }
 
         Day dayInstance = (Day) c.getDeclaredConstructor().newInstance();
-        System.out.printf("-- Tests for day %s:%n", day);
+        System.out.printf("-- Day %s:%n", day);
         dayInstance.solvePart1();
         dayInstance.solvePart2();
         System.out.println();
       }
-    } catch (InstantiationException ie) {
+    } catch (InstantiationException | IllegalAccessException | InvocationTargetException |
+             NoSuchMethodException ie) {
       ie.printStackTrace();
-    } catch (IllegalAccessException iae) {
-      iae.printStackTrace();
-    } catch (InvocationTargetException ite) {
-      ite.printStackTrace();
-    } catch (NoSuchMethodException nsme) {
-      nsme.printStackTrace();
     }
   }
 
 
   private Class getClassForName(String className) {
     try {
-      Class c = Class.forName(className);
-      return c;
+      return Class.forName(className);
     } catch (ClassNotFoundException cnfe) {
       // Absorb this exception, as some classes might not be implemented.
     }
