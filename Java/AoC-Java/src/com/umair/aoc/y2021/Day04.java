@@ -54,9 +54,42 @@ public class Day04 extends Day {
     return Long.toString(result);
   }
 
+  /**
+   * Figure out which board wins last.
+   */
   @Override
   protected String part2(List<String> lines) {
-    return null;
+    Context gameContext = buildContext(lines);
+
+    int winningMove = -1;
+    int winningGridId = -1;
+    Set<Integer> gridsAlreadyWon = new HashSet<>();
+
+    for (int move : gameContext.moves) {
+      // For each move, get the list of addresses to update:
+      List<Address> addresses = gameContext.moveToAddressesMap.get(move);
+
+      // Update the address for each grid that's still in play and contains this move.
+      for (Address address : addresses) {
+        if (gridsAlreadyWon.contains(address.gridId)) {
+          continue;
+        }
+
+        GridNode[][] g = gameContext.grids.get(address.gridId);
+        g[address.row][address.column].visited = true;
+
+        if (isBingo(g, address.row, address.column)) {
+          winningMove = move;
+          winningGridId = address.gridId;
+          gridsAlreadyWon.add(address.gridId);
+        }
+      }
+    }
+
+    // Generate sum of unvisited nodes
+    long sumOfUnvisited = sumUnvisited(gameContext.grids.get(winningGridId));
+    long score = sumOfUnvisited * winningMove;
+    return Long.toString(score);
   }
 
   @Override
@@ -66,7 +99,7 @@ public class Day04 extends Day {
 
   @Override
   protected String part2Filename() {
-    return filenameFromDataFileNumber(1);
+    return filenameFromDataFileNumber(2);
   }
 
 
@@ -143,6 +176,18 @@ public class Day04 extends Day {
         .map(String::strip)
         .map(Integer::parseInt)
         .toList());
+  }
+
+  private static long sumUnvisited(GridNode[][] grid) {
+    long sumOfUnvisited = 0;
+    for (GridNode[] gridRow : grid) {
+      for (GridNode gridNode : gridRow) {
+        if (!gridNode.visited) {
+          sumOfUnvisited += gridNode.value;
+        }
+      }
+    }
+    return sumOfUnvisited;
   }
 
   private static class Context {
