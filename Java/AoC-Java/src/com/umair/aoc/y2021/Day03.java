@@ -3,8 +3,8 @@ package com.umair.aoc.y2021;
 import com.umair.aoc.common.Constants;
 import com.umair.aoc.common.Day;
 
-import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class Day03 extends Day {
 
@@ -12,20 +12,26 @@ public class Day03 extends Day {
     super(3, 2021);
   }
 
+  /**
+   * Finds the power consumption.
+   */
   @Override
   protected String part1(List<String> lines) {
     if (lines.isEmpty()) {
       return Constants.INPUT_EMPTY;
     }
 
-    int[] result = countsOneBitPerPosition(lines);
+    int[] countsOfOneDigit = countsOneBitPerPosition(lines);
     long gamma = 0;
     long epsilon = 0;
 
-    for (int i = 0; i < result.length; i++) {
+    // Each bit in the gamma rate can be determined by finding the most common bit in the
+    // corresponding position of all numbers in the diagnostic report.
+    // Similarly, epsilon rate can be determined by finding the least common bit.
+    for (int count : countsOfOneDigit) {
       gamma = gamma << 1;
       epsilon = epsilon << 1;
-      if (result[i] > 0) {
+      if (count > 0) {
         // Most common bit is a 1.
         gamma = gamma | 1;
       } else {
