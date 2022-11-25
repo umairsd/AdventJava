@@ -5,7 +5,6 @@ import com.umair.aoc.common.DataUtils;
 import com.umair.aoc.common.Day;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 public class Day01 extends Day {
 
