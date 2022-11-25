@@ -3,6 +3,7 @@ package com.umair.aoc.y2021;
 import com.umair.aoc.common.Day;
 
 import java.util.*;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 public class Day06 extends Day {
@@ -40,27 +41,24 @@ public class Day06 extends Day {
 
   @Override
   protected String part2(List<String> lines) {
-    List<Lanternfish> startingFish = Arrays.stream(lines.get(0).strip().split(","))
+    Map<Long, Long> timerToCountMap = Arrays.stream(lines.get(0).strip().split(","))
         .map(String::strip)
-        .map(Integer::parseInt)
-        .map(Lanternfish::new)
-        .collect(Collectors.toCollection(ArrayList::new)); // creates a mutable collection.
+        .map(Long::parseLong)
+        .collect(Collectors.groupingBy(Function.identity(), Collectors.counting()));
 
-    // For each generation, store the count of fish created, and their current timer.
-    List<Generation> spawnedGenerations = new ArrayList<>();
-    long totalFish = startingFish.size();
+    List<Generation> generations = new ArrayList<>();
+    for (Map.Entry<Long, Long> entry : timerToCountMap.entrySet()) {
+      Generation g = new Generation(entry.getValue(), entry.getKey());
+      generations.add(g);
+    }
+
+    long totalFish = generations.size();
 
     int iterationCount = 0;
     while (iterationCount < 256) {
-      long spawnedByOriginal = startingFish
-          .stream()
-          .map(Lanternfish::update)
-          .flatMap(Optional::stream)
-          .count();
-
       long spawned = 0;
 
-      for (Generation gen : spawnedGenerations) {
+      for (Generation gen : generations) {
         // Find any generations where the timer is 0.
         if (gen.timer == 0) {
           // Reset the timer, and create new fish by adding to `spawned`.
@@ -71,14 +69,13 @@ public class Day06 extends Day {
         }
       }
 
-      long totalSpawned = spawnedByOriginal + spawned;
-      spawnedGenerations.add(new Generation(totalSpawned, TIME_TO_SPAWN_CHILD));
+      generations.add(new Generation(spawned, TIME_TO_SPAWN_CHILD));
 
-      totalFish += totalSpawned;
+      totalFish += spawned;
       iterationCount++;
     }
 
-    return Long.toString(totalFish);
+    return Long.toString(totalFish); // 1639643057051
   }
 
   @Override
