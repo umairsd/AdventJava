@@ -35,7 +35,30 @@ public class Day07 extends Day {
 
   @Override
   protected String part2(List<String> lines) {
-    return null;
+    List<Integer> positions = Arrays.stream(lines.get(0).split(","))
+        .map(String::strip)
+        .map(Integer::parseInt)
+        .toList();
+
+    int maxPosition = positions.stream().max(Integer::compare).orElse(0);
+    long minFuelNeeded = Long.MAX_VALUE;
+
+    for (int newP = 0; newP < maxPosition; newP++) {
+      long fuelToNewPosition = 0;
+      for (int p : positions) {
+        // Use sum of arithmetic progression formula.
+        long n = Math.abs(p - newP);
+        long d = 1;
+        long a = 1;
+        long sum = (n * (2 * a + (n - 1) * d)) / 2;
+
+        fuelToNewPosition += sum;
+      }
+
+      minFuelNeeded = Math.min(minFuelNeeded, fuelToNewPosition);
+    }
+
+    return Long.toString(minFuelNeeded);
   }
 
   @Override
@@ -45,6 +68,6 @@ public class Day07 extends Day {
 
   @Override
   protected String part2Filename() {
-    return filenameFromDataFileNumber(1);
+    return filenameFromDataFileNumber(2);
   }
 }
