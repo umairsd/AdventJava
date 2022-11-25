@@ -17,28 +17,33 @@ public class Runner {
   public void run(int year) {
     System.out.printf("== Running Tests for the year %s ==%n", yearFormat.format(year));
 
+    for (int day = 1; day <= 25; day++) {
+      run(year, day);
+    }
+  }
+
+  public void run(int year, int day) {
     try {
       // Note: This line is not working.
       // String packageName = this.getClass().getPackageName();
 
-      for (int day = 1; day <= 25; day++) {
         // E.g. com.umair.aoc.y2021.Day01
-        String className = String.format("com.umair.aoc.y%s.Day%s",
-            yearFormat.format(year),
-            dayFormat.format(day));
-        Class c = getClassForName(className);
-        if (c == null) {
-          continue;
-        }
-
-        Day dayInstance = (Day) c.getDeclaredConstructor().newInstance();
-        System.out.printf("-- Day %s:%n", day);
-        dayInstance.solvePart1();
-        dayInstance.solvePart2();
-        System.out.println();
+      String className = String.format("com.umair.aoc.y%s.Day%s",
+          yearFormat.format(year),
+          dayFormat.format(day));
+      Class c = getClassForName(className);
+      if (c == null) {
+        return;
       }
+
+      Day dayInstance = (Day) c.getDeclaredConstructor().newInstance();
+      System.out.printf("-- Day %s:%n", day);
+      dayInstance.solvePart1();
+      dayInstance.solvePart2();
+      System.out.println();
     } catch (InstantiationException | IllegalAccessException | InvocationTargetException |
              NoSuchMethodException ie) {
+      System.out.printf("Error executing day %s for year %s", day, year);
       ie.printStackTrace();
     }
   }
