@@ -26,29 +26,23 @@ public class Day05 extends Day {
       Point start = ln.start;
       Point end = ln.end;
 
-      if (start.x == end.x) {
-        for (int col = Math.min(start.y, end.y); col <= Math.max(start.y, end.y); col++) {
-          grid[start.x][col] += 1;
+      if (start.x == end.x) { // x is column
+        for (int row = Math.min(start.y, end.y); row <= Math.max(start.y, end.y); row++) {
+          grid[row][start.x] += 1;
         }
-      } else if (start.y == end.y) {
-        for (int i = Math.min(start.x, end.x); i <= Math.max(start.x, end.x); i++) {
-          grid[i][start.y] += 1;
+      } else if (start.y == end.y) { // y is row
+        for (int column = Math.min(start.x, end.x); column <= Math.max(start.x, end.x); column++) {
+          grid[start.y][column] += 1;
         }
       }
     });
 
-    int dangerousAreas = 0;
-    for (int[] row : grid) {
-      for (int node : row) {
-        dangerousAreas += (node >= 2) ? 1 : 0;
-      }
-    }
-
+    int dangerousAreas = countDangerousAreas(grid);
     return Integer.toString(dangerousAreas);
   }
 
   @Override
-  protected String part2(List<String> lines) {
+  protected String part2(List<String> data) {
     return null;
   }
 
@@ -60,6 +54,16 @@ public class Day05 extends Day {
   @Override
   protected String part2Filename() {
     return filenameFromDataFileNumber(1);
+  }
+
+  private static int countDangerousAreas(int[][] grid) {
+    int dangerousAreas = 0;
+    for (int[] row : grid) {
+      for (int node : row) {
+        dangerousAreas += (node >= 2) ? 1 : 0;
+      }
+    }
+    return dangerousAreas;
   }
 
   private static List<Line> buildLines(List<String> data) {
@@ -113,6 +117,11 @@ public class Day05 extends Day {
     Line(Point start, Point end) {
       this.start = start;
       this.end = end;
+    }
+
+    @Override
+    public String toString() {
+      return "(" + start.x + "," + start.y + ") -> (" + end.x + "," + end.y + ")";
     }
   }
 }
