@@ -20,24 +20,17 @@ public class Day10 extends Day {
     }
 
     long totalScore = 0;
+    Stack<Character> stack = new Stack<>();
     for (String line : lines) {
-      Stack<Character> stack = new Stack<>();
+      stack.clear();
 
       for (Character c : line.toCharArray()) {
         if (isOpening(c)) {
           stack.push(c);
-          continue;
-        }
-
-        if (stack.isEmpty()) {
-          totalScore += getScore(c);
-          break;
-        }
-
-        if (getMatching(c) == stack.peek()) {
+        } else if (!stack.isEmpty() && getMatching(c) == stack.peek()) {
           stack.pop();
         } else {
-          totalScore += getScore(c);
+          totalScore += getSyntaxCheckerScore(c);
           break;
         }
       }
@@ -82,7 +75,7 @@ public class Day10 extends Day {
     };
   }
 
-  private static long getScore(Character c) {
+  private static long getSyntaxCheckerScore(Character c) {
     return switch (c) {
       case ')' -> 3;
       case ']' -> 57;
