@@ -29,6 +29,24 @@ public class Day11 extends Day {
     return Integer.toString(totalFlashes);
   }
 
+  @Override
+  protected String part2(List<String> lines) {
+    if (lines.isEmpty()) {
+      return INPUT_EMPTY;
+    }
+
+    Octopus[][] octopuses = parseInputToOctopuses(lines);
+    int totalOctopusCount = octopuses.length * octopuses[0].length;
+    int flashesPerStep;
+    int step = 0;
+    do {
+      step += 1;
+      flashesPerStep = executeOneStep(octopuses);
+    } while (flashesPerStep != totalOctopusCount);
+
+    return Integer.toString(step);
+  }
+
   private int executeOneStep(Octopus[][] octopuses) {
     int totalFlashes = 0;
     int flashesInOneLoop = 0;
@@ -80,18 +98,13 @@ public class Day11 extends Day {
   }
 
   @Override
-  protected String part2(List<String> lines) {
-    return null;
-  }
-
-  @Override
   protected String part1Filename() {
     return filenameFromDataFileNumber(2);
   }
 
   @Override
   protected String part2Filename() {
-    return filenameFromDataFileNumber(1);
+    return filenameFromDataFileNumber(2);
   }
 
   /**
@@ -120,7 +133,7 @@ public class Day11 extends Day {
         .toList();
     return neighbors;
   }
-  
+
   private static Octopus[][] parseInputToOctopuses(List<String> lines) {
     Octopus[][] octopuses = new Octopus[lines.size()][lines.get(0).length()];
     for (int r = 0; r < lines.size(); r++) {
