@@ -11,8 +11,13 @@ public class Runner {
 
   public static void main(String[] args) {
     Runner runner = new Runner();
-    runner.run(2021);
-    runner.run(2022);
+    if (args.length == 0) {
+      runner.run(2021);
+      runner.run(2022);
+    } else {
+      int year = Integer.parseInt(args[0]);
+      runner.run(year);
+    }
   }
 
   public void run(int year) {
