@@ -21,7 +21,15 @@ public class Day12 extends Day {
 
   @Override
   protected String part2(List<String> lines) {
-    return null;
+    var graph = buildGraph(lines);
+
+    Map<String, Integer> visitedCounts = new HashMap<>();
+    for (String key : graph.keySet()) {
+      visitedCounts.put(key, 0);
+    }
+
+    var pathCount = dfsVisitSmallCavesOnce2("start", graph, visitedCounts);
+    return Integer.toString(pathCount);
   }
 
   @Override
@@ -31,8 +39,52 @@ public class Day12 extends Day {
 
   @Override
   protected String part2Filename() {
-    return filenameFromDataFileNumber(1);
+    return filenameFromDataFileNumber(4);
   }
+
+
+  private static int dfsVisitSmallCavesOnce2(
+      String node,
+      Map<String, List<String>> graph,
+      Map<String, Integer> visitedCounts
+  ) {
+    if (node.equals("end")) {
+      // This is a valid path.
+      return 1;
+    }
+
+    // Mark the node (cave) as visited if it isn't a large one, OR if it hasn't been visited before.
+    int count = visitedCounts.get(node);
+    boolean hasVisitedTwice = isAnySmallCaveVisitedTwice(visitedCounts);
+    boolean canVisit =
+        isLargeCave(node) || count == 0 || (count == 1 && !hasVisitedTwice && !node.equals("start"));
+    if (!canVisit) {
+      return 0;
+    }
+
+    // We can visit this node. Mark it as visited.
+    visitedCounts.put(node, count + 1);
+
+    int pathCount = 0;
+    List<String> neighbors = graph.getOrDefault(node, new ArrayList<>());
+    for (String neighborNode : neighbors) {
+      pathCount += dfsVisitSmallCavesOnce2(neighborNode, graph, visitedCounts);
+    }
+
+    // Mark it as unvisited, now that we're done.
+    visitedCounts.put(node, count);
+    return pathCount;
+  }
+
+  private static boolean isAnySmallCaveVisitedTwice(Map<String, Integer> visitedCounts) {
+    for (Map.Entry<String, Integer> entry : visitedCounts.entrySet()) {
+      if (!isLargeCave(entry.getKey()) && entry.getValue() == 2) {
+        return true;
+      }
+    }
+    return false;
+  }
+
 
   private static int dfsVisitSmallCavesOnce(
       String node,
