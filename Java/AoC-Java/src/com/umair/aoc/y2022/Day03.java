@@ -3,6 +3,8 @@ package com.umair.aoc.y2022;
 import com.umair.aoc.common.Day;
 
 import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Collectors;
 
 public class Day03 extends Day {
 
@@ -16,7 +18,7 @@ public class Day03 extends Day {
 
     long totalPriority = 0;
     for (Rucksack r : rucksacks) {
-      char c = findIntersection(r.first, r.second);
+      char c = findIntersection(r.getFirst(), r.getSecond());
       long priority = getPriority(c);
       totalPriority += priority;
     }
@@ -26,7 +28,17 @@ public class Day03 extends Day {
 
   @Override
   protected String part2(List<String> lines) {
-    return null;
+    List<Rucksack> rucksacks = parseLinesToRucksacks(lines);
+    List<ElfGroup> elfGroups = parseRucksacksToElfGroups(rucksacks);
+
+    long totalPriority = 0;
+    for (ElfGroup g : elfGroups) {
+      char c = g.getBadge();
+      long priority = getPriority(c);
+      totalPriority += priority;
+    }
+
+    return Long.toString(totalPriority);
   }
 
   @Override
@@ -36,7 +48,7 @@ public class Day03 extends Day {
 
   @Override
   protected String part2Filename() {
-    return filenameFromDataFileNumber(1);
+    return filenameFromDataFileNumber(2);
   }
 
   private static long getPriority(Character c) {
@@ -59,27 +71,58 @@ public class Day03 extends Day {
     List<Rucksack> rucksacks = new ArrayList<>();
     for (String line : lines) {
       assert(line.length() % 2 == 0);
-      List<Character> firstHalf = line.substring(0, line.length() / 2)
-          .chars()
-          .mapToObj(e -> (char) e)
-          .toList();
-      List<Character> secondHalf = line.substring(line.length() / 2)
-          .chars()
-          .mapToObj(e -> (char) e)
-          .toList();
-
-      rucksacks.add(new Rucksack(firstHalf, secondHalf));
+      List<Character> contents = line.chars().mapToObj(e -> (char) e).toList();
+      rucksacks.add(new Rucksack(contents));
     }
     return rucksacks;
   }
 
-  private static class Rucksack {
-    List<Character> first;
-    List<Character> second;
+  private static List<ElfGroup> parseRucksacksToElfGroups(List<Rucksack> rucksacks) {
+    AtomicInteger counter = new AtomicInteger();
 
-    Rucksack(List<Character> first, List<Character> second) {
-      this.first = first;
-      this.second = second;
+    Collection<List<Rucksack>> chunks = rucksacks.stream()
+        .collect(Collectors.groupingBy(it -> counter.getAndIncrement() / 3))
+        .values();
+
+    List<ElfGroup> result = new ArrayList<>();
+    for (List<Rucksack> chunk : chunks) {
+      ElfGroup g = new ElfGroup();
+      g.rucksacks.addAll(chunk);
+      result.add(g);
+    }
+
+    return result;
+  }
+
+  private static class Rucksack {
+    List<Character> rucksackContents;
+
+    Rucksack(List<Character> contents) {
+      this.rucksackContents = contents;
+    }
+
+    List<Character> getFirst() {
+      assert(rucksackContents.size() % 2 == 0);
+      return rucksackContents.subList(0, rucksackContents.size() / 2);
+    }
+
+    List<Character> getSecond() {
+      assert(rucksackContents.size() % 2 == 0);
+      return rucksackContents.subList(rucksackContents.size() / 2, rucksackContents.size());
+    }
+  }
+
+  private static class ElfGroup {
+    private final List<Rucksack> rucksacks = new ArrayList<>();
+
+    Character getBadge() {
+      assert(rucksacks.size() == 3);
+      List<Character> common = new ArrayList<>(rucksacks.get(0).rucksackContents);
+      common.retainAll(rucksacks.get(1).rucksackContents);
+      common.retainAll(rucksacks.get(2).rucksackContents);
+
+      assert(common.size() == 1);
+      return common.get(0);
     }
   }
 }
