@@ -19,6 +19,21 @@ public class Day12 extends Day {
     return Integer.toString(pathCount);
   }
 
+  @Override
+  protected String part2(List<String> lines) {
+    return null;
+  }
+
+  @Override
+  protected String part1Filename() {
+    return filenameFromDataFileNumber(4);
+  }
+
+  @Override
+  protected String part2Filename() {
+    return filenameFromDataFileNumber(1);
+  }
+
   private static int dfsVisitSmallCavesOnce(
       String node,
       Map<String, List<String>> graph,
@@ -49,21 +64,6 @@ public class Day12 extends Day {
       visited.remove(node);
     }
     return pathCount;
-  }
-
-  @Override
-  protected String part2(List<String> lines) {
-    return null;
-  }
-
-  @Override
-  protected String part1Filename() {
-    return filenameFromDataFileNumber(4);
-  }
-
-  @Override
-  protected String part2Filename() {
-    return filenameFromDataFileNumber(1);
   }
 
   private static Map<String, List<String>> buildGraph(List<String> lines) {
