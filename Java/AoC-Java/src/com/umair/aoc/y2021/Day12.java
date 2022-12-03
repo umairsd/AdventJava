@@ -3,6 +3,7 @@ package com.umair.aoc.y2021;
 import com.umair.aoc.common.Day;
 
 import java.util.*;
+import static com.umair.aoc.util.CollectionUtils.singleElement;
 
 public class Day12 extends Day {
 
@@ -13,22 +14,33 @@ public class Day12 extends Day {
   @Override
   protected String part1(List<String> lines) {
     var graph = buildGraph(lines);
+    CaveVertex start = graph.keySet().stream().filter(CaveVertex::isStart).collect(singleElement());
 
-    Set<String> visited = new HashSet<>();
-    var pathCount = dfsVisitSmallCavesOnce("start", graph, visited);
+    // Can visit the cave (vertex) if it is a large one, OR if it hasn't been visited before.
+    Visitable visitableFn = (v, gUnused) -> v.isLargeCave || v.getVisitedCount() == 0;
+
+    int pathCount = dfsVisit(start, graph, visitableFn);
     return Integer.toString(pathCount);
   }
 
   @Override
   protected String part2(List<String> lines) {
     var graph = buildGraph(lines);
+    CaveVertex start = graph.keySet().stream().filter(CaveVertex::isStart).collect(singleElement());
 
-    Map<String, Integer> visitedCounts = new HashMap<>();
-    for (String key : graph.keySet()) {
-      visitedCounts.put(key, 0);
-    }
+    Visitable visitableFn = (v, g) -> {
+      // Can visit the cave (vertex) if:
+      // - it is a large one, or
+      // - it is a small one and hasn't been visited before, or
+      // - it has been visited once, is not the start, and no other vertex has been visited twice.
+      int count = v.getVisitedCount();
+      boolean isAnyVertexVisitedTwice = isAnySmallCaveVisitedTwice(g);
+      boolean canVisit =
+          v.isLargeCave || count == 0 || (count == 1 && !isAnyVertexVisitedTwice && !v.isStart());
+      return canVisit;
+    };
 
-    var pathCount = dfsVisitSmallCavesOnce2("start", graph, visitedCounts);
+    int pathCount = dfsVisit(start, graph, visitableFn);
     return Integer.toString(pathCount);
   }
 
@@ -42,96 +54,62 @@ public class Day12 extends Day {
     return filenameFromDataFileNumber(4);
   }
 
-
-  private static int dfsVisitSmallCavesOnce2(
-      String node,
-      Map<String, List<String>> graph,
-      Map<String, Integer> visitedCounts
+  private static int dfsVisit(
+      CaveVertex caveVertex,
+      Map<CaveVertex, List<CaveVertex>> graph,
+      Visitable visitable
   ) {
-    if (node.equals("end")) {
-      // This is a valid path.
+    if (caveVertex.isEnd()) {
+      // We found a valid path to the end.
       return 1;
     }
 
-    // Mark the node (cave) as visited if it isn't a large one, OR if it hasn't been visited before.
-    int count = visitedCounts.get(node);
-    boolean hasVisitedTwice = isAnySmallCaveVisitedTwice(visitedCounts);
-    boolean canVisit =
-        isLargeCave(node) || count == 0 || (count == 1 && !hasVisitedTwice && !node.equals("start"));
-    if (!canVisit) {
+    if (!visitable.canVisit(caveVertex, graph)) {
       return 0;
     }
 
-    // We can visit this node. Mark it as visited.
-    visitedCounts.put(node, count + 1);
+    // Visit the cave.
+    caveVertex.visitedCount += 1;
 
     int pathCount = 0;
-    List<String> neighbors = graph.getOrDefault(node, new ArrayList<>());
-    for (String neighborNode : neighbors) {
-      pathCount += dfsVisitSmallCavesOnce2(neighborNode, graph, visitedCounts);
+    List<CaveVertex> neighbors = graph.getOrDefault(caveVertex, new ArrayList<>())
+        .stream()
+        .filter(v -> visitable.canVisit(v, graph))
+        .toList();
+    for (CaveVertex neighbor : neighbors) {
+      pathCount += dfsVisit(neighbor, graph, visitable);
     }
 
-    // Mark it as unvisited, now that we're done.
-    visitedCounts.put(node, count);
+    // We are done processing this path, so mark this as unvisited.
+    caveVertex.visitedCount -= 1;
     return pathCount;
   }
 
-  private static boolean isAnySmallCaveVisitedTwice(Map<String, Integer> visitedCounts) {
-    for (Map.Entry<String, Integer> entry : visitedCounts.entrySet()) {
-      if (!isLargeCave(entry.getKey()) && entry.getValue() == 2) {
+  private static boolean isAnySmallCaveVisitedTwice(Map<CaveVertex, List<CaveVertex>> graph) {
+    for (CaveVertex v : graph.keySet()) {
+      if (!v.isLargeCave && v.getVisitedCount() == 2) {
         return true;
       }
     }
     return false;
   }
 
+  private static Map<CaveVertex, List<CaveVertex>> buildGraph(List<String> lines) {
+    Map<CaveVertex, List<CaveVertex>> graph = new HashMap<>();
+    Map<String, CaveVertex> vertices = new HashMap<>();
 
-  private static int dfsVisitSmallCavesOnce(
-      String node,
-      Map<String, List<String>> graph,
-      Set<String> visited
-  ) {
-    if (node.equals("end")) {
-      // This is a valid path.
-      return 1;
-    }
-
-    // Mark the node as visited if it isn't a large node.
-    boolean isLargeCave = isLargeCave(node);
-    if (!isLargeCave) {
-      visited.add(node);
-    }
-
-    List<String> neighbors = graph.getOrDefault(node, new ArrayList<>());
-    int pathCount = 0;
-    for (String neighborNode : neighbors) {
-      // Can visit a node (cave) if it is a large cave, or if it has not been visited before.
-      if (isLargeCave(neighborNode) || !visited.contains(neighborNode)) {
-        // DFS
-        pathCount += dfsVisitSmallCavesOnce(neighborNode, graph, visited);
-      }
-    }
-
-    if (!isLargeCave) {
-      visited.remove(node);
-    }
-    return pathCount;
-  }
-
-  private static Map<String, List<String>> buildGraph(List<String> lines) {
-    Map<String, List<String>> graph = new HashMap<>();
     for (String line : lines) {
       String[] tokens = line.strip().split("-");
-      String vertexA = tokens[0];
-      String vertexB = tokens[1];
+      CaveVertex vertexA = buildOrGetVertex(tokens[0], vertices);
+      CaveVertex vertexB = buildOrGetVertex(tokens[1], vertices);
 
       // Add the first node (cave).
-      List<String> adjListA = graph.getOrDefault(vertexA, new ArrayList<>());
+      List<CaveVertex> adjListA = graph.getOrDefault(vertexA, new ArrayList<>());
       adjListA.add(vertexB);
       graph.put(vertexA, adjListA);
 
       // Add the second node (cave).
-      List<String> adjListB = graph.getOrDefault(vertexB, new ArrayList<>());
+      List<CaveVertex> adjListB = graph.getOrDefault(vertexB, new ArrayList<>());
       adjListB.add(vertexA);
       graph.put(vertexB, adjListB);
     }
@@ -139,7 +117,63 @@ public class Day12 extends Day {
     return graph;
   }
 
-  private static boolean isLargeCave(String cave) {
-    return cave.chars().allMatch(Character::isUpperCase);
+  private static CaveVertex buildOrGetVertex(String name, Map<String, CaveVertex> vertices) {
+    if (!vertices.containsKey(name)) {
+      vertices.put(name, new CaveVertex(name));
+    }
+    return vertices.get(name);
+  }
+
+  @FunctionalInterface
+  private interface Visitable {
+    boolean canVisit(CaveVertex v, Map<CaveVertex, List<CaveVertex>> graph);
+  }
+
+  private static class CaveVertex {
+    private static final String START = "start";
+    private static final String END = "end";
+
+    private final String name;
+    private final boolean isLargeCave;
+    private int visitedCount = 0;
+
+    CaveVertex(String name) {
+      this.name = name;
+      this.isLargeCave = name.chars().allMatch(Character::isUpperCase);
+    }
+
+    int getVisitedCount() {
+      if (isLargeCave) {
+        // Large caves can be visited unlimited times.
+        return 0;
+      }
+      return visitedCount;
+    }
+
+    boolean isStart() {
+      return name.equals(START);
+    }
+
+    boolean isEnd() {
+      return name.equals(END);
+    }
+
+    @Override
+    public String toString() {
+      return name + ", " + visitedCount;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+      if (this == o) return true;
+      if (o == null || getClass() != o.getClass()) return false;
+      CaveVertex that = (CaveVertex) o;
+      return name.equals(that.name);
+    }
+
+    @Override
+    public int hashCode() {
+      return Objects.hash(name);
+    }
   }
 }
