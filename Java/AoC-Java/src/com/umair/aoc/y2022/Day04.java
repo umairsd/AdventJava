@@ -17,9 +17,7 @@ public class Day04 extends Day {
     int fullyContainedCount = 0;
     for (List<Interval> intervalPair : intervalPairs) {
       assert(intervalPair.size() == 2);
-      Interval longer = intervalPair.get(0); // Guaranteed, based on the parsing logic.
-      Interval shorter = intervalPair.get(1);
-      if (shorter.start >= longer.start && shorter.end <= longer.end) {
+      if (isFullyContained(intervalPair.get(0), intervalPair.get(1))) {
         fullyContainedCount += 1;
       }
     }
@@ -28,7 +26,19 @@ public class Day04 extends Day {
 
   @Override
   protected String part2(List<String> lines) {
-    return null;
+    List<List<Interval>> intervalPairs = parseLinesToIntervals(lines);
+
+    int overlappingIntervals = 0;
+    for (List<Interval> intervalPair : intervalPairs) {
+      assert(intervalPair.size() == 2);
+      Interval i1 = intervalPair.get(0);
+      Interval i2 = intervalPair.get(1);
+
+      if (isOverlap(i1, i2) || isFullyContained(i1, i2)) {
+        overlappingIntervals += 1;
+      }
+    }
+    return Integer.toString(overlappingIntervals);
   }
 
   @Override
@@ -38,7 +48,22 @@ public class Day04 extends Day {
 
   @Override
   protected String part2Filename() {
-    return filenameFromDataFileNumber(1);
+    return filenameFromDataFileNumber(2);
+  }
+
+  private static boolean isOverlap(Interval i1, Interval i2) {
+    Interval earlierStart = (i1.start <= i2.start ? i1 : i2);
+    Interval laterStart = (i1.start > i2.start ? i1 : i2);
+
+    boolean isOverlap = laterStart.start <= earlierStart.end && laterStart.end > earlierStart.end;
+    return isOverlap;
+  }
+
+  private static boolean isFullyContained(Interval i1, Interval i2) {
+    Interval longer = (i1.getLength() >= i2.getLength() ? i1 : i2);
+    Interval shorter = (i1.getLength() < i2.getLength() ? i1 : i2);
+
+    return (shorter.start >= longer.start && shorter.end <= longer.end);
   }
 
   private static List<List<Interval>> parseLinesToIntervals(List<String> lines) {
