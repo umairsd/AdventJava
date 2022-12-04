@@ -28,7 +28,14 @@ public class Day13 extends Day {
 
   @Override
   protected String part2(List<String> lines) {
-    return null;
+    int splitIndex = lines.indexOf("");
+    List<Point> points = parsePoints(lines.subList(0, splitIndex));
+    List<Instruction> instructions = parseInstructions(lines.subList(splitIndex + 1, lines.size()));
+    Paper paper = buildDottedPaper(points);
+
+    instructions.forEach(instr -> foldPaper(paper, instr));
+
+    return paper.toString();
   }
 
   @Override
@@ -38,13 +45,13 @@ public class Day13 extends Day {
 
   @Override
   protected String part2Filename() {
-    return filenameFromDataFileNumber(1);
+    return filenameFromDataFileNumber(2);
   }
 
   private static void foldPaper(Paper paper, Instruction instruction) {
     switch(instruction.foldDirection) {
       case UP -> foldUp(paper, instruction.foldPoint);
-      case LEFT -> foldDown(paper, instruction.foldPoint);
+      case LEFT -> foldLeft(paper, instruction.foldPoint);
     }
   }
 
@@ -63,11 +70,11 @@ public class Day13 extends Day {
       }
     }
 
-    // Update the dimensions of the paper.
+    // Update dimensions.
     paper.setEffectiveLength(yFoldPoint);
   }
 
-  private static void foldDown(Paper paper, int xFoldPoint) {
+  private static void foldLeft(Paper paper, int xFoldPoint) {
     int widthOfRight = paper.effectiveWidth - xFoldPoint - 1;
     int numColumnsToFold = Math.min(xFoldPoint, widthOfRight);
 
@@ -206,6 +213,19 @@ public class Day13 extends Day {
         throw new IllegalArgumentException();
       }
       this.effectiveWidth = updatedWidth;
+    }
+
+    @Override
+    public String toString() {
+      StringBuilder sb = new StringBuilder();
+      sb.append("\n");
+      for (int row = 0; row < effectiveLength; row++) {
+        for (int column = 0; column < effectiveWidth; column++) {
+          sb.append(contents[row][column]);
+        }
+        sb.append("\n");
+      }
+      return sb.toString();
     }
   }
 }
