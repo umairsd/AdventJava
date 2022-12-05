@@ -13,8 +13,8 @@ public class Day05 extends Day {
   @Override
   protected String part1(List<String> lines) {
     int splitIndex = lines.indexOf("");
-    List<String> stackLines = new ArrayList(lines.subList(0, splitIndex));
-    List<String> instructionLines = new ArrayList(lines.subList(splitIndex + 1, lines.size()));
+    List<String> stackLines = new ArrayList<>(lines.subList(0, splitIndex));
+    List<String> instructionLines = new ArrayList<>(lines.subList(splitIndex + 1, lines.size()));
 
     Map<Integer, List<String>> stackMap = parseStacks(stackLines);
     List<MoveInstruction> instructions = parseInstructions(instructionLines);
@@ -39,9 +39,9 @@ public class Day05 extends Day {
   @Override
   protected String part2(List<String> lines) {
     int splitIndex = lines.indexOf("");
-    Map<Integer, List<String>> stackMap = parseStacks(new ArrayList(lines.subList(0, splitIndex)));
+    Map<Integer, List<String>> stackMap = parseStacks(new ArrayList<>(lines.subList(0, splitIndex)));
     List<MoveInstruction> instructions =
-        parseInstructions(new ArrayList(lines.subList(splitIndex + 1, lines.size())));
+        parseInstructions(new ArrayList<>(lines.subList(splitIndex + 1, lines.size())));
 
     for (MoveInstruction instruction : instructions) {
       List<String> sourceStack = stackMap.get(instruction.source);
@@ -82,9 +82,7 @@ public class Day05 extends Day {
     // The last line is the count of stacks. Set up the map.
     Map<Integer, List<String>> stackMap = new HashMap<>();
     String lastLine = stackLines.get(stackLines.size() - 1);
-    String[] stackTokens = lastLine.strip().split("(?<=\\G.{4})");;
-    int stackCount = stackTokens.length;
-
+    String[] stackTokens = lastLine.strip().split("(?<=\\G.{4})");
     for (String t : stackTokens) {
       stackMap.put(Integer.parseInt(t.strip()), new ArrayList<>());
     }
