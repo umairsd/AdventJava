@@ -16,33 +16,47 @@ public class Day05 extends Day {
     List<String> stackLines = new ArrayList(lines.subList(0, splitIndex));
     List<String> instructionLines = new ArrayList(lines.subList(splitIndex + 1, lines.size()));
 
-    Map<Integer, Stack<String>> stackMap = parseStacks(stackLines);
+    Map<Integer, List<String>> stackMap = parseStacks(stackLines);
     List<MoveInstruction> instructions = parseInstructions(instructionLines);
 
     for (MoveInstruction instruction : instructions) {
       int remainingCount = instruction.count;
-      Stack<String> sourceStack = stackMap.get(instruction.source);
-      Stack<String> destinationStack = stackMap.get(instruction.destination);
+      List<String> sourceStack = stackMap.get(instruction.source);
+      List<String> destinationStack = stackMap.get(instruction.destination);
 
       assert(remainingCount >= sourceStack.size());
 
       while (remainingCount > 0) {
-        destinationStack.push(sourceStack.pop());
+        String itemToMove = sourceStack.remove(sourceStack.size() - 1);
+        destinationStack.add(itemToMove);
         remainingCount--;
       }
     }
 
-    StringBuilder sb = new StringBuilder();
-    for (int startingID = 1; startingID <= stackMap.size(); startingID++) {
-      sb.append(stackMap.get(startingID).peek());
-    }
-
-    return sb.toString();
+    return getTopsOfAllStacks(stackMap);
   }
 
   @Override
   protected String part2(List<String> lines) {
-    return null;
+    int splitIndex = lines.indexOf("");
+    Map<Integer, List<String>> stackMap = parseStacks(new ArrayList(lines.subList(0, splitIndex)));
+    List<MoveInstruction> instructions =
+        parseInstructions(new ArrayList(lines.subList(splitIndex + 1, lines.size())));
+
+    for (MoveInstruction instruction : instructions) {
+      List<String> sourceStack = stackMap.get(instruction.source);
+      List<String> destinationStack = stackMap.get(instruction.destination);
+
+      assert (instruction.count >= sourceStack.size());
+
+      int startIndex = sourceStack.size() - instruction.count;
+      List<String> itemsToMove = sourceStack.subList(startIndex, sourceStack.size());
+      // Remove the items from the source, and add them to the destination.
+      stackMap.put(instruction.source, sourceStack.subList(0, startIndex));
+      destinationStack.addAll(itemsToMove);
+    }
+
+    return getTopsOfAllStacks(stackMap);
   }
 
   @Override
@@ -52,18 +66,27 @@ public class Day05 extends Day {
 
   @Override
   protected String part2Filename() {
-    return filenameFromDataFileNumber(1);
+    return filenameFromDataFileNumber(2);
   }
 
-  private static Map<Integer, Stack<String>> parseStacks(List<String> stackLines) {
+  private static String getTopsOfAllStacks(Map<Integer, List<String>> stackMap) {
+    StringBuilder sb = new StringBuilder();
+    for (int startingID = 1; startingID <= stackMap.size(); startingID++) {
+      List<String> stack = stackMap.get(startingID);
+      sb.append(stack.get(stack.size() - 1));
+    }
+    return sb.toString();
+  }
+
+  private static Map<Integer, List<String>> parseStacks(List<String> stackLines) {
     // The last line is the count of stacks. Set up the map.
-    Map<Integer, Stack<String>> stackMap = new HashMap<>();
+    Map<Integer, List<String>> stackMap = new HashMap<>();
     String lastLine = stackLines.get(stackLines.size() - 1);
     String[] stackTokens = lastLine.strip().split("(?<=\\G.{4})");;
     int stackCount = stackTokens.length;
 
     for (String t : stackTokens) {
-      stackMap.put(Integer.parseInt(t.strip()), new Stack<>());
+      stackMap.put(Integer.parseInt(t.strip()), new ArrayList<>());
     }
 
     // Remove the last line.
@@ -89,7 +112,7 @@ public class Day05 extends Day {
 
     // Invert each of the stacks.
     for (Integer key : stackMap.keySet()) {
-      Stack<String> stack = stackMap.get(key);
+      List<String> stack = stackMap.get(key);
       Collections.reverse(stack);
       stackMap.put(key, stack);
     }
