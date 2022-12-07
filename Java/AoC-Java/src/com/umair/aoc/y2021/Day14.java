@@ -15,6 +15,10 @@ public class Day14 extends Day {
     super(14, 2021);
   }
 
+  /**
+   * Keeping part-1 as suboptimal, by generating the entire polymer string. This is helpful
+   * to get a feel for the problem.
+   */
   @Override
   protected String part1(List<String> lines) {
     if (lines.isEmpty()) {
@@ -81,20 +85,13 @@ public class Day14 extends Day {
     int iterationCount = 1;
 
     while (iterationCount <= PART2_ITERATION2) {
-      polymer = createPolymerUsingInsertionRules(polymer, insertionRules);
+      polymer = rebuildPolymerUsingInsertionRules(polymer, insertionRules);
       iterationCount++;
     }
 
     Map<Character, Long> countMap = buildCharacterCountMapFromPolymer(polymer);
-    long max = countMap.values()
-        .stream()
-        .max(Long::compare)
-        .orElse(0L);
-    long min = countMap.values()
-        .stream()
-        .min(Long::compare)
-        .orElse(0L);
-
+    long max = countMap.values().stream().max(Long::compare).orElse(0L);
+    long min = countMap.values().stream().min(Long::compare).orElse(0L);
     return Long.toString(max - min);
   }
 
@@ -108,7 +105,7 @@ public class Day14 extends Day {
     return filenameFromDataFileNumber(2);
   }
 
-  private static Polymer createPolymerUsingInsertionRules(
+  private static Polymer rebuildPolymerUsingInsertionRules(
       Polymer polymer,
       Map<LetterPair, List<LetterPair>> insertionRules
   ) {
@@ -121,7 +118,6 @@ public class Day14 extends Day {
       if (insertionRules.containsKey(key)) {
         // For a rule such as "NN -> C", if the letter pair NN is included in the polymer, it
         // splits into two letter pairs NC, and CN.
-
         // The new polymer does not contain NN, so we don't need to worry about it. For each of
         // the elements that it splits into (NC, CN) increase their count by the count of the
         // current letter pair. Basically, 5 NNs will split into 5 NC and 5 CN.
@@ -137,6 +133,7 @@ public class Day14 extends Day {
 
   private static Map<Character, Long> buildCharacterCountMapFromPolymer(Polymer polymer) {
     Map<Character, Long> countMap = new HashMap<>();
+    // First, get the total counts of each of the characters in the polymer.
     for (LetterPair key : polymer.letterPairCounts.keySet()) {
       long keyCount = polymer.letterPairCounts.get(key);
 
@@ -147,12 +144,25 @@ public class Day14 extends Day {
       countMap.put(key.getSecond(), secondCharCount + keyCount);
     }
 
+    /*
+    - Using the example in the question, the starting template is NNCB. This gets broken into
+      letter pairs as [NN, NC, CB]. Notice that each of the inner characters is repeated twice.
+      The second N of NN, and the first N of NC are the same character in the final polymer "NNCB",
+      and is thus duplicated.
+    - After step 1, these pairs are further broken into [NC, CN, NB, BC, CH, HB], representing
+      NCNBCHB. Again, notice that the inner characters are duplicated.
+
+    - This means that the inner characters will always sum to even values, and we need to divide
+      them by 2 to get the actual count.
+    - At the same time, the extreme left and right character(s) are only used once, and thus not
+      duplicated. This means that these values will be odd, and thus need to be handled correctly.
+     */
     for (Character c : countMap.keySet()) {
-      long value = countMap.get(c);
-      if (value % 2 == 0) {
-        countMap.put(c, value / 2);
+      long count = countMap.get(c);
+      if (count % 2 == 0) {
+        countMap.put(c, count / 2);
       } else {
-        countMap.put(c, (value + 1) / 2);
+        countMap.put(c, (count / 2) + 1);
       }
     }
     return countMap;
