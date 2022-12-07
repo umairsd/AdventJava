@@ -23,22 +23,22 @@ public abstract class Day {
 
   /**
    * Reads the file for part 1, passes it to `part1()` to solve,
-   * and then prints out the result.
+   * and then returns the result.
    */
-  public void solvePart1() {
+  public String solvePart1() {
     List<String> data = readData(part1Filename());
     String result = part1(data);
-    System.out.println("Part 1: " + result);
+    return result;
   }
 
   /**
    * Reads the file for part 2, passes it to `part2()` to solve,
-   * and then prints out the result.
+   * and then returns the result.
    */
-  public void solvePart2() {
+  public String solvePart2() {
     List<String> data = readData(part2Filename());
     String result = part2(data);
-    System.out.println("Part 2: " + result);
+    return result;
   }
 
   protected abstract String part1(List<String> lines);
@@ -58,17 +58,16 @@ public abstract class Day {
     DecimalFormat yearFormat = new DecimalFormat("0000");
 
     // year/day<dayNumber>-part2.txt
-    StringBuilder builder = new StringBuilder();
-    builder.append(RESOURCES_PATH_PREFIX);
-    builder.append(PATH_SEPARATOR);
-    builder.append(yearFormat.format(year));
-    builder.append(PATH_SEPARATOR);
-    builder.append(FILE_NAME_PREFIX);
-    builder.append(dayFormat.format(dayNumber));
-    builder.append(FILE_NAME_SUFFIX);
-    builder.append(part);
-    builder.append(FILE_EXTENSION);
+    String result = RESOURCES_PATH_PREFIX +
+        PATH_SEPARATOR +
+        yearFormat.format(year) +
+        PATH_SEPARATOR +
+        FILE_NAME_PREFIX +
+        dayFormat.format(dayNumber) +
+        FILE_NAME_SUFFIX +
+        part +
+        FILE_EXTENSION;
 
-    return builder.toString();
+    return result;
   }
 }

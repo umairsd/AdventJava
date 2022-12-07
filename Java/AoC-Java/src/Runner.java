@@ -3,6 +3,8 @@ import com.umair.aoc.common.Day;
 import java.lang.reflect.InvocationTargetException;
 import java.text.DecimalFormat;
 
+import static java.lang.System.out;
+
 @SuppressWarnings("rawtypes")
 public class Runner {
   private static final DecimalFormat dayFormat = new DecimalFormat("00");
@@ -21,7 +23,7 @@ public class Runner {
   }
 
   public void run(int year) {
-    System.out.printf("== Running Tests for the year %s ==%n", yearFormat.format(year));
+    out.printf("== Running Tests for the year %s ==%n", yearFormat.format(year));
 
     for (int day = 1; day <= 25; day++) {
       run(year, day);
@@ -43,22 +45,37 @@ public class Runner {
       }
 
       Day dayInstance = (Day) c.getDeclaredConstructor().newInstance();
-      System.out.printf("-- Day %s:%n", day);
-      dayInstance.solvePart1();
-      dayInstance.solvePart2();
-      System.out.println();
+
+      out.printf("-- Day %s:%n", day);
+      out.printf("Part 1: %s%n", timeAndExecute(dayInstance::solvePart1));
+      out.printf("Part 2: %s%n", timeAndExecute(dayInstance::solvePart2));
+      out.println();
+
     } catch (InstantiationException | IllegalAccessException | InvocationTargetException |
              NoSuchMethodException ie) {
-      System.out.printf("Error executing day %s for year %s", day, year);
+      out.printf("Error executing day %s for year %s", day, year);
       ie.printStackTrace();
     }
   }
 
+  @FunctionalInterface
+  private interface Executor {
+    String execute();
+  }
+
+  private static String timeAndExecute(Executor executor) {
+    long startTime = System.currentTimeMillis();
+    String executionResult = executor.execute();
+    long endTime = System.currentTimeMillis();
+
+    String result = String.format("%s (in %sms)", executionResult, (endTime - startTime));
+    return result;
+  }
 
   private Class getClassForName(String className) {
     try {
       return Class.forName(className);
-    } catch (ClassNotFoundException cnfe) {
+    } catch (ClassNotFoundException e) {
       // Absorb this exception, as some classes might not be implemented.
     }
 
