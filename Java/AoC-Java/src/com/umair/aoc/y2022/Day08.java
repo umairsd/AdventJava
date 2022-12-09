@@ -16,39 +16,33 @@ public class Day08 extends Day {
 
     int rowCount = treeGrid.length;
     int columnCount = treeGrid[0].length;
-    TallestNeighbor[][] tallestNeighbors = new TallestNeighbor[rowCount][columnCount];
+
+    int[][] tallestOnLeft = new int[rowCount][columnCount];
     for (int r = 0; r < rowCount; r++) {
+      // For the first element in a row, there is nothing to the left, hence the height is zero.
+      for (int c = 1; c < columnCount; c++) {
+        tallestOnLeft[r][c] = Math.max(tallestOnLeft[r][c - 1], treeGrid[r][c - 1]);
+      }
+    }
+
+    int[][] tallestOnRight = new int[rowCount][columnCount];
+    for (int r = 0; r < rowCount; r++) {
+      for (int c = columnCount - 2; c >= 0; c--) {
+        tallestOnRight[r][c] = Math.max(tallestOnRight[r][c + 1], treeGrid[r][c + 1]);
+      }
+    }
+
+    int[][] tallestOnTop = new int[rowCount][columnCount];
+    for (int r = 1; r < rowCount; r++) {
       for (int c = 0; c < columnCount; c++) {
-        tallestNeighbors[r][c] = new TallestNeighbor(treeGrid[r][c]);
+        tallestOnTop[r][c] = Math.max(tallestOnTop[r - 1][c], treeGrid[r - 1][c]);
       }
     }
 
-    // Fill rows first.
-    for (int r = 1; r < rowCount - 1; r++) {
-      // Left to right, and top to bottom.
-      for (int c = 1; c < columnCount - 1; c++) {
-        int treeHeight = treeGrid[r][c];
-        int tallestOnLeft = tallestNeighbors[r][c - 1].fromLeft;
-        tallestNeighbors[r][c].fromLeft = Math.max(treeHeight, tallestOnLeft);
-
-        int tallestAbove = tallestNeighbors[r - 1][c].fromTop;
-        tallestNeighbors[r][c].fromTop = Math.max(treeHeight, tallestAbove);
-      }
-
-      // Right to left
-      for (int c = columnCount - 2; c > 0; c--) {
-        int treeHeight = treeGrid[r][c];
-        int tallestOnRight = tallestNeighbors[r][c + 1].fromRight;
-        tallestNeighbors[r][c].fromRight = Math.max(treeHeight, tallestOnRight);
-      }
-    }
-
-    for (int r = rowCount - 2; r > 0; r--) {
-      // Bottom to top
-      for (int c = 1; c < columnCount - 1; c++) {
-        int treeHeight = treeGrid[r][c];
-        int tallestBelow = tallestNeighbors[r + 1][c].fromBottom;
-        tallestNeighbors[r][c].fromBottom = Math.max(treeHeight, tallestBelow);
+    int[][] tallestOnBottom = new int[rowCount][columnCount];
+    for (int r = rowCount - 2; r >= 0; r--) {
+      for (int c = 0; c < columnCount; c++) {
+        tallestOnBottom[r][c] = Math.max(tallestOnBottom[r + 1][c], treeGrid[r + 1][c]);
       }
     }
 
@@ -56,11 +50,11 @@ public class Day08 extends Day {
     for (int r = 1; r < rowCount - 1; r++) {
       for (int c = 1; c < columnCount - 1; c++) {
         int height = treeGrid[r][c];
-        TallestNeighbor t = tallestNeighbors[r][c];
-        boolean isVisibleFromLeft = height > t.fromLeft;
-        boolean isVisibleFromRight = height > t.fromRight;
-        boolean isVisibleFromTop = height > t.fromTop;
-        boolean isVisibleFromBottom = height > t.fromBottom;
+
+        boolean isVisibleFromLeft = height > tallestOnLeft[r][c];
+        boolean isVisibleFromRight = height > tallestOnRight[r][c];
+        boolean isVisibleFromTop = height > tallestOnTop[r][c];
+        boolean isVisibleFromBottom = height > tallestOnBottom[r][c];
 
         if (isVisibleFromBottom || isVisibleFromTop || isVisibleFromLeft || isVisibleFromRight) {
           visibleCount++;
@@ -78,7 +72,7 @@ public class Day08 extends Day {
 
   @Override
   protected String part1Filename() {
-    return filenameFromDataFileNumber(1);
+    return filenameFromDataFileNumber(2);
   }
 
   @Override
