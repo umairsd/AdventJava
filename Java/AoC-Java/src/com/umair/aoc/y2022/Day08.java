@@ -67,7 +67,19 @@ public class Day08 extends Day {
 
   @Override
   protected String part2(List<String> lines) {
-    return null;
+    int[][] treeGrid = parseTreeGrid(lines);
+    int rowCount = treeGrid.length;
+    int columnCount = treeGrid[0].length;
+
+    int maxScenicScore = Integer.MIN_VALUE;
+    for (int r = 0; r < rowCount; r++) {
+      for (int c = 0; c < columnCount; c++) {
+        int score = scenicScore(treeGrid, r, c);
+        maxScenicScore = Math.max(maxScenicScore, score);
+      }
+    }
+
+    return Integer.toString(maxScenicScore);
   }
 
   @Override
@@ -77,7 +89,61 @@ public class Day08 extends Day {
 
   @Override
   protected String part2Filename() {
-    return filenameFromDataFileNumber(1);
+    return filenameFromDataFileNumber(2);
+  }
+
+  private static int scenicScore(int[][] treeGrid, int row, int column) {
+    int rowCount = treeGrid.length;
+    int columnCount = treeGrid[0].length;
+
+    int height = treeGrid[row][column];
+
+    // Look left.
+    int seenOnLeft = 0;
+    int c = column - 1;
+    while (c >= 0) {
+      seenOnLeft++; // We always see at least one tree.
+      if (treeGrid[row][c] >= height) {
+        break;
+      }
+      c--;
+    }
+
+    // Look right.
+    int seenOnRight = 0;
+    c = column + 1;
+    while (c < columnCount) {
+      seenOnRight++;
+      if (treeGrid[row][c] >= height) {
+        break;
+      }
+      c++;
+    }
+
+    // Look up.
+    int seenAbove = 0;
+    int r = row - 1;
+    while (r >= 0) {
+      seenAbove++;
+      if (treeGrid[r][column] >= height) {
+        break;
+      }
+      r--;
+    }
+
+    // Look down.
+    int seenDown = 0;
+    r = row + 1;
+    while (r < rowCount) {
+      seenDown++;
+      if (treeGrid[r][column] >= height) {
+        break;
+      }
+      r++;
+    }
+
+    int scenicScore = seenOnLeft * seenOnRight * seenAbove * seenDown;
+    return scenicScore;
   }
 
   private static int[][] parseTreeGrid(List<String> lines) {
@@ -94,22 +160,4 @@ public class Day08 extends Day {
     return grid;
   }
 
-  private static class TallestNeighbor {
-    int fromLeft;
-    int fromRight;
-    int fromTop;
-    int fromBottom;
-
-    TallestNeighbor(int value) {
-      fromLeft = value;
-      fromRight = value;
-      fromTop = value;
-      fromBottom = value;
-    }
-
-    @Override
-    public String toString() {
-      return "(l: " + fromLeft + ", r: " + fromRight + "), (t: " + fromTop + ", b: " + fromBottom + ")";
-    }
-  }
 }
