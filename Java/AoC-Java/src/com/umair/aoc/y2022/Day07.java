@@ -10,7 +10,6 @@ public class Day07 extends Day {
     super(7, 2022);
   }
 
-
   @Override
   protected String part1(List<String> lines) {
     FSNode root = parseFilesystem(lines);
@@ -18,7 +17,6 @@ public class Day07 extends Day {
 
     long totalSizeOfSmallDirectories = traverseTreeToComputeDirectoriesBelowThreshold(root,
         100_000);
-
     return Long.toString(totalSizeOfSmallDirectories);
   }
 
@@ -37,7 +35,6 @@ public class Day07 extends Day {
     List<Long> sizes = new ArrayList<>();
     traverseTreeToCollectSizesAboveThreshold(root, spaceToBeDeleted, sizes);
     Collections.sort(sizes);
-
     return Long.toString(sizes.get(0));
   }
 
@@ -106,6 +103,9 @@ public class Day07 extends Day {
     return totalSizeOfChildren;
   }
 
+  private static final String LINE_START_COMMAND = "$";
+  private static final String LINE_START_CD = "$ cd";
+
   private static FSNode parseFilesystem(List<String> lines) {
     FSNode root = new FSNode("/", FileType.DIRECTORY);
     FSNode currentNode = root;
@@ -114,9 +114,8 @@ public class Day07 extends Day {
     stack.push(root);
 
     for (String line : lines.stream().skip(1).toList()) {
-      if (line.startsWith("$")) {
-        // Command.
-        if (line.startsWith("$ cd")) {
+      if (line.startsWith(LINE_START_COMMAND)) {
+        if (line.startsWith(LINE_START_CD)) {
           String[] tokens = line.split(" ");
           String path = tokens[2].strip();
 
