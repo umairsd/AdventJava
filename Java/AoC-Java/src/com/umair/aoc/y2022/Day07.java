@@ -24,7 +24,21 @@ public class Day07 extends Day {
 
   @Override
   protected String part2(List<String> lines) {
-    return null;
+    FSNode root = parseFilesystem(lines);
+    traverseTreeToComputeDirectorySizes(root);
+
+    long totalFileSize = root.size;
+    long totalFilesystemSize = 70_000_000;
+    long spaceNeededForUpgrade = 30_000_000;
+
+    long availableSpace = totalFilesystemSize - totalFileSize;
+    long spaceToBeDeleted = spaceNeededForUpgrade - availableSpace;
+
+    List<Long> sizes = new ArrayList<>();
+    traverseTreeToCollectSizesAboveThreshold(root, spaceToBeDeleted, sizes);
+    Collections.sort(sizes);
+
+    return Long.toString(sizes.get(0));
   }
 
   @Override
@@ -34,14 +48,34 @@ public class Day07 extends Day {
 
   @Override
   protected String part2Filename() {
-    return filenameFromDataFileNumber(1);
+    return filenameFromDataFileNumber(2);
   }
 
   /**
-   * Post order traversal of the tree to compute the total size of all directories below the given
-   * threshold.
+   * Traversal of the tree to collect all directory sizes above the given threshold.
    */
-  private static long traverseTreeToComputeDirectoriesBelowThreshold(FSNode root, int threshold) {
+  private static void traverseTreeToCollectSizesAboveThreshold(
+      FSNode root,
+      long threshold,
+      List<Long> collector
+  ) {
+    if (root.type == FileType.FILE) {
+      return;
+    }
+    if (root.size >= threshold) {
+      collector.add(root.size);
+    }
+
+    for (String childName : root.children.keySet()) {
+      FSNode child = root.children.get(childName);
+      traverseTreeToCollectSizesAboveThreshold(child, threshold, collector);
+    }
+  }
+
+  /**
+   * Traversal of the tree to compute the total size of all directories below the given threshold.
+   */
+  private static long traverseTreeToComputeDirectoriesBelowThreshold(FSNode root, long threshold) {
     if (root.type == FileType.FILE) {
       return 0;
     }
