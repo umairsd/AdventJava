@@ -11,6 +11,11 @@ public class Day09 extends Day {
     super(9, 2022);
   }
 
+  /**
+   * Note: Part 1 can be refactored to use the `move` and `follow` model that's being used in
+   * part-2. However, I am leaving this as is, as this approach is a bit more brute force-y, and
+   * somewhat easier to parse and understand.
+   */
   @Override
   protected String part1(List<String> lines) {
     List<Move> moves = parseMoves(lines);
@@ -134,7 +139,7 @@ public class Day09 extends Day {
         head.x--;
       }
 
-     } else {
+    } else {
       if (head.x >= tail.x) {
         // If on the same column, or head to the right of tail, only head moves.
         head.x--;
@@ -256,10 +261,12 @@ public class Day09 extends Day {
   private static class Point {
     int y;
     int x;
+
     Point(int x, int y) {
       this.x = x;
       this.y = y;
     }
+
     Point(Point p) {
       this.x = p.x;
       this.y = p.y;
