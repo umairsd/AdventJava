@@ -41,7 +41,46 @@ public class Day09 extends Day {
 
   @Override
   protected String part2(List<String> lines) {
-    return null;
+    List<Move> moves = parseMoves(lines);
+    Set<Point> visited = new HashSet<>();
+
+    List<Point> points = buildStartingPoints();
+    visited.add(points.get(points.size() - 1));
+
+    for (Move m : moves) {
+      int count = m.distance;
+      while (count > 0) {
+        // Move the head.
+        move(points.get(0), m.direction);
+
+        // Have all the points follow the head.
+        for (int i = 1; i < points.size(); i++) {
+          follow(points.get(i - 1), points.get(i));
+        }
+
+        // Mark the tail's position.
+        visited.add(new Point(points.get(points.size() - 1)));
+        count--;
+      }
+    }
+
+    int count = visited.size();
+    return Integer.toString(count);
+  }
+
+  private static List<Point> buildStartingPoints() {
+    return List.of(
+        new Point(0, 0),
+        new Point(0, 0),
+        new Point(0, 0),
+        new Point(0, 0),
+        new Point(0, 0),
+        new Point(0, 0),
+        new Point(0, 0),
+        new Point(0, 0),
+        new Point(0, 0),
+        new Point(0, 0)
+    );
   }
 
   @Override
@@ -51,7 +90,39 @@ public class Day09 extends Day {
 
   @Override
   protected String part2Filename() {
-    return filenameFromDataFileNumber(1);
+    return filenameFromDataFileNumber(2);
+  }
+
+  private static void move(Point point, Direction direction) {
+    switch (direction) {
+      case UP -> point.y++;
+      case DOWN -> point.y--;
+      case LEFT -> point.x--;
+      case RIGHT -> point.x++;
+    }
+  }
+
+  private static void follow(Point leading, Point trailing) {
+    int deltaX = leading.x - trailing.x;
+    int deltaY = leading.y - trailing.y;
+    // The trailing point does not move if the leading point is "adjacent" to it.
+    if (Math.abs(deltaX) <= 1 && Math.abs(deltaY) <= 1) {
+      return;
+    }
+
+    // Can be replaced by: trailing.x += Math.signum(deltaX);
+    if (deltaX > 0) { // move Right.
+      trailing.x++;
+    } else if (deltaX < 0) { // move Left.
+      trailing.x--;
+    }
+
+    // Can be replaced by: trailing.y += Math.signum(deltaY);
+    if (deltaY > 0) { // move Up.
+      trailing.y++;
+    } else if (deltaY < 0) { // move Down.
+      trailing.y--;
+    }
   }
 
   private static void moveLeftByOne(Point head, Point tail) {
