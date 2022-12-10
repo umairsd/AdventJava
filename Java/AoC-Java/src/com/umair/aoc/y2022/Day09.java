@@ -2,7 +2,6 @@ package com.umair.aoc.y2022;
 
 import com.umair.aoc.common.Day;
 
-import java.awt.*;
 import java.util.*;
 import java.util.List;
 
@@ -25,118 +24,19 @@ public class Day09 extends Day {
       int count = m.distance;
       while (count > 0) {
         switch (m.direction) {
-          case UP -> moveUpByOne(head, tail, visited);
-          case DOWN -> moveDownByOne(head, tail, visited);
-          case LEFT -> moveLeftByOne(head, tail, visited);
-          case RIGHT -> moveRightByOne(head, tail, visited);
+          case UP -> moveUpByOne(head, tail);
+          case DOWN -> moveDownByOne(head, tail);
+          case LEFT -> moveLeftByOne(head, tail);
+          case RIGHT -> moveRightByOne(head, tail);
         }
 
+        visited.add(new Point(tail));
         count--;
       }
     }
 
     int count = visited.size();
     return Integer.toString(count);
-  }
-
-  private static void moveLeftByOne(Point head, Point tail, Set<Point> visited) {
-    if (head.y == tail.y) { // Same row
-      if (head.x < tail.x) { // Head to the left of tail
-        head.x--;
-        tail.x--;
-        visited.add(new Point(tail));
-      } else {
-        head.x--;
-      }
-
-     } else {
-      if (head.x >= tail.x) {
-        // If on the same column, or head to the right of tail, only head moves.
-        head.x--;
-      } else {
-        // Head is to the left of the tail. Head moves left, and tail moves diagonally.
-        head.x--;
-        tail.y = head.y;
-        tail.x--;
-        visited.add(new Point(tail));
-      }
-    }
-  }
-
-  private static void moveRightByOne(Point head, Point tail, Set<Point> visited) {
-    if (head.y == tail.y) { // Same row
-      if (head.x > tail.x) { // Head to the right of tail
-        head.x++;
-        tail.x++;
-        visited.add(new Point(tail));
-      } else {
-        head.x++;
-      }
-
-    } else {
-      if (head.x <= tail.x) {
-        // If on the same column, or head to the left of tail, only head moves.
-        head.x++;
-      } else {
-        // Head is to the right of the tail. Head moves right, and tail moves diagonally.
-        head.x++;
-        tail.y = head.y;
-        tail.x++;
-        visited.add(new Point(tail));
-      }
-    }
-  }
-
-  private static void moveUpByOne(Point head, Point tail, Set<Point> visited) {
-    if (head.x == tail.x) { // Head and tail are on the same column.
-      if (head.y > tail.y) {
-        // If head is above the tail, then both move up.
-        head.y++;
-        tail.y++;
-        visited.add(new Point(tail));
-      } else {
-        // Otherwise, head moves up, but tail stays put.
-        head.y++;
-      }
-
-    } else {
-      if (head.y <= tail.y) {
-        // If on the same row, or head is below the tail, only head moves.
-        head.y++;
-      } else {
-        // If head is above the tail, then head moves up, and tail moves diagonally.
-        head.y++;
-        tail.x = head.x;
-        tail.y++;
-        visited.add(new Point(tail));
-      }
-    }
-  }
-
-  private static void moveDownByOne(Point head, Point tail, Set<Point> visited) {
-    if (head.x == tail.x) { // Head and tail are on the same column.
-      if (head.y < tail.y) {
-        // If head is below the tail, then both move down.
-        head.y--;
-        tail.y--;
-        visited.add(new Point(tail));
-      } else {
-        // Otherwise, head moves down, but tail stays put.
-        head.y--;
-      }
-
-    } else {
-      if (head.y >= tail.y) {
-        // If on the same row, or head is above the tail, only head moves.
-        head.y--;
-      } else {
-        // If head is above the below, then head moves down, and tail moves diagonally.
-        head.y--;
-        tail.x = head.x;
-        tail.y--;
-        visited.add(new Point(tail));
-      }
-    }
   }
 
   @Override
@@ -152,6 +52,98 @@ public class Day09 extends Day {
   @Override
   protected String part2Filename() {
     return filenameFromDataFileNumber(1);
+  }
+
+  private static void moveLeftByOne(Point head, Point tail) {
+    if (head.y == tail.y) { // Same row
+      if (head.x < tail.x) { // Head to the left of tail
+        head.x--;
+        tail.x--;
+      } else {
+        head.x--;
+      }
+
+     } else {
+      if (head.x >= tail.x) {
+        // If on the same column, or head to the right of tail, only head moves.
+        head.x--;
+      } else {
+        // Head is to the left of the tail. Head moves left, and tail moves diagonally.
+        head.x--;
+        tail.y = head.y;
+        tail.x--;
+      }
+    }
+  }
+
+  private static void moveRightByOne(Point head, Point tail) {
+    if (head.y == tail.y) { // Same row
+      if (head.x > tail.x) { // Head to the right of tail
+        head.x++;
+        tail.x++;
+      } else {
+        head.x++;
+      }
+
+    } else {
+      if (head.x <= tail.x) {
+        // If on the same column, or head to the left of tail, only head moves.
+        head.x++;
+      } else {
+        // Head is to the right of the tail. Head moves right, and tail moves diagonally.
+        head.x++;
+        tail.y = head.y;
+        tail.x++;
+      }
+    }
+  }
+
+  private static void moveUpByOne(Point head, Point tail) {
+    if (head.x == tail.x) { // Head and tail are on the same column.
+      if (head.y > tail.y) {
+        // If head is above the tail, then both move up.
+        head.y++;
+        tail.y++;
+      } else {
+        // Otherwise, head moves up, but tail stays put.
+        head.y++;
+      }
+
+    } else {
+      if (head.y <= tail.y) {
+        // If on the same row, or head is below the tail, only head moves.
+        head.y++;
+      } else {
+        // If head is above the tail, then head moves up, and tail moves diagonally.
+        head.y++;
+        tail.x = head.x;
+        tail.y++;
+      }
+    }
+  }
+
+  private static void moveDownByOne(Point head, Point tail) {
+    if (head.x == tail.x) { // Head and tail are on the same column.
+      if (head.y < tail.y) {
+        // If head is below the tail, then both move down.
+        head.y--;
+        tail.y--;
+      } else {
+        // Otherwise, head moves down, but tail stays put.
+        head.y--;
+      }
+
+    } else {
+      if (head.y >= tail.y) {
+        // If on the same row, or head is above the tail, only head moves.
+        head.y--;
+      } else {
+        // If head is above the below, then head moves down, and tail moves diagonally.
+        head.y--;
+        tail.x = head.x;
+        tail.y--;
+      }
+    }
   }
 
   private static List<Move> parseMoves(List<String> lines) {
