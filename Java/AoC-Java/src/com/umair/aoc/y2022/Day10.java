@@ -21,6 +21,7 @@ public class Day10 extends Day {
   @Override
   protected String part1(List<String> lines) {
     Set<Integer> checkpoints = new HashSet<>(List.of(20, 60, 100, 140, 180, 220));
+    // Each index contains the value of the register DURING that index.
     int[] registerHistory = new int[MAX_CYCLES];
     int registerX = 1;
     // The next cycle that will end.
@@ -64,12 +65,12 @@ public class Day10 extends Day {
 
     int spritePosition = 1;
     // Each index of the register history is the value at the end of that cycle.
-    int[] registerHistory = parseRegisterHistory(lines);
+    int[] registerHistory = parseRegisterHistoryAtCycleEnd(lines);
+
     // `cycle` is the next cycle that will end.
     for (int cycle = 1; cycle < MAX_CYCLES; cycle++) {
       int row = (cycle - 1) / crtWidth;
       int column = (cycle - 1) % crtWidth;
-
 
       int delta = Math.abs(spritePosition - column);
       crt[row][column] = delta <= 1 ? LIT : DARK;
@@ -78,15 +79,13 @@ public class Day10 extends Day {
       spritePosition = registerHistory[cycle];
     }
 
-    StringBuilder sb = new StringBuilder();
-    sb.append("\n");
+    StringBuilder sb = new StringBuilder("\n");
     for (char[] row : crt) {
       for (char pixel : row) {
         sb.append(pixel);
       }
       sb.append("\n");
     }
-
     return sb.toString();
   }
 
@@ -101,9 +100,9 @@ public class Day10 extends Day {
   }
 
   /**
-   * The value at each index i represents the value of the register X at the end of each cycle i.
+   * The value at each index i represents the value of the register X at the end of the cycle i.
    */
-  private static int[] parseRegisterHistory(List<String> lines) {
+  private static int[] parseRegisterHistoryAtCycleEnd(List<String> lines) {
     int[] registerHistory = new int[MAX_CYCLES];
     int registerX = 1;
     // The next cycle that will end.
