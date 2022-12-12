@@ -12,8 +12,6 @@ import java.util.stream.Collectors;
  */
 public class Day11 extends Day {
 
-  private static final int NUM_ROUNDS = 20;
-
   public Day11() {
     super(11, 2022);
   }
@@ -26,15 +24,39 @@ public class Day11 extends Day {
         .map(Day11::parseMonkey)
         .collect(Collectors.toMap(Monkey::getName, Function.identity()));
 
+
+    long divisor = 3;
+    long activityLevel = runSimulation(monkeyMap, 20, (worryLevel -> worryLevel / divisor));
+    return Long.toString(activityLevel);
+  }
+
+  @Override
+  protected String part2(List<String> lines) {
+    Map<String, Monkey> monkeyMap = splitIntoChunks(lines)
+        .stream()
+        .map(Day11::parseMonkey)
+        .collect(Collectors.toMap(Monkey::getName, Function.identity()));
+
+    long lcm = monkeyMap.values().stream().map(m -> m.testDivisor).reduce(1L, (a, b) -> a * b);
+    long activityLevel = runSimulation(monkeyMap, 10_000, (worryLevel -> worryLevel % lcm));
+    return Long.toString(activityLevel);
+  }
+
+  private static long runSimulation(
+      Map<String, Monkey> monkeyMap,
+      int numRounds,
+      WorryManager worryManager
+  ) {
     int round = 1;
-    while (round <= NUM_ROUNDS) {
+    while (round <= numRounds) {
       for (var entrySet : monkeyMap.entrySet()) {
         Monkey m = entrySet.getValue();
-        for (int item : m.getItemsList()) {
+        for (long item : m.getItemsList()) {
           // Inspect the item.
           m.incrementInspectionCount();
-          int updatedWorryLevel = m.worryLevelOperation.recalculateWorryLevel(item);
-          updatedWorryLevel /= 3;
+          long updatedWorryLevel = m.worryLevelOperation.recalculateWorryLevel(item);
+
+          updatedWorryLevel = worryManager.manage(updatedWorryLevel);
 
           // Throw the item.
           String targetMonkey = m.targetMonkeyIdentifier.identify(updatedWorryLevel);
@@ -56,17 +78,12 @@ public class Day11 extends Day {
 
     assert (activeMonkeys.size() >= 2);
     long activityLevel = activeMonkeys.get(0) * activeMonkeys.get(1);
-    return Long.toString(activityLevel);
-  }
-
-  @Override
-  protected String part2(List<String> lines) {
-    return null;
+    return activityLevel;
   }
 
   @Override
   protected String part1Filename() {
-    return filenameFromDataFileNumber(2);
+    return filenameFromDataFileNumber(1);
   }
 
   @Override
@@ -99,13 +116,13 @@ public class Day11 extends Day {
     int itemsTokenIndex = itemsLine.indexOf(':');
     String itemsSegment = itemsLine.substring(itemsTokenIndex + 1);
     String[] itemsToken = itemsSegment.strip().split(",");
-    List<Integer> items = Arrays.stream(itemsToken)
+    List<Long> items = Arrays.stream(itemsToken)
         .map(String::strip)
-        .map(Integer::parseInt)
+        .map(Long::parseLong)
         .toList();
 
     WorryLevelOperation operation = parseWorryLevelOperation(lines.get(2));
-    int divisor = Integer.parseInt(getEndOfLineToken(lines.get(3)));
+    long divisor = Long.parseLong(getEndOfLineToken(lines.get(3)));
     String monkeyIfTrue = getEndOfLineToken(lines.get(4));
     String monkeyIfFalse = getEndOfLineToken(lines.get(5));
 
@@ -150,18 +167,18 @@ public class Day11 extends Day {
   }
 
   static class Monkey {
-    private final List<Integer> items = new ArrayList<>();
+    private final List<Long> items = new ArrayList<>();
     private final String name;
     private final WorryLevelOperation worryLevelOperation;
     @SuppressWarnings({"FieldCanBeLocal", "unused"})
-    private final int testDivisor;
+    private final long testDivisor;
     private final TargetMonkeyIdentifier targetMonkeyIdentifier;
     private long inspectionCount = 0;
 
     private Monkey(
         String name,
         WorryLevelOperation worryLevelOperation,
-        int testDivisor,
+        long testDivisor,
         TargetMonkeyIdentifier targetMonkeyIdentifier
     ) {
       this.name = name;
@@ -182,7 +199,7 @@ public class Day11 extends Day {
       return name;
     }
 
-    private List<Integer> getItemsList() {
+    private List<Long> getItemsList() {
       return items;
     }
 
@@ -194,7 +211,7 @@ public class Day11 extends Day {
     private static class MonkeyBuilder {
       private String name;
       private WorryLevelOperation worryLevelOperation;
-      private int testDivisor;
+      private long testDivisor;
       private TargetMonkeyIdentifier targetMonkeyIdentifier;
 
       private MonkeyBuilder setName(String name) {
@@ -207,7 +224,7 @@ public class Day11 extends Day {
         return this;
       }
 
-      private MonkeyBuilder setTestDivisor(int testDivisor) {
+      private MonkeyBuilder setTestDivisor(long testDivisor) {
         this.testDivisor = testDivisor;
         return this;
       }
@@ -232,11 +249,11 @@ public class Day11 extends Day {
       this.secondArgumentStr = secondArgumentStr;
     }
 
-    private int recalculateWorryLevel(int firstArgument) {
-      int secondArgument = secondArgumentStr.equals("old")
+    private long recalculateWorryLevel(long firstArgument) {
+      long secondArgument = secondArgumentStr.equals("old")
           ? firstArgument
-          : Integer.parseInt(secondArgumentStr);
-      int result = switch (op) {
+          : Long.parseLong(secondArgumentStr);
+      long result = switch (op) {
         case ADD -> firstArgument + secondArgument;
         case MULTIPLY -> firstArgument * secondArgument;
         case SUBTRACT -> firstArgument - secondArgument;
@@ -247,11 +264,19 @@ public class Day11 extends Day {
     }
   }
 
+  /**
+   * Lambda that determines the target monkey based on the current worry level.
+   */
   @FunctionalInterface
   private interface TargetMonkeyIdentifier {
-    /**
-     * Takes the fully resolved worryLevel, and returns the name of the target monkey.
-     */
-    String identify(int worryLevel);
+    String identify(long worryLevel);
+  }
+
+  /**
+   * Lambda that manages the worry level for an item by generating the updated worry levels.
+   */
+  @FunctionalInterface
+  private interface WorryManager {
+    long manage(long worryLevel);
   }
 }
