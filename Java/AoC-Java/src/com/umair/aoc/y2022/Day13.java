@@ -5,6 +5,7 @@ import com.umair.aoc.common.Day;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Stack;
+import java.util.stream.Collectors;
 
 import static com.umair.aoc.util.DataUtils.splitIntoChunks;
 
@@ -43,7 +44,25 @@ public class Day13 extends Day {
 
   @Override
   protected String part2(List<String> lines) {
-    return null;
+    List<Packet> packets = lines.stream()
+        .filter(l -> !l.isBlank())
+        .map(Day13::parsePacket)
+        .collect(Collectors.toList());
+
+    Packet decoder1 = buildDecoderPacket(2);
+    Packet decoder2 = buildDecoderPacket(6);
+    packets.addAll(List.of(decoder1, decoder2));
+
+    packets.sort((l, r) -> switch (comparePackets(l, r)) {
+      case CORRECT -> -1;
+      case INCORRECT -> 1;
+      case INDETERMINATE -> 0;
+    });
+
+    int i = packets.indexOf(decoder1) + 1;
+    int j = packets.indexOf(decoder2) + 1;
+
+    return Integer.toString(i * j);
   }
 
   @Override
@@ -53,7 +72,12 @@ public class Day13 extends Day {
 
   @Override
   protected String part2Filename() {
-    return filenameFromDataFileNumber(1);
+    return filenameFromDataFileNumber(2);
+  }
+
+  private static Packet buildDecoderPacket(int value) {
+    Packet result = new Packet(new Packet(new Packet(value)));
+    return result;
   }
 
   private static ComparisonResult comparePackets(Packet left, Packet right) {
@@ -167,6 +191,11 @@ public class Day13 extends Day {
     public Packet(int value) {
       this.value = value;
       isValueOnly = true;
+    }
+
+    @SuppressWarnings("CopyConstructorMissesField")
+    public Packet(Packet p) {
+      packetsList.add(p);
     }
 
     void append(Packet il) {
