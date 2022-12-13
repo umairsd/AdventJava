@@ -1,6 +1,6 @@
 package com.umair.aoc.y2021;
 
-import com.umair.aoc.common.DataUtils;
+import com.umair.aoc.util.DataUtils;
 import com.umair.aoc.common.Day;
 
 import java.util.List;
@@ -112,7 +112,7 @@ public class Day05 extends Day {
   }
 
   private static List<Line> buildLines(List<String> data) {
-    data = DataUtils.removeBlank(data);
+    data = DataUtils.removeBlankLines(data);
     List<Line> lines = data
         .stream()
         .filter(Objects::nonNull)

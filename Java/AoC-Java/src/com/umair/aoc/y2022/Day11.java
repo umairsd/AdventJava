@@ -6,6 +6,8 @@ import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import static com.umair.aoc.util.DataUtils.splitIntoChunks;
+
 /**
  * Day 11: Monkey in the Middle
  * <a href="https://adventofcode.com/2022/day/11">2022, Day-11</a>
@@ -89,21 +91,6 @@ public class Day11 extends Day {
   @Override
   protected String part2Filename() {
     return filenameFromDataFileNumber(1);
-  }
-
-  private static List<List<String>> splitIntoChunks(List<String> lines) {
-    List<List<String>> result = new ArrayList<>();
-    List<String> chunk = new ArrayList<>();
-    for (String line : lines) {
-      if (line.strip().isBlank()) {
-        result.add(chunk);
-        chunk = new ArrayList<>();
-      } else {
-        chunk.add(line);
-      }
-    }
-    result.add(chunk);
-    return result;
   }
 
   private static Monkey parseMonkey(List<String> lines) {
