@@ -3,9 +3,6 @@ package com.umair.aoc.y2022;
 import com.umair.aoc.common.Day;
 
 import java.util.*;
-import java.util.List;
-
-import static com.umair.aoc.common.Constants.ERROR;
 
 /**
  * Day 12: Hill Climbing Algorithm
@@ -20,37 +17,42 @@ public class Day12 extends Day {
   @Override
   protected String part1(List<String> lines) {
     char[][] grid = parseGrid(lines);
-    int rowCount = grid.length;
-    int columnCount = grid[0].length;
+    int minPathLength = findShortestPathFromAllStartingPoints(grid, Set.of('S'));
+    return Integer.toString(minPathLength);
+  }
 
-    Optional<Point> start = Optional.empty();
-    Optional<Point> end = Optional.empty();
+  @Override
+  protected String part2(List<String> lines) {
+    char[][] grid = parseGrid(lines);
+    int minPathLength = findShortestPathFromAllStartingPoints(grid, Set.of('a', 'S'));
+    return Integer.toString(minPathLength);
+  }
 
-    for (int r = 0; r < rowCount; r++) {
-      for (int c = 0; c < columnCount; c++) {
-        if (grid[r][c] == 'S') {
-          start = Optional.of(new Point(r, c));
+  private static int findShortestPathFromAllStartingPoints(
+      char[][] grid, Set<Character> startingPointValues
+  ) {
+    List<Point> startingPoints = new ArrayList<>();
+    Point end = new Point(0, 0);
+    for (int r = 0; r < grid.length; r++) {
+      for (int c = 0; c < grid[r].length; c++) {
+        if (startingPointValues.contains(grid[r][c])) {
+          startingPoints.add(new Point(r, c));
           grid[r][c] = 'a';
 
         } else if (grid[r][c] == 'E') {
-          end = Optional.of(new Point(r, c));
+          end = new Point(r, c);
           grid[r][c] = 'z';
         }
       }
     }
 
-    if (start.isEmpty() || end.isEmpty()) {
-      return ERROR;
+    int minPathLength = Integer.MAX_VALUE;
+    for (Point start : startingPoints) {
+      int pathLength = shortestPathLength(grid, start, end);
+      minPathLength = Math.min(minPathLength, pathLength);
     }
 
-    Optional<Integer> pathLength = shortestPathLength(grid, start.get(), end.get());
-    //noinspection OptionalGetWithoutIsPresent
-    return Integer.toString(pathLength.get());
-  }
-
-  @Override
-  protected String part2(List<String> lines) {
-    return null;
+    return minPathLength;
   }
 
   @Override
@@ -60,13 +62,13 @@ public class Day12 extends Day {
 
   @Override
   protected String part2Filename() {
-    return filenameFromDataFileNumber(1);
+    return filenameFromDataFileNumber(2);
   }
 
   /**
    * Uses BFS to find the shortest path.
    */
-  private static Optional<Integer> shortestPathLength(char[][] grid, Point start, Point end) {
+  private static int shortestPathLength(char[][] grid, Point start, Point end) {
     // Whether a given point has been visited.
     Set<Point> visited = new HashSet<>();
     // Queue for maintaining the BFS expansion.
@@ -81,7 +83,7 @@ public class Day12 extends Day {
       Point currentPoint = queue.poll();
 
       if (currentPoint.equals(end)) {
-        return Optional.of(pathLengths.get(currentPoint));
+        return pathLengths.get(currentPoint);
       }
 
       // Expand through the neighbors.
@@ -93,7 +95,7 @@ public class Day12 extends Day {
       }
     }
 
-    return Optional.empty();
+    return Integer.MAX_VALUE;
   }
 
   private static List<Point> validNeighbors(
