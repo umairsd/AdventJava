@@ -2,6 +2,7 @@ package com.umair.aoc.y2022;
 
 import com.umair.aoc.common.Day;
 
+import javax.swing.text.html.Option;
 import java.util.*;
 
 /**
@@ -59,15 +60,30 @@ public class Day14 extends Day {
 
     int depositedParticleCount = 0;
 
+    // Note: Add a cache for a particle's path to optimize run-time. Without the cache, ~900ms.
+    // With the cache, ~70ms.
+    Stack<GridPosition> pathCache = new Stack<>();
+
     while (true) {
       GridPosition start = new GridPosition(0, 500);
       Optional<GridPosition> newPosition = moveParticle(sandGrid, start);
+
       if (newPosition.isPresent() && newPosition.get().equals(start)) {
         // The new position covers the starting point. We cannot make forward progress, so add
         // the sand particle, and exit.
         sandGrid[start.row][start.column] = SAND;
         depositedParticleCount++;
         break;
+      }
+
+      // From the cache, pop the last available position. If the position contains AIR, set the
+      // new position to this value.
+      while (!pathCache.isEmpty()) {
+        GridPosition pos = pathCache.pop();
+        if (sandGrid[pos.row][pos.column] == AIR) {
+          newPosition = Optional.of(pos);
+          break;
+        }
       }
 
       while (newPosition.isPresent()) {
@@ -77,6 +93,7 @@ public class Day14 extends Day {
           break;
         }
 
+        pathCache.push(newPosition.get());
         start = newPosition.get();
         newPosition = moveParticle(sandGrid, start);
       }
