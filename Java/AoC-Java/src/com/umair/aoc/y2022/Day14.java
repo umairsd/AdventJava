@@ -25,8 +25,8 @@ public class Day14 extends Day {
     char[][] sandGrid = buildSandGridWithPaths(rockPositions);
 
     int depositedParticleCount = 0;
-    GridPosition start = new GridPosition(1, 500);
-    sandGrid[start.row - 1][start.column] = '+';
+    GridPosition start = new GridPosition(0, 500);
+    sandGrid[start.row][start.column] = '+';
 
     while (true) {
       GridPosition newPosition = moveParticle(sandGrid, start);
@@ -53,7 +53,7 @@ public class Day14 extends Day {
 
   @Override
   protected String part2Filename() {
-    return filenameFromDataFileNumber(2);
+    return filenameFromDataFileNumber(0);
   }
 
   private static GridPosition moveParticle(char[][] sandGrid, GridPosition startingPosition) {
@@ -82,26 +82,32 @@ public class Day14 extends Day {
       return p;
     }
   }
-  
+
   private static GridPosition lowestPositionDownTheColumn(
       char[][] sandGrid,
       int startingRow,
       int startingColumn
   ) {
-    for (int r = startingRow; r < sandGrid.length; r++) {
-      if (sandGrid[r][startingColumn] != '.') {
-        // First position that's not air:
+    int r = startingRow;
+    while (r < sandGrid.length) {
+      if (sandGrid[r][startingColumn] != AIR && sandGrid[r][startingColumn] != '+') {
+        // First row that's not valid, so return the previous row.
         return new GridPosition(r - 1, startingColumn);
       }
+      r++;
     }
-    return null;
+
+    if (r == sandGrid.length) {
+      return null; // The particle falls through.
+    }
+    return new GridPosition(r, startingColumn);
   }
 
   private static char[][] buildSandGridWithPaths(List<List<GridPosition>> rockPositions) {
     int maxX = getMaxIntValue(rockPositions, p -> p.column);
     int maxY = getMaxIntValue(rockPositions, p -> p.row);
 
-    char[][] sandGrid = new char[maxY + 1][maxX + 1];
+    char[][] sandGrid = new char[maxY + 3][maxX + 1];
     for (char[] row : sandGrid) {
       Arrays.fill(row, AIR);
     }
