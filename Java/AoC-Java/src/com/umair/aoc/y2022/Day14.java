@@ -2,7 +2,6 @@ package com.umair.aoc.y2022;
 
 import com.umair.aoc.common.Day;
 
-import javax.swing.text.html.Option;
 import java.util.*;
 
 /**
