@@ -25,78 +25,21 @@ public class Day14 extends Day {
     char[][] sandGrid = buildSandGridWithPaths(rockPositions);
 
     int depositedParticleCount = 0;
-    GridPosition start = new GridPosition(500, 1);
-    sandGrid[start.getRow() - 1][start.getColumn()] = '+';
+    GridPosition start = new GridPosition(1, 500);
+    sandGrid[start.row - 1][start.column] = '+';
 
     while (true) {
-      GridPosition p = lowestPositionDownTheColumn(sandGrid, start.getRow(), start.getColumn());
-      if (p == null) {
-        // The particle falls into the void.
+      GridPosition newPosition = moveParticle(sandGrid, start);
+      if (newPosition == null) {
         break;
       }
-
-      // If the particle can fall left and down, keep attempting to fall diagonally.
-      GridPosition leftDown = new GridPosition(p);
-      while (leftDown != null &&
-          leftDown.column - 1 >= 0 &&
-          leftDown.row + 1 < sandGrid.length &&
-          sandGrid[leftDown.row + 1][leftDown.column - 1] == AIR) {
-        leftDown = lowestPositionDownTheColumn(sandGrid, leftDown.row + 1, leftDown.column - 1);
-      }
-
-      if (leftDown == null) {
-        // The particle falls into the void.
-        break;
-      }
-      if (!leftDown.equals(p)) {
-        depositedParticleCount++;
-        sandGrid[leftDown.row][leftDown.column] = SAND;
-        continue;
-      }
-
-      // If the particle can fall right and down, keep attempting to fall diagonally.
-      GridPosition rightDown = new GridPosition(p);
-      while (rightDown != null &&
-          rightDown.column + 1 < sandGrid[rightDown.row].length &&
-          rightDown.row + 1 < sandGrid.length &&
-          sandGrid[rightDown.row + 1][rightDown.column + 1] == AIR) {
-        rightDown = lowestPositionDownTheColumn(sandGrid, rightDown.row + 1, rightDown.column + 1);
-      }
-
-      if (rightDown == null) {
-        // The particle falls into the void.
-        break;
-      }
-      if (!rightDown.equals(p)) {
-        depositedParticleCount++;
-        sandGrid[rightDown.row][rightDown.column] = SAND;
-        continue;
-      }
-
-      // Tried left, tried right. Doesn't matter. Just go with original position.
-      sandGrid[p.row][p.column] = SAND;
+      sandGrid[newPosition.row][newPosition.column] = SAND;
       depositedParticleCount++;
     }
 
     return Integer.toString(depositedParticleCount);
   }
 
-  /**
-   * Finds the lowest position that's air.
-   */
-  private static GridPosition lowestPositionDownTheColumn(
-      char[][] sandGrid,
-      int startingRow,
-      int startingColumn
-  ) {
-    for (int r = startingRow; r < sandGrid.length; r++) {
-      if (sandGrid[r][startingColumn] != '.') {
-        // First position that's not air:
-        return new GridPosition(startingColumn, r - 1);
-      }
-    }
-    return null;
-  }
 
   @Override
   protected String part2(List<String> lines) {
@@ -110,12 +53,53 @@ public class Day14 extends Day {
 
   @Override
   protected String part2Filename() {
-    return filenameFromDataFileNumber(1);
+    return filenameFromDataFileNumber(2);
+  }
+
+  private static GridPosition moveParticle(char[][] sandGrid, GridPosition startingPosition) {
+    // Can the particle move down? If so, go!
+    GridPosition p = lowestPositionDownTheColumn(sandGrid, startingPosition.row, startingPosition.column);
+    if (p == null) {
+      return null; // Fell into the void.
+    }
+
+    // If the particle can fall left and down, start from that position.
+    if (p.column - 1 >= 0 &&
+        p.row + 1 < sandGrid.length &&
+        sandGrid[p.row + 1][p.column - 1] == AIR) {
+      GridPosition newStartPosition = new GridPosition(p.row + 1, p.column - 1);
+      GridPosition viaLeft = moveParticle(sandGrid, newStartPosition);
+      return viaLeft;
+
+    } else if (p.column + 1 < sandGrid[p.row].length &&
+        p.row + 1 < sandGrid.length &&
+        sandGrid[p.row + 1][p.column + 1] == AIR) {
+      GridPosition newStartPosition = new GridPosition(p.row + 1, p.column + 1);
+      GridPosition viaRight = moveParticle(sandGrid, newStartPosition);
+      return viaRight;
+    } else {
+      // The particle fell down, but couldn't fall to left or right. This is the final position.
+      return p;
+    }
+  }
+  
+  private static GridPosition lowestPositionDownTheColumn(
+      char[][] sandGrid,
+      int startingRow,
+      int startingColumn
+  ) {
+    for (int r = startingRow; r < sandGrid.length; r++) {
+      if (sandGrid[r][startingColumn] != '.') {
+        // First position that's not air:
+        return new GridPosition(r - 1, startingColumn);
+      }
+    }
+    return null;
   }
 
   private static char[][] buildSandGridWithPaths(List<List<GridPosition>> rockPositions) {
-    int maxX = getMaxIntValue(rockPositions, GridPosition::getColumn);
-    int maxY = getMaxIntValue(rockPositions, GridPosition::getRow);
+    int maxX = getMaxIntValue(rockPositions, p -> p.column);
+    int maxY = getMaxIntValue(rockPositions, p -> p.row);
 
     char[][] sandGrid = new char[maxY + 1][maxX + 1];
     for (char[] row : sandGrid) {
@@ -132,20 +116,20 @@ public class Day14 extends Day {
   }
 
   private static void drawRockPath(GridPosition from, GridPosition to, char[][] sandGrid) {
-    if (from.getColumn() == to.getColumn()) {
+    if (from.column == to.column) {
       // Vertical Line.
-      int minY = Math.min(from.getRow(), to.getRow());
-      int maxY = Math.max(from.getRow(), to.getRow());
+      int minY = Math.min(from.row, to.row);
+      int maxY = Math.max(from.row, to.row);
       for (int r = minY; r <= maxY; r++) {
-        sandGrid[r][from.getColumn()] = ROCK;
+        sandGrid[r][from.column] = ROCK;
       }
 
-    } else if (from.getRow() == to.getRow()) {
+    } else if (from.row == to.row) {
       // Horizontal line.
-      int minX = Math.min(from.getColumn(), to.getColumn());
-      int maxX = Math.max(from.getColumn(), to.getColumn());
+      int minX = Math.min(from.column, to.column);
+      int maxX = Math.max(from.column, to.column);
       for (int c = minX; c <= maxX; c++) {
-        sandGrid[from.getRow()][c] = ROCK;
+        sandGrid[from.row][c] = ROCK;
       }
     }
   }
@@ -175,53 +159,16 @@ public class Day14 extends Day {
     List<GridPosition> result = Arrays.stream(tokenPositions)
         .map(s -> {
           var t = s.strip().split(",");
-          return new GridPosition(Integer.parseInt(t[0].strip()), Integer.parseInt(t[1].strip()));
+          var x = Integer.parseInt(t[0].strip());
+          var y = Integer.parseInt(t[1].strip());
+          return new GridPosition(y, x);
         })
         .toList();
 
     return result;
   }
 
-  private static class GridPosition {
-    int column; // Distance from left.
-    int row; // Distance from top.
-
-    GridPosition(int column, int row) {
-      this.column = column;
-      this.row = row;
-    }
-
-    GridPosition(GridPosition p) {
-      this.row = p.row;
-      this.column = p.column;
-    }
-
-    int getColumn() {
-      return column;
-    }
-
-    int getRow() {
-      return row;
-    }
-
-    @Override
-    public String toString() {
-      return "r: " + row + ", c: " + column;
-    }
-
-    @Override
-    public boolean equals(Object o) {
-      if (this == o) return true;
-      if (o == null || getClass() != o.getClass()) return false;
-      GridPosition that = (GridPosition) o;
-      return column == that.column && row == that.row;
-    }
-
-    @Override
-    public int hashCode() {
-      return Objects.hash(column, row);
-    }
-  }
+  private record GridPosition(int row, int column){}
 
   @FunctionalInterface
   private interface MapGridPositionToInt {
