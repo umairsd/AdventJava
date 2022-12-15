@@ -18,32 +18,71 @@ public class Day14 extends Day {
     super(14, 2022);
   }
 
-
   @Override
   protected String part1(List<String> lines) {
     List<List<GridPosition>> rockPositions = parseRockPositions(lines);
     char[][] sandGrid = buildSandGridWithPaths(rockPositions);
-
     int depositedParticleCount = 0;
-    GridPosition start = new GridPosition(0, 500);
-    sandGrid[start.row][start.column] = '+';
 
     while (true) {
-      GridPosition newPosition = moveParticle(sandGrid, start);
-      if (newPosition == null) {
+      GridPosition start = new GridPosition(0, 500);
+      Optional<GridPosition> newPosition = moveParticle(sandGrid, start);
+
+      while (newPosition.isPresent()) {
+        if (newPosition.get().equals(start)) {
+          sandGrid[start.row][start.column] = SAND;
+          depositedParticleCount++;
+          break;
+        }
+
+        start = newPosition.get();
+        newPosition = moveParticle(sandGrid, start);
+      }
+
+      if (newPosition.isEmpty()) {
+        // The particle fell into the void.
         break;
       }
-      sandGrid[newPosition.row][newPosition.column] = SAND;
-      depositedParticleCount++;
     }
 
     return Integer.toString(depositedParticleCount);
   }
 
-
   @Override
   protected String part2(List<String> lines) {
-    return null;
+    List<List<GridPosition>> rockPositions = parseRockPositions(lines);
+    char[][] sandGrid = buildSandGridWithPaths(rockPositions);
+    // The last row is made from rocks.
+    for (int c = 0; c < sandGrid[0].length; c++) {
+      sandGrid[sandGrid.length - 1][c] = ROCK;
+    }
+
+    int depositedParticleCount = 0;
+
+    while (true) {
+      GridPosition start = new GridPosition(0, 500);
+      Optional<GridPosition> newPosition = moveParticle(sandGrid, start);
+      if (newPosition.isPresent() && newPosition.get().equals(start)) {
+        // The new position covers the starting point. We cannot make forward progress, so add
+        // the sand particle, and exit.
+        sandGrid[start.row][start.column] = SAND;
+        depositedParticleCount++;
+        break;
+      }
+
+      while (newPosition.isPresent()) {
+        if (newPosition.get().equals(start)) {
+          sandGrid[start.row][start.column] = SAND;
+          depositedParticleCount++;
+          break;
+        }
+
+        start = newPosition.get();
+        newPosition = moveParticle(sandGrid, start);
+      }
+    }
+
+    return Integer.toString(depositedParticleCount);
   }
 
   @Override
@@ -53,61 +92,53 @@ public class Day14 extends Day {
 
   @Override
   protected String part2Filename() {
-    return filenameFromDataFileNumber(0);
+    return filenameFromDataFileNumber(2);
   }
 
-  private static GridPosition moveParticle(char[][] sandGrid, GridPosition startingPosition) {
-    // Can the particle move down? If so, go!
-    GridPosition p = lowestPositionDownTheColumn(sandGrid, startingPosition.row, startingPosition.column);
-    if (p == null) {
-      return null; // Fell into the void.
-    }
-
-    // If the particle can fall left and down, start from that position.
-    if (p.column - 1 >= 0 &&
-        p.row + 1 < sandGrid.length &&
-        sandGrid[p.row + 1][p.column - 1] == AIR) {
-      GridPosition newStartPosition = new GridPosition(p.row + 1, p.column - 1);
-      GridPosition viaLeft = moveParticle(sandGrid, newStartPosition);
-      return viaLeft;
-
-    } else if (p.column + 1 < sandGrid[p.row].length &&
-        p.row + 1 < sandGrid.length &&
-        sandGrid[p.row + 1][p.column + 1] == AIR) {
-      GridPosition newStartPosition = new GridPosition(p.row + 1, p.column + 1);
-      GridPosition viaRight = moveParticle(sandGrid, newStartPosition);
-      return viaRight;
-    } else {
-      // The particle fell down, but couldn't fall to left or right. This is the final position.
-      return p;
-    }
-  }
-
-  private static GridPosition lowestPositionDownTheColumn(
+  /**
+   * Attempts to move the particle. If the return value is:
+   * - Optional.empty(), indicates that the particle has fallen through the abyss.
+   * - Position that's the same as the starting position => particle has come to rest.
+   * - New position of the particle.
+   */
+  private static Optional<GridPosition> moveParticle(
       char[][] sandGrid,
-      int startingRow,
-      int startingColumn
+      GridPosition startingPosition
   ) {
-    int r = startingRow;
-    while (r < sandGrid.length) {
-      if (sandGrid[r][startingColumn] != AIR && sandGrid[r][startingColumn] != '+') {
-        // First row that's not valid, so return the previous row.
-        return new GridPosition(r - 1, startingColumn);
-      }
-      r++;
+    // Falling into the abyss!
+    if (startingPosition.row + 1 == sandGrid.length) {
+      return Optional.empty();
     }
 
-    if (r == sandGrid.length) {
-      return null; // The particle falls through.
+    Optional<GridPosition> nextPosition = neighbors(startingPosition)
+        .stream()
+        .filter(p -> isWithinCave(sandGrid, p) && sandGrid[p.row][p.column] == AIR)
+        .findFirst();
+
+    if (nextPosition.isPresent()) {
+      return nextPosition;
     }
-    return new GridPosition(r, startingColumn);
+    // Returning the starting position indicates that the particle can move no further.
+    return Optional.of(startingPosition);
+  }
+
+  private static boolean isWithinCave(char[][] cave, GridPosition p) {
+    return p.row < cave.length && p.column >= 0 && p.column < cave[0].length;
+  }
+
+  private static List<GridPosition> neighbors(GridPosition p) {
+    return List.of(
+      new GridPosition(p.row + 1, p.column),      // down
+      new GridPosition(p.row + 1, p.column - 1),  // down-left
+      new GridPosition(p.row + 1, p.column + 1)   // down-right
+    );
   }
 
   private static char[][] buildSandGridWithPaths(List<List<GridPosition>> rockPositions) {
-    int maxX = getMaxIntValue(rockPositions, p -> p.column);
     int maxY = getMaxIntValue(rockPositions, p -> p.row);
+    int maxX = getMaxIntValue(rockPositions, p -> p.column) + 500;
 
-    char[][] sandGrid = new char[maxY + 3][maxX + 1];
+    char[][] sandGrid = new char[maxY + 3][maxX];
     for (char[] row : sandGrid) {
       Arrays.fill(row, AIR);
     }
