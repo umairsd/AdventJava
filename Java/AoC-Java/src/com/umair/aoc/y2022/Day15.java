@@ -2,9 +2,7 @@ package com.umair.aoc.y2022;
 
 import com.umair.aoc.common.Day;
 
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 /**
  * Day 15: Beacon Exclusion Zone
@@ -21,8 +19,17 @@ public class Day15 extends Day {
   @Override
   protected String part1(List<String> lines) {
     List<Sensor> sensors = parseSensors(lines);
-    long disallowedColumns = disallowedColumnsCount(sensors, ROW_NUM_PART1);
-    return Long.toString(disallowedColumns);
+    List<Range> mergedRanges = mergeRangesForRow(sensors, ROW_NUM_PART1);
+
+    long columnsCoveredBySignal = mergedRanges.stream()
+        .mapToLong(Range::size)
+        .sum();
+    long coveredByItem = sensors.stream()
+        .filter(s -> s.beacon.position.y == ROW_NUM_PART1)
+        .map(s -> s.beacon.position.x)
+        .distinct()
+        .count();
+    return Long.toString(columnsCoveredBySignal - coveredByItem);
   }
 
   @Override
@@ -37,38 +44,12 @@ public class Day15 extends Day {
 
   @Override
   protected String part2Filename() {
-    return filenameFromDataFileNumber(1);
+    return filenameFromDataFileNumber(2);
   }
 
-  @SuppressWarnings("SameParameterValue")
-  private static int disallowedColumnsCount(List<Sensor> sensors, long currentY) {
-    Set<Long> disallowedColumns = new HashSet<>();
-
-    // Columns covered by an existing beacon or sensor.
-    Set<Long> coveredColumns = columnsCoveredAtRow(sensors, currentY);
-
-    for (Sensor s : sensors) {
-      // The row delta between the `currentY`, and the sensor's vertical position.
-      long deltaY = Math.abs(s.position.y - currentY);
-      // The number of columns covered to the left and right of the sensors column position.
-      long halfColumnCount = s.manhattanDistance() - deltaY;
-      long minX = s.position.x - halfColumnCount;
-      long minY = s.position.x + halfColumnCount;
-
-      while (minX <= minY) {
-        if (!coveredColumns.contains(minX)) {
-          disallowedColumns.add(minX);
-        }
-        minX++;
-      }
-    }
-
-    return disallowedColumns.size();
-  }
-
-  private static Set<Long> columnsCoveredAtRow(List<Sensor> sensorCoverages, long currentY) {
+  private static Set<Long> columnsCoveredByItemAtRow(List<Sensor> sensors, long currentY) {
     Set<Long> coveredColumns = new HashSet<>();
-    for (Sensor s : sensorCoverages) {
+    for (Sensor s : sensors) {
       if (s.position.y == currentY) {
         coveredColumns.add(s.position.x);
       }
@@ -108,6 +89,30 @@ public class Day15 extends Day {
     return new Vertex(x, y);
   }
 
+  @SuppressWarnings("SameParameterValue")
+  private static Stack<Range> mergeRangesForRow(List<Sensor> sensors, long row) {
+    List<Range> ranges = sensors.stream()
+        .map(s -> s.rangeAtRow(row))
+        .filter(Optional::isPresent)
+        .map(Optional::get)
+        .sorted(Comparator.comparingLong(r -> r.min))
+        .toList();
+
+    Stack<Range> mergedRanges = new Stack<>();
+
+    for (Range currentRange : ranges) {
+      if (mergedRanges.isEmpty() || mergedRanges.peek().max < currentRange.min) {
+        mergedRanges.push(currentRange);
+      } else {
+        Range top = mergedRanges.pop();
+        Range newRange = new Range(top.min, Math.max(top.max, currentRange.max));
+        mergedRanges.push(newRange);
+      }
+    }
+
+    return mergedRanges;
+  }
+
   private static class Sensor {
     Vertex position;
     Beacon beacon;
@@ -118,9 +123,21 @@ public class Day15 extends Day {
     }
 
     long manhattanDistance() {
-      long distance = Math.abs(beacon.position.x - position.x)
-          + Math.abs(beacon.position.y - position.y);
-      return distance;
+      return position.manhattanDistance(beacon.position);
+    }
+
+    Optional<Range> rangeAtRow(long currentY) {
+      // The row delta between the `currentY`, and the sensor's vertical position.
+      long deltaY = Math.abs(position.y - currentY);
+      // The number of columns covered to the left and right of the sensors column position.
+      long halfColumnCount = manhattanDistance() - deltaY;
+      long minX = position.x - halfColumnCount;
+      long maxX = position.x + halfColumnCount;
+
+      if (minX <= maxX) {
+        return Optional.of(new Range(minX, maxX));
+      }
+      return Optional.empty();
     }
 
     @Override
@@ -131,7 +148,18 @@ public class Day15 extends Day {
     }
   }
 
+  private record Range(long min, long max) {
+    long size() {
+      return max - min + 1;
+    }
+  }
+
   private record Beacon(Vertex position) { }
 
-  private record Vertex(long x, long y) { }
+  private record Vertex(long x, long y) {
+    long manhattanDistance(Vertex otherVertex) {
+      long distance = Math.abs(x - otherVertex.x) + Math.abs(y - otherVertex.y);
+      return distance;
+    }
+  }
 }
