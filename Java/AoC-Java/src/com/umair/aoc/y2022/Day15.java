@@ -12,53 +12,17 @@ import java.util.Set;
  */
 public class Day15 extends Day {
 
+  private static final long ROW_NUM_PART1 = 2_000_000;
+
   public Day15() {
     super(15, 2022);
   }
 
   @Override
   protected String part1(List<String> lines) {
-    List<Sensor> sensors = parseSensors(lines);
-    long disallowedColumns = disallowedColumnsCount(sensors, 2000000);
+    List<SensorCoverage> sensorCoverages = parseSensorCoverages(lines);
+    long disallowedColumns = disallowedColumnsCount(sensorCoverages, ROW_NUM_PART1);
     return Long.toString(disallowedColumns);
-  }
-
-  private static int disallowedColumnsCount(List<Sensor> sensors, long currentRow) {
-    Set<Long> disallowedColumns = new HashSet<>();
-
-    // Columns covered by an existing beacon or sensor.
-    Set<Long> coveredColumns = columnsCoveredAtRow(sensors, currentRow);
-
-    for (Sensor s : sensors) {
-      long rowDelta = Math.abs(s.sensorLocation.row - currentRow);
-      // The number of columns covered to the left and right of the sensors column position.
-      long halfColumnCount = s.manhattanDistance() - rowDelta;
-      long minCol = s.sensorLocation.column - halfColumnCount;
-      long maxCol = s.sensorLocation.column + halfColumnCount;
-
-      while (minCol <= maxCol) {
-        if (!coveredColumns.contains(minCol)) {
-          disallowedColumns.add(minCol);
-        }
-        minCol++;
-      }
-    }
-
-    return disallowedColumns.size();
-  }
-
-  private static Set<Long> columnsCoveredAtRow(List<Sensor> sensors, long currentRow) {
-    Set<Long> coveredColumns = new HashSet<>();
-    for (Sensor s : sensors) {
-      if (s.sensorLocation.row == currentRow) {
-        coveredColumns.add(s.sensorLocation.column);
-      }
-      if (s.beaconLocation.row == currentRow) {
-        coveredColumns.add(s.beaconLocation.column);
-      }
-    }
-
-    return coveredColumns;
   }
 
   @Override
@@ -76,19 +40,62 @@ public class Day15 extends Day {
     return filenameFromDataFileNumber(1);
   }
 
-  private static List<Sensor> parseSensors(List<String> lines) {
-    List<Sensor> sensors = lines.stream()
-        .map(Day15::parseSensor)
-        .toList();
-    return sensors;
+
+  @SuppressWarnings("SameParameterValue")
+  private static int disallowedColumnsCount(List<SensorCoverage> sensorCoverages, long currentRow) {
+    Set<Long> disallowedColumns = new HashSet<>();
+
+    // Columns covered by an existing beacon or sensor.
+    Set<Long> coveredColumns = columnsCoveredAtRow(sensorCoverages, currentRow);
+
+    for (SensorCoverage s : sensorCoverages) {
+      long rowDelta = Math.abs(s.sensorLocation.row - currentRow);
+      // The number of columns covered to the left and right of the sensors column position.
+      long halfColumnCount = s.manhattanDistance() - rowDelta;
+      long minCol = s.sensorLocation.column - halfColumnCount;
+      long maxCol = s.sensorLocation.column + halfColumnCount;
+
+      while (minCol <= maxCol) {
+        if (!coveredColumns.contains(minCol)) {
+          disallowedColumns.add(minCol);
+        }
+        minCol++;
+      }
+    }
+
+    return disallowedColumns.size();
   }
 
-  private static Sensor parseSensor(String line) {
+  private static Set<Long> columnsCoveredAtRow(
+      List<SensorCoverage> sensorCoverages,
+      long currentRow
+  ) {
+    Set<Long> coveredColumns = new HashSet<>();
+    for (SensorCoverage s : sensorCoverages) {
+      if (s.sensorLocation.row == currentRow) {
+        coveredColumns.add(s.sensorLocation.column);
+      }
+      if (s.beaconLocation.row == currentRow) {
+        coveredColumns.add(s.beaconLocation.column);
+      }
+    }
+
+    return coveredColumns;
+  }
+
+  private static List<SensorCoverage> parseSensorCoverages(List<String> lines) {
+    List<SensorCoverage> sensorCoverages = lines.stream()
+        .map(Day15::parseSensorCoverage)
+        .toList();
+    return sensorCoverages;
+  }
+
+  private static SensorCoverage parseSensorCoverage(String line) {
     String[] tokens = line.split(":");
 
     Coord sensorLocation = parseCoord(tokens[0]);
     Coord beaconLocation = parseCoord(tokens[1]);
-    return new Sensor(sensorLocation, beaconLocation);
+    return new SensorCoverage(sensorLocation, beaconLocation);
   }
 
   private static Coord parseCoord(String s) {
@@ -105,29 +112,11 @@ public class Day15 extends Day {
     return new Coord(y, x);
   }
 
-  private static int getMax(List<Sensor> sensors, CoordToInt f) {
-    int max = sensors.stream()
-        .map(s -> Math.max(f.intValue(s.sensorLocation), f.intValue(s.beaconLocation)))
-        .mapToInt(v -> v)
-        .max()
-        .orElseThrow(IllegalArgumentException::new);
-    return max;
-  }
-
-  private static int getMin(List<Sensor> sensors, CoordToInt f) {
-    int min = sensors.stream()
-        .map(s -> Math.min(f.intValue(s.sensorLocation), f.intValue(s.beaconLocation)))
-        .mapToInt(v -> v)
-        .min()
-        .orElseThrow(IllegalArgumentException::new);
-    return min;
-  }
-
-  private static class Sensor {
+  private static class SensorCoverage {
     Coord sensorLocation;
     Coord beaconLocation;
 
-    Sensor(Coord s, Coord b) {
+    SensorCoverage(Coord s, Coord b) {
       this.sensorLocation = s;
       this.beaconLocation = b;
     }
@@ -146,10 +135,6 @@ public class Day15 extends Day {
     }
   }
 
-  private record Coord(long row, long column){}
-
-  @FunctionalInterface
-  private interface CoordToInt {
-    int intValue(Coord coord);
+  private record Coord(long row, long column) {
   }
 }
