@@ -11,6 +11,8 @@ import java.util.*;
 public class Day15 extends Day {
 
   private static final long ROW_NUM_PART1 = 2_000_000;
+  private static final long MAX_COORDINATE = 4_000_000;
+  private static final long SIGNAL_CONSTANT = 4_000_000;
 
   public Day15() {
     super(15, 2022);
@@ -34,7 +36,46 @@ public class Day15 extends Day {
 
   @Override
   protected String part2(List<String> lines) {
-    return null;
+    List<Sensor> sensors = parseSensors(lines);
+    long y = -1;
+    long x = -1;
+
+    for (int row = 0; row <= MAX_COORDINATE; row++) {
+      boolean foundGap = false;
+      List<Range> mergedRanges = mergeRangesForRow(sensors, row);
+
+      Range previousMin = mergedRanges.get(0);
+      Range min = new Range(Math.max(0, previousMin.min), previousMin.max);
+
+      Range previousMax = mergedRanges.get(mergedRanges.size() - 1);
+      Range max = new Range(previousMax.min, Math.min(MAX_COORDINATE, previousMax.max));
+
+      mergedRanges.set(0, min);
+      mergedRanges.set(mergedRanges.size() - 1, max);
+
+      long total = mergedRanges.stream().mapToLong(Range::size).sum();
+      if (total < MAX_COORDINATE + 1) {
+        // Find the gap in the ranges.
+        for (int j = 1; j < mergedRanges.size(); j++) {
+          Range previous = mergedRanges.get(j - 1);
+          Range current = mergedRanges.get(j);
+
+          if (previous.max < current.min) {
+            foundGap = true;
+            y = row;
+            x = current.min - 1;
+            break;
+          }
+        }
+
+        if (foundGap) {
+          break;
+        }
+      }
+    }
+
+    long signalTuningFrequency = (SIGNAL_CONSTANT * x + y);
+    return Long.toString(signalTuningFrequency);
   }
 
   @Override
@@ -45,19 +86,6 @@ public class Day15 extends Day {
   @Override
   protected String part2Filename() {
     return filenameFromDataFileNumber(2);
-  }
-
-  private static Set<Long> columnsCoveredByItemAtRow(List<Sensor> sensors, long currentY) {
-    Set<Long> coveredColumns = new HashSet<>();
-    for (Sensor s : sensors) {
-      if (s.position.y == currentY) {
-        coveredColumns.add(s.position.x);
-      }
-      if (s.beacon.position.y == currentY) {
-        coveredColumns.add(s.beacon.position.x);
-      }
-    }
-    return coveredColumns;
   }
 
   private static List<Sensor> parseSensors(List<String> lines) {
