@@ -20,8 +20,8 @@ public class Day15 extends Day {
 
   @Override
   protected String part1(List<String> lines) {
-    List<SensorCoverage> sensorCoverages = parseSensorCoverages(lines);
-    long disallowedColumns = disallowedColumnsCount(sensorCoverages, ROW_NUM_PART1);
+    List<Sensor> sensors = parseSensors(lines);
+    long disallowedColumns = disallowedColumnsCount(sensors, ROW_NUM_PART1);
     return Long.toString(disallowedColumns);
   }
 
@@ -40,65 +40,61 @@ public class Day15 extends Day {
     return filenameFromDataFileNumber(1);
   }
 
-
   @SuppressWarnings("SameParameterValue")
-  private static int disallowedColumnsCount(List<SensorCoverage> sensorCoverages, long currentRow) {
+  private static int disallowedColumnsCount(List<Sensor> sensors, long currentY) {
     Set<Long> disallowedColumns = new HashSet<>();
 
     // Columns covered by an existing beacon or sensor.
-    Set<Long> coveredColumns = columnsCoveredAtRow(sensorCoverages, currentRow);
+    Set<Long> coveredColumns = columnsCoveredAtRow(sensors, currentY);
 
-    for (SensorCoverage s : sensorCoverages) {
-      long rowDelta = Math.abs(s.sensorLocation.row - currentRow);
+    for (Sensor s : sensors) {
+      // The row delta between the `currentY`, and the sensor's vertical position.
+      long deltaY = Math.abs(s.position.y - currentY);
       // The number of columns covered to the left and right of the sensors column position.
-      long halfColumnCount = s.manhattanDistance() - rowDelta;
-      long minCol = s.sensorLocation.column - halfColumnCount;
-      long maxCol = s.sensorLocation.column + halfColumnCount;
+      long halfColumnCount = s.manhattanDistance() - deltaY;
+      long minX = s.position.x - halfColumnCount;
+      long minY = s.position.x + halfColumnCount;
 
-      while (minCol <= maxCol) {
-        if (!coveredColumns.contains(minCol)) {
-          disallowedColumns.add(minCol);
+      while (minX <= minY) {
+        if (!coveredColumns.contains(minX)) {
+          disallowedColumns.add(minX);
         }
-        minCol++;
+        minX++;
       }
     }
 
     return disallowedColumns.size();
   }
 
-  private static Set<Long> columnsCoveredAtRow(
-      List<SensorCoverage> sensorCoverages,
-      long currentRow
-  ) {
+  private static Set<Long> columnsCoveredAtRow(List<Sensor> sensorCoverages, long currentY) {
     Set<Long> coveredColumns = new HashSet<>();
-    for (SensorCoverage s : sensorCoverages) {
-      if (s.sensorLocation.row == currentRow) {
-        coveredColumns.add(s.sensorLocation.column);
+    for (Sensor s : sensorCoverages) {
+      if (s.position.y == currentY) {
+        coveredColumns.add(s.position.x);
       }
-      if (s.beaconLocation.row == currentRow) {
-        coveredColumns.add(s.beaconLocation.column);
+      if (s.beacon.position.y == currentY) {
+        coveredColumns.add(s.beacon.position.x);
       }
     }
-
     return coveredColumns;
   }
 
-  private static List<SensorCoverage> parseSensorCoverages(List<String> lines) {
-    List<SensorCoverage> sensorCoverages = lines.stream()
-        .map(Day15::parseSensorCoverage)
+  private static List<Sensor> parseSensors(List<String> lines) {
+    List<Sensor> sensors = lines.stream()
+        .map(Day15::parseSensor)
         .toList();
-    return sensorCoverages;
+    return sensors;
   }
 
-  private static SensorCoverage parseSensorCoverage(String line) {
+  private static Sensor parseSensor(String line) {
     String[] tokens = line.split(":");
 
-    Coord sensorLocation = parseCoord(tokens[0]);
-    Coord beaconLocation = parseCoord(tokens[1]);
-    return new SensorCoverage(sensorLocation, beaconLocation);
+    Vertex sensorPosition = parseVertex(tokens[0]);
+    Vertex beaconPosition = parseVertex(tokens[1]);
+    return new Sensor(sensorPosition, new Beacon(beaconPosition));
   }
 
-  private static Coord parseCoord(String s) {
+  private static Vertex parseVertex(String s) {
     // Split by ','
     String[] outerTokens = s.strip().split(",");
 
@@ -109,32 +105,33 @@ public class Day15 extends Day {
     String[] yTokens = outerTokens[1].strip().split("=");
     long y = Long.parseLong(yTokens[yTokens.length - 1].strip());
 
-    return new Coord(y, x);
+    return new Vertex(x, y);
   }
 
-  private static class SensorCoverage {
-    Coord sensorLocation;
-    Coord beaconLocation;
+  private static class Sensor {
+    Vertex position;
+    Beacon beacon;
 
-    SensorCoverage(Coord s, Coord b) {
-      this.sensorLocation = s;
-      this.beaconLocation = b;
+    Sensor(Vertex position, Beacon beacon) {
+      this.position = position;
+      this.beacon = beacon;
     }
 
     long manhattanDistance() {
-      long distance = Math.abs(beaconLocation.row - sensorLocation.row)
-          + Math.abs(beaconLocation.column - sensorLocation.column);
+      long distance = Math.abs(beacon.position.x - position.x)
+          + Math.abs(beacon.position.y - position.y);
       return distance;
     }
 
     @Override
     public String toString() {
-      return "S: (r: " + sensorLocation.row + ", c: " + sensorLocation.column + "), " +
-          "B: (r: " + beaconLocation.row + ", c: " + beaconLocation.column + "), " +
-          "d = " + manhattanDistance();
+      return "S: (x: " + position.x + ", y: " + position.y + "), " +
+          "B: (x: " + beacon.position.x + ", y: " + beacon.position.y + "), " +
+          "r = " + manhattanDistance();
     }
   }
 
-  private record Coord(long row, long column) {
-  }
+  private record Beacon(Vertex position) { }
+
+  private record Vertex(long x, long y) { }
 }
