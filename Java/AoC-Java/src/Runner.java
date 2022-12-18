@@ -16,9 +16,13 @@ public class Runner {
     if (args.length == 0) {
       runner.run(2021);
       runner.run(2022);
-    } else {
+    } else if (args.length == 1) {
       int year = Integer.parseInt(args[0]);
       runner.run(year);
+    } else if (args.length == 2) {
+      int year = Integer.parseInt(args[0]);
+      int day = Integer.parseInt(args[1]);
+      runner.run(year, day);
     }
   }
 
