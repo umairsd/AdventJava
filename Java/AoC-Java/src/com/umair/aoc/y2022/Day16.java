@@ -2,6 +2,8 @@ package com.umair.aoc.y2022;
 
 import com.umair.aoc.common.Day;
 
+import java.nio.file.Path;
+import java.sql.Array;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -31,7 +33,36 @@ public class Day16 extends Day {
 
   @Override
   protected String part2(List<String> lines) {
-    return null;
+    Map<Valve, List<Valve>> graph = parseGraph(lines);
+    Map<String, Map<String, Integer>> distanceMatrix = distanceMatrix(graph);
+    @SuppressWarnings("OptionalGetWithoutIsPresent")
+    Valve start = graph.keySet().stream().filter(v -> v.name.equals("AA")).findFirst().get();
+
+    List<Valve> valvesToOpen = graph.keySet().stream().filter(v -> v.flowRate > 0).toList();
+
+    var humanPath = findPath(
+        start,            // Starting valve.
+        valvesToOpen,     // List of valves to open.
+        distanceMatrix,   // Distances matrix.
+        26,               // Time remaining.
+        List.of(start),   // Valves on the current path.
+        new ArrayList<>(),// Set of valves to avoid overlapping.
+        graph);
+
+    System.out.println("Human flow: " + humanPath.flow);
+
+    var elephantPath = findPath(
+        start,            // Starting valve.
+        valvesToOpen,     // List of valves to open.
+        distanceMatrix,   // Distances matrix.
+        26,               // Time remaining.
+        List.of(start),   // Valves on the current path.
+        new ArrayList<>(humanPath.valves),  // Set of valves to avoid overlapping.
+        graph);
+    System.out.println("Elephant flow: " + elephantPath.flow);
+
+    int result = humanPath.flow + elephantPath.flow;
+    return Integer.toString(result);
   }
 
   @Override
@@ -41,7 +72,7 @@ public class Day16 extends Day {
 
   @Override
   protected String part2Filename() {
-    return filenameFromDataFileNumber(1);
+    return filenameFromDataFileNumber(2);
   }
 
   /**
@@ -62,25 +93,83 @@ public class Day16 extends Day {
 
     for (Valve v : valvesToOpen) {
       int distanceFromStart = distanceMatrix.get(start.name).get(v.name);
-      if (distanceFromStart > remainingMinutes) {
+      if (distanceFromStart >= remainingMinutes) {
         // We can't make it to this valve. So try the next one.
         continue;
       }
 
       int minutesToGetToAndOpenV = distanceFromStart + 1; // 1 minute to open the valve.
-      int updatedMinutes = remainingMinutes - minutesToGetToAndOpenV;
-      int flowFromV = v.flowRate * updatedMinutes;
+      int minutesLeft = remainingMinutes - minutesToGetToAndOpenV;
+      int flowFromV = v.flowRate * minutesLeft;
 
-      List<Valve> updatedOpenToValves = valvesToOpen.stream()
+      List<Valve> updatedValvesToOpen = valvesToOpen.stream()
           .filter(vo -> !vo.name.equals(v.name))
           .toList();
 
       int totalFlow = flowFromV +
-          findFlow(v, updatedOpenToValves, distanceMatrix, updatedMinutes, ignoredGraph);
+          findFlow(v, updatedValvesToOpen, distanceMatrix, minutesLeft, ignoredGraph);
       cumulativeFlows.add(totalFlow);
     }
 
     return cumulativeFlows.stream().max(Integer::compare).orElse(0);
+  }
+
+  private static Path findPath(
+      Valve start,
+      List<Valve> valvesToOpen,
+      Map<String, Map<String, Integer>> distanceMatrix,
+      int remainingMinutes,
+      List<Valve> valvesOnCurrentPath,
+      List<Valve> noOverlap,
+      Map<Valve, List<Valve>> ignoredGraph
+  ) {
+    List<Path> paths = new ArrayList<>();
+
+    for (Valve v : valvesToOpen) {
+      if (noOverlap.contains(v)) {
+        continue;
+      }
+
+      int distanceFromStart = distanceMatrix.get(start.name).get(v.name);
+      if (distanceFromStart >= remainingMinutes) {
+        // We can't make it to this valve. So try the next one.
+        continue;
+      }
+
+      int minutesToGetToAndOpenV = distanceFromStart + 1; // 1 minute to open the valve.
+      int minutesLeft = remainingMinutes - minutesToGetToAndOpenV;
+      int flowFromV = v.flowRate * minutesLeft;
+
+      List<Valve> updatedValvesToOpen = valvesToOpen.stream()
+          .filter(vo -> !vo.name.equals(v.name))
+          .toList();
+
+      List<Valve> valvesOnNextPath = new ArrayList<>(valvesOnCurrentPath);
+      valvesOnNextPath.add(v);
+
+      Path fullPath = findPath(
+          v,
+          updatedValvesToOpen,
+          distanceMatrix,
+          minutesLeft,
+          valvesOnNextPath,
+          noOverlap,
+          ignoredGraph);
+
+      List<Valve> valvesOnPath = new ArrayList<>(valvesOnCurrentPath);
+      valvesOnPath.add(v);
+      valvesOnPath.addAll(fullPath.valves);
+      paths.add(new Path(valvesOnPath, flowFromV + fullPath.flow));
+    }
+
+    Path bestPath = new Path(List.of(), 0);
+    for (Path p : paths) {
+      if (p.flow > bestPath.flow) {
+        bestPath = p;
+      }
+    }
+
+    return bestPath;
   }
 
   /**
@@ -122,6 +211,8 @@ public class Day16 extends Day {
 
     return distances;
   }
+
+  private record Path(List<Valve> valves, int flow) {}
 
   private record QNode(Valve valve, int distance) {
   }
