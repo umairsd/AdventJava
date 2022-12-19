@@ -5,7 +5,6 @@ import com.umair.aoc.common.Day;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 
 /**
  * Day 16: Proboscidea Volcanium
@@ -19,16 +18,15 @@ public class Day16 extends Day {
 
   @Override
   protected String part1(List<String> lines) {
-    GraphContext graphContext = parseGraph(lines);
-    Map<Valve, ValveState> valveStateMap = new HashMap<>();
-    for (Valve v : graphContext.graph.keySet()) {
-      valveStateMap.put(v, new ValveState(false, 0));
-    }
+    Map<Valve, List<Valve>> graph = parseGraph(lines);
 
-    Valve start = new Valve("AA");
-    Map<MemoKey, Integer> memo = new HashMap<>();
-    int rate = flowRate(start, graphContext, 30, valveStateMap, memo);
-    return Integer.toString(rate);
+    Map<String, Map<String, Integer>> distanceMatrix = distanceMatrix(graph);
+    @SuppressWarnings("OptionalGetWithoutIsPresent")
+    Valve start = graph.keySet().stream().filter(v -> v.name.equals("AA")).findFirst().get();
+    List<Valve> valvesToOpen = graph.keySet().stream().filter(v -> v.flowRate > 0).toList();
+
+    int result = findFlow(start, valvesToOpen, distanceMatrix, 30, graph);
+    return Integer.toString(result);
   }
 
   @Override
@@ -36,63 +34,9 @@ public class Day16 extends Day {
     return null;
   }
 
-  private static int flowRate(
-      Valve current,
-      GraphContext gctx,
-      int remainingTime,
-      Map<Valve, ValveState> stateMap,
-      Map<MemoKey, Integer> memo
-  ) {
-
-    if (remainingTime == 0) {
-      int totalFlow = 0;
-
-      System.out.print("Open valves: ");
-      for (Valve v : stateMap.keySet()) {
-        ValveState state = stateMap.get(v);
-        if (state.isOpen) {
-          System.out.print("(" + v.name + ", m=" + state.minutesOpen + "), ");
-          totalFlow += (gctx.valveFlowRateMap.get(v) * state.minutesOpen);
-        }
-      }
-      System.out.println();
-      return totalFlow;
-    }
-
-    MemoKey key = new MemoKey(current, remainingTime);
-    if (memo.containsKey(key)) {
-      return memo.get(key);
-    }
-
-    int maxFlowRate = Integer.MIN_VALUE;
-    ValveState currentState = stateMap.get(current);
-
-    if (!currentState.isOpen && gctx.valveFlowRateMap.get(current) != 0) {
-      // Open the valve. And note down how many minutes does it stay open.
-      ValveState newState = new ValveState(true, remainingTime - 1);
-
-      var copiedStates = new HashMap<>(stateMap);
-      copiedStates.put(current, newState);
-      int fr1 = flowRate(current, gctx, remainingTime - 1, copiedStates, memo);
-      maxFlowRate = fr1;
-    }
-
-    List<Valve> neighbors = gctx.graph.get(current);
-    for (Valve neighbor : neighbors) {
-      // Travel to each of them that are NOT open
-      if (!stateMap.get(neighbor).isOpen) {
-        int flowRate = flowRate(neighbor, gctx, remainingTime - 1, stateMap, memo);
-        maxFlowRate = Math.max(maxFlowRate, flowRate);
-      }
-    }
-
-    memo.put(key, maxFlowRate);
-    return maxFlowRate;
-  }
-
   @Override
   protected String part1Filename() {
-    return filenameFromDataFileNumber(1);
+    return filenameFromDataFileNumber(2);
   }
 
   @Override
@@ -100,15 +44,117 @@ public class Day16 extends Day {
     return filenameFromDataFileNumber(1);
   }
 
-  private static GraphContext parseGraph(List<String> lines) {
-    GraphContext ctx = new GraphContext();
-    for (String line : lines) {
-      parseLine(line, ctx);
+  /**
+   * From the `start` node, go through each valve from the list of valves to open. For each such
+   * valve, determine the time to get to this valve (via distanceMatrix) and see if we can reach
+   * this valve within the time remaining. If so, then calculate the contribution to the total flow
+   * from this valve, and recursively continue.
+   */
+  private static int findFlow(
+      Valve start,
+      List<Valve> valvesToOpen,
+      Map<String, Map<String, Integer>> distanceMatrix,
+      int remainingMinutes,
+      Map<Valve, List<Valve>> ignoredGraph
+  ) {
+
+    List<Integer> cumulativeFlows = new ArrayList<>();
+
+    for (Valve v : valvesToOpen) {
+      int distanceFromStart = distanceMatrix.get(start.name).get(v.name);
+      if (distanceFromStart > remainingMinutes) {
+        // We can't make it to this valve. So try the next one.
+        continue;
+      }
+
+      int minutesToGetToAndOpenV = distanceFromStart + 1; // 1 minute to open the valve.
+      int updatedMinutes = remainingMinutes - minutesToGetToAndOpenV;
+      int flowFromV = v.flowRate * updatedMinutes;
+
+      List<Valve> updatedOpenToValves = valvesToOpen.stream()
+          .filter(vo -> !vo.name.equals(v.name))
+          .toList();
+
+      int totalFlow = flowFromV +
+          findFlow(v, updatedOpenToValves, distanceMatrix, updatedMinutes, ignoredGraph);
+      cumulativeFlows.add(totalFlow);
     }
-    return ctx;
+
+    return cumulativeFlows.stream().max(Integer::compare).orElse(0);
   }
 
-  private static void parseLine(String line, GraphContext graphContext) {
+  /**
+   * Uses BFS to calculate distances from each node to every other node.
+   */
+  private static Map<String, Map<String, Integer>> distanceMatrix(Map<Valve, List<Valve>> graph) {
+    Map<String, Map<String, Integer>> distances = new HashMap<>();
+
+    for (Valve v : graph.keySet()) {
+      if (!distances.containsKey(v.name)) {
+        distances.put(v.name, new HashMap<>());
+      }
+      Map<String, Integer> distancesFromV = distances.get(v.name);
+
+      Queue<QNode> queue = new ArrayDeque<>();
+      Set<Valve> visited = new HashSet<>();
+      // Distance from v to v is 0.
+      distancesFromV.put(v.name, 0);
+      queue.add(new QNode(v, 0));
+
+      while (!queue.isEmpty()) {
+        QNode qNode = queue.poll();
+        if (visited.contains(qNode.valve)) {
+          continue;
+        }
+        visited.add(qNode.valve);
+
+        for (Valve neighbor : graph.get(qNode.valve)) {
+          int distance = qNode.distance + 1;
+          int existingDistance = distancesFromV.getOrDefault(neighbor.name, Integer.MAX_VALUE);
+
+          if (distance < existingDistance) {
+            distancesFromV.put(neighbor.name, distance);
+            queue.add(new QNode(neighbor, distance));
+          }
+        }
+      }
+    }
+
+    return distances;
+  }
+
+  private record QNode(Valve valve, int distance) {
+  }
+
+  private static Map<Valve, List<Valve>> parseGraph(List<String> lines) {
+    Map<Valve, List<Valve>> graph = new HashMap<>();
+    Map<String, List<String>> nameToNeighborsMap = new HashMap<>();
+
+    for (String line : lines) {
+      Valve v = parseValve(line);
+      List<String> neighbors = parseNeighbors(line);
+
+      graph.put(v, new ArrayList<>());
+      nameToNeighborsMap.put(v.name, neighbors);
+    }
+
+    for (Valve valve : graph.keySet()) {
+      var neighborNames = nameToNeighborsMap.get(valve.name);
+
+      for (String n : neighborNames) {
+        var neighbor = graph.keySet()
+            .stream()
+            .filter(v -> v.name.equals(n))
+            .findFirst()
+            .orElseThrow(IllegalArgumentException::new);
+        graph.get(valve).add(neighbor);
+      }
+    }
+
+    return graph;
+  }
+
+  private static Valve parseValve(String line) {
     String[] outerTokens = line.split(";");
     // Parse valve.
     String[] valveNameTokens = outerTokens[0].strip().split(" ");
@@ -117,53 +163,20 @@ public class Day16 extends Day {
     String[] rateTokens = outerTokens[0].strip().split("=");
     int flowRate = Integer.parseInt(rateTokens[rateTokens.length - 1].strip());
 
-    Valve v = new Valve(name);
+    Valve v = new Valve(name, flowRate);
+    return v;
+  }
+
+  private static List<String> parseNeighbors(String line) {
+    String[] outerTokens = line.split(";");
 
     Pattern p = Pattern.compile("tunnels* leads* to valves* ");
     Matcher m = p.matcher(outerTokens[1]);
     String neighborsString = m.replaceAll("");
     String[] neighborTokens = neighborsString.strip().split(",");
-
-    List<Valve> neighbors = Arrays.stream(neighborTokens)
-        .map(String::strip)
-        .map(Valve::new)
-        .toList();
-
-    graphContext.graph.put(v, neighbors);
-    graphContext.valveFlowRateMap.put(v, flowRate);
+    return Arrays.stream(neighborTokens).map(String::strip).toList();
   }
 
-  private record MemoKey(Valve valve, int minutesRemaining) { }
-
-  private static class GraphContext {
-    private final Map<Valve, List<Valve>> graph = new HashMap<>();
-    private final Map<Valve, Integer> valveFlowRateMap = new HashMap<>();
-  }
-
-  private record ValveState(boolean isOpen, int minutesOpen) { }
-
-  private static class Valve {
-    String name;
-    Valve(String name) {
-      this.name = name;
-    }
-
-    @Override
-    public String toString() {
-      return name;
-    }
-
-    @Override
-    public boolean equals(Object o) {
-      if (this == o) return true;
-      if (o == null || getClass() != o.getClass()) return false;
-      Valve valve = (Valve) o;
-      return name.equals(valve.name);
-    }
-
-    @Override
-    public int hashCode() {
-      return Objects.hash(name);
-    }
+  private record Valve(String name, int flowRate) {
   }
 }
