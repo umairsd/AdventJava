@@ -65,7 +65,7 @@ public class Day16 extends Day {
 
   @Override
   protected String part1Filename() {
-    return filenameFromDataFileNumber(1);
+    return filenameFromDataFileNumber(2);
   }
 
   @Override
@@ -264,27 +264,26 @@ public class Day16 extends Day {
     return graph;
   }
 
+  private static final Pattern linePattern =
+      Pattern.compile("Valve (.*) has flow rate=(.*); tunnels? leads? to valves? (.*)");
+
   private static Valve parseValve(String line) {
-    String[] outerTokens = line.split(";");
-    // Parse valve.
-    String[] valveNameTokens = outerTokens[0].strip().split(" ");
-    String name = valveNameTokens[1].strip();
-
-    String[] rateTokens = outerTokens[0].strip().split("=");
-    int flowRate = Integer.parseInt(rateTokens[rateTokens.length - 1].strip());
-
-    Valve v = new Valve(name, flowRate);
-    return v;
+    Matcher m = linePattern.matcher(line);
+    if (!m.matches()) {
+      throw new IllegalStateException("Bad input line: " + line);
+    }
+    String name = m.group(1);
+    int flowRate = Integer.parseInt(m.group(2));
+    return new Valve(name, flowRate);
   }
 
   private static List<String> parseNeighbors(String line) {
-    String[] outerTokens = line.split(";");
-
-    Pattern p = Pattern.compile("tunnels* leads* to valves* ");
-    Matcher m = p.matcher(outerTokens[1]);
-    String neighborsString = m.replaceAll("");
-    String[] neighborTokens = neighborsString.strip().split(",");
-    return Arrays.stream(neighborTokens).map(String::strip).toList();
+    Matcher m = linePattern.matcher(line);
+    if (!m.matches()) {
+      throw new IllegalStateException("Bad input line: " + line);
+    }
+    var neighbors = Arrays.asList(m.group(3).split(", "));
+    return neighbors;
   }
 
   private record Valve(String name, int flowRate) {}
