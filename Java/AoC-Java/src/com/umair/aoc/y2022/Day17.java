@@ -22,17 +22,16 @@ public class Day17 extends Day {
   @Override
   protected String part1(List<String> lines) {
     List<JetDirection> jetDirections = parseJetDirections(lines);
-    Set<RockCoord> cave = new HashSet<>();
+    Cave cave = new Cave();
 
-    int time = 0;
-    int maxCaveY;
+    long time = 0;
+    long maxCaveY = 0;
     for (int rockNum = 0; rockNum < 2022; rockNum++) {
-      maxCaveY = cave.stream().map(RockCoord::y).max(Integer::compare).orElse(0);
-
       Rock rock = generateRock(rockNum % ROCK_COUNT, maxCaveY + 4);
+
       boolean canMove = true;
       while (canMove) {
-        JetDirection jet = jetDirections.get(time % jetDirections.size());
+        JetDirection jet = jetDirections.get( (int)(time % jetDirections.size()));
 
         var maybeMovedRock = maybeApplyJet(rock, jet, cave);
         if (maybeMovedRock.isPresent()) { // Moved successfully.
@@ -49,12 +48,13 @@ public class Day17 extends Day {
         time++;
       }
 
-      // Once the rock stops moving, add the new position of the rock to the cave.
-      cave.addAll(rock.coordinates);
+      // Once the rock stops moving, add the rock to the cave.
+      cave.addRock(rock);
+      maxCaveY = cave.getHeight();
     }
 
-    int result = cave.stream().map(RockCoord::y).max(Integer::compare).orElseThrow();
-    return Integer.toString(result);
+    long result = cave.getHeight();
+    return Long.toString(result);
   }
 
   @Override
@@ -64,7 +64,7 @@ public class Day17 extends Day {
 
   @Override
   protected String part1Filename() {
-    return filenameFromDataFileNumber(2);
+    return filenameFromDataFileNumber(1);
   }
 
   @Override
@@ -79,7 +79,7 @@ public class Day17 extends Day {
   private static Optional<Rock> maybeApplyJet(
       Rock rock,
       JetDirection jetDirection,
-      Set<RockCoord> cave
+      Cave cave
   ) {
     Rock movedRock = null;
 
@@ -88,7 +88,7 @@ public class Day17 extends Day {
         // Generate rock if the new position is within the boundary of the cave.
         if (rock.coordinates.stream().allMatch(c -> c.x > CAVE_MIN_X)) {
           movedRock = new Rock(rock.coordinates.stream()
-              .map(c -> new RockCoord(c.x - 1, c.y))
+              .map(c -> new Position(c.x - 1, c.y))
               .toList());
         }
       }
@@ -96,13 +96,13 @@ public class Day17 extends Day {
         // Generate rock if the new position is within the boundary of the cave.
         if (rock.coordinates.stream().allMatch(c -> c.x < CAVE_MAX_X)) {
           movedRock = new Rock(rock.coordinates.stream()
-              .map(c -> new RockCoord(c.x + 1, c.y))
+              .map(c -> new Position(c.x + 1, c.y))
               .toList());
         }
       }
     }
 
-    return movedRock != null && movedRock.coordinates.stream().noneMatch(cave::contains)
+    return movedRock != null && movedRock.coordinates.stream().noneMatch(cave.points::contains)
         ? Optional.of(movedRock)
         : Optional.empty();
   }
@@ -111,12 +111,12 @@ public class Day17 extends Day {
    * If the rock can fall down by one, generates the new position of the rock and has it fall.
    * Otherwise, returns .empty(), indicating that the rock cannot fall anymore.
    */
-  private static Optional<Rock> maybeFall(Rock rock, Set<RockCoord> cave) {
+  private static Optional<Rock> maybeFall(Rock rock, Cave cave) {
     Rock movedRock = new Rock(rock.coordinates.stream()
-        .map(c -> new RockCoord(c.x, c.y - 1))
+        .map(c -> new Position(c.x, c.y - 1))
         .toList());
 
-    return movedRock.coordinates.stream().allMatch(c -> !cave.contains(c) && c.y >= 1)
+    return movedRock.coordinates.stream().allMatch(c -> !cave.points.contains(c) && c.y >= 1)
         ? Optional.of(movedRock)
         : Optional.empty();
   }
@@ -126,48 +126,85 @@ public class Day17 extends Day {
    * Each rock appears so that its left edge is two units away from the left wall and its bottom
    * edge is three units above the highest rock in the room. This
    *
-   * @param step    The current step of the simulation.
+   * @param rockNumber    The current step of the simulation.
    * @param bottomY The bottomY coordinate of the rock.
    * @return Rock for the given step.
    */
-  private static Rock generateRock(int step, int bottomY) {
+  private static Rock generateRock(int rockNumber, long bottomY) {
     int x = 2;
     // Horizontal Line
-    Rock r0 = new Rock(IntStream.range(2, 6).mapToObj(i -> new RockCoord(i, bottomY)).toList());
+    Rock r0 = new Rock(IntStream.range(2, 6).mapToObj(i -> new Position(i, bottomY)).toList());
 
     // Plus sign
     Rock r1 = new Rock(List.of(
-        new RockCoord(x + 1, bottomY + 2),
-        new RockCoord(x, bottomY + 1),
-        new RockCoord(x + 1, bottomY + 1),
-        new RockCoord(x + 2, bottomY + 1),
-        new RockCoord(x + 1, bottomY)
+        new Position(x + 1, bottomY + 2),
+        new Position(x, bottomY + 1),
+        new Position(x + 1, bottomY + 1),
+        new Position(x + 2, bottomY + 1),
+        new Position(x + 1, bottomY)
     ));
 
     // Reverse L.
     Rock r2 = new Rock(List.of(
-        new RockCoord(x + 2, bottomY + 2),
-        new RockCoord(x + 2, bottomY + 1),
-        new RockCoord(x, bottomY), new RockCoord(x + 1, bottomY), new RockCoord(x + 2, bottomY)
+        new Position(x + 2, bottomY + 2),
+        new Position(x + 2, bottomY + 1),
+        new Position(x, bottomY), new Position(x + 1, bottomY), new Position(x + 2, bottomY)
     ));
 
     // Vertical Line
-    Rock r3 = new Rock(IntStream.range(0, 4).mapToObj(i -> new RockCoord(x, i + bottomY)).toList());
+    Rock r3 = new Rock(IntStream.range(0, 4).mapToObj(i -> new Position(x, i + bottomY)).toList());
 
     // Square
     Rock r4 = new Rock(List.of(
-        new RockCoord(x, bottomY + 1), new RockCoord(x + 1, bottomY + 1),
-        new RockCoord(x, bottomY), new RockCoord(x + 1, bottomY)
+        new Position(x, bottomY + 1), new Position(x + 1, bottomY + 1),
+        new Position(x, bottomY), new Position(x + 1, bottomY)
     ));
 
-    return switch (step % ROCK_COUNT) {
+    return switch (rockNumber % ROCK_COUNT) {
       case 0 -> r0;
       case 1 -> r1;
       case 2 -> r2;
       case 3 -> r3;
       case 4 -> r4;
-      default -> throw new IllegalStateException("Bad value for step: " + step);
+      default -> throw new IllegalStateException("Bad value for step: " + rockNumber);
     };
+  }
+
+  private static class Cave {
+    private final Set<Position> points = new HashSet<>();
+    private long height = 0;
+
+    void addRock(Rock rock) {
+      long maxY = height;
+      for (var p : rock.coordinates) {
+        maxY = Math.max(maxY, p.y);
+        points.add(p);
+      }
+      height = maxY;
+    }
+
+    long getHeight() {
+      return height;
+    }
+
+    @Override
+    public String toString() {
+      StringBuilder sb = new StringBuilder();
+      long maxRow = points.stream().map(Position::y).max(Long::compareTo).orElse(0L);
+
+      for (long row = maxRow + 3; row > 0; row--) {
+        for (long col = CAVE_MIN_X; col < CAVE_MAX_X; col++) {
+          Position c = new Position(col, row);
+          if (points.contains(c)) {
+            sb.append("#");
+          } else {
+            sb.append(".");
+          }
+        }
+        sb.append("\n");
+      }
+      return sb.toString();
+    }
   }
 
   private static List<JetDirection> parseJetDirections(List<String> lines) {
@@ -188,28 +225,9 @@ public class Day17 extends Day {
     RIGHT
   }
 
-  private record Rock(List<RockCoord> coordinates) {
+  private record Rock(List<Position> coordinates) {
   }
 
-  private record RockCoord(int x, int y) {
-  }
-
-  @SuppressWarnings("unused")
-  private static String debugDave(Set<RockCoord> cave) {
-    StringBuilder sb = new StringBuilder();
-    int maxRow = cave.stream().map(RockCoord::y).max(Integer::compareTo).orElse(0);
-
-    for (int row = maxRow + 3; row > 0; row--) {
-      for (int col = 0; col < 7; col++) {
-        RockCoord c = new RockCoord(col, row);
-        if (cave.contains(c)) {
-          sb.append("#");
-        } else {
-          sb.append(".");
-        }
-      }
-      sb.append("\n");
-    }
-    return sb.toString();
+  private record Position(long x, long y) {
   }
 }
