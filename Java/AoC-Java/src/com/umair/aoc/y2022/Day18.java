@@ -14,7 +14,20 @@ public class Day18 extends Day {
 
   @Override
   protected String part1(List<String> lines) {
-    return null;
+    List<Cube> cubes = lines.stream().map(Day18::parseCube).toList();
+    int totalExposedSides = cubes.size() * 6;
+
+    for (int i = 0; i < cubes.size(); i++) {
+      for (int j = i + 1; j < cubes.size(); j++) {
+        var c1 = cubes.get(i);
+        var c2 = cubes.get(j);
+        if (areCubesTouching(c1, c2)) {
+          totalExposedSides -= 2;
+        }
+      }
+    }
+
+    return Integer.toString(totalExposedSides);
   }
 
   @Override
@@ -24,12 +37,19 @@ public class Day18 extends Day {
 
   @Override
   protected String part1Filename() {
-    return filenameFromDataFileNumber(1);
+    return filenameFromDataFileNumber(2);
   }
 
   @Override
   protected String part2Filename() {
     return filenameFromDataFileNumber(1);
+  }
+
+  private static boolean areCubesTouching(Cube c1, Cube c2) {
+    boolean result = (c1.x == c2.x && c1.y == c2.y && Math.abs(c1.z - c2.z) == 1) ||
+        (c1.x == c2.x && c1.z == c2.z && Math.abs(c1.y - c2.y) == 1) ||
+        (c1.z == c2.z && c1.y == c2.y && Math.abs(c1.x - c2.x) == 1);
+    return result;
   }
 
   private static final Pattern linePattern = Pattern.compile("(.*),(.*),(.*)");
