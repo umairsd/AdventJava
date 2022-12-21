@@ -60,23 +60,18 @@ public class Day17 extends Day {
   @Override
   protected String part2(List<String> lines) {
     List<JetDirection> jetDirections = parseJetDirections(lines);
-    Map<MapKey, CaveState> checkpointsMap = new HashMap<>();
     Cave cave = new Cave();
-
+    long time = 0;
     long maxCaveY = 0;
-    long rockDropped = 1;
-    int topCount = 20;
-    int jetIndex = 0;
-//    long targetDropCount = 2022;
-    long targetDropCount = 1000000000000L;
+    List<Long> caveHeightsPerStep = new ArrayList<>();
 
-    while (rockDropped <= targetDropCount) {
-      int rockIndex = (int)((rockDropped - 1) % ROCK_COUNT);
+    for (int rockNum = 0; rockNum < 100_000; rockNum++) {
+      int rockIndex = rockNum % ROCK_COUNT;
       Rock rock = generateRock(rockIndex, maxCaveY + 4);
 
       boolean canMove = true;
       while (canMove) {
-        JetDirection jet = jetDirections.get(jetIndex);
+        JetDirection jet = jetDirections.get( (int)(time % jetDirections.size()));
 
         var maybeMovedRock = maybeApplyJet(rock, jet, cave);
         if (maybeMovedRock.isPresent()) { // Moved successfully.
@@ -90,38 +85,56 @@ public class Day17 extends Day {
           canMove = false;
         }
 
-        jetIndex = (jetIndex + 1) % jetDirections.size();
+        time++;
       }
 
-      // Once the rock stops moving, add the new position of the rock to the cave.
+      // Once the rock stops moving, add the rock to the cave.
       cave.addRock(rock);
       maxCaveY = cave.getHeight();
-
-      var caveTopStr = cave.topNToString(topCount);
-      var prevJetIndex = (jetIndex - 1) % jetDirections.size();
-      var key = new MapKey(rockIndex, prevJetIndex, caveTopStr);
-
-      if (checkpointsMap.containsKey(key)) {
-        CaveState prevState = checkpointsMap.get(key);
-        long cycleSize = rockDropped - prevState.droppedRockCount;
-        long cycles = (targetDropCount - rockDropped) / cycleSize;
-        rockDropped += cycles * cycleSize;
-
-        long rowsToCopy = topCount;
-        long startingSrcY = prevState.caveHeight - rowsToCopy;
-        long startingDestY = prevState.caveHeight + cycles * cycleSize;
-        copyPartOfCave(cave, startingSrcY, rowsToCopy, startingDestY);
-
-        checkpointsMap.clear();
-      } else {
-        CaveState state = new CaveState(rockDropped, maxCaveY);
-        checkpointsMap.put(key, state);
-      }
-
-      rockDropped++;
+      caveHeightsPerStep.add(maxCaveY);
     }
 
-    long result = cave.getHeight();
+    // Calculate the height difference of the cave between each rock.
+    List<Long> heightDeltas = new ArrayList<>();
+    for (int i = 1; i < caveHeightsPerStep.size(); i++) {
+      long previous = caveHeightsPerStep.get(i - 1);
+      long current = caveHeightsPerStep.get(i);
+      heightDeltas.add(current - previous);
+    }
+
+
+    // To detect a loop, use a marker pattern. This marker pattern is made up of height deltas
+    // e.g. (-1, 2, 3, 3, 1), that will be used to find other parts of the height differences that
+    // follow the same pattern.
+    // The constants below are arbitrarily chosen.
+    int loopBeginIndex = 2201;
+    int markerLength = 53;
+
+    // This is the marker pattern of height deltas that we want to use to find a loop.
+    List<Long> markerSegment = heightDeltas.subList(loopBeginIndex, loopBeginIndex + markerLength);
+
+    long loopHeight = -1;
+    long loopLength = -1;
+    long caveHeightPriorToLoop = caveHeightsPerStep.get(loopBeginIndex - 1);
+
+    for (int i = loopBeginIndex + markerLength; i < heightDeltas.size() - markerLength; i++) {
+      var currentSubList = heightDeltas.subList(i, i + markerLength);
+      if (markerSegment.equals(currentSubList)) {
+        // Marker segment matches the sublist starting at index `i`.
+        loopLength = i - loopBeginIndex;
+        loopHeight = caveHeightsPerStep.get(i - 1) - caveHeightPriorToLoop;
+        break;
+      }
+    }
+
+    long totalRockCount = 1_000_000_000_000L;
+    // Calculate the height at the target based on the number of loops and the height of the loop
+    long numFullLoops = (totalRockCount - loopBeginIndex) / loopLength;
+    long partialLoopStartIndex =  (totalRockCount - loopBeginIndex) % loopLength;
+    long heightOfPartialLoop =
+        caveHeightsPerStep.get(loopBeginIndex + (int)partialLoopStartIndex) - caveHeightPriorToLoop;
+
+    long result = caveHeightPriorToLoop + (loopHeight * numFullLoops) + heightOfPartialLoop - 1;
     return Long.toString(result);
   }
 
@@ -132,7 +145,7 @@ public class Day17 extends Day {
 
   @Override
   protected String part2Filename() {
-    return filenameFromDataFileNumber(1);
+    return filenameFromDataFileNumber(2);
   }
 
   /**
@@ -175,7 +188,7 @@ public class Day17 extends Day {
         .map(c -> new Point(c.x, c.y - 1))
         .toList());
 
-    return movedRock.points.stream().allMatch(c -> !cave.points.contains(c) && c.y >= 1)
+    return movedRock.points.stream().allMatch(c -> !cave.contains(c) && c.y >= 1)
         ? Optional.of(movedRock)
         : Optional.empty();
   }
@@ -228,22 +241,6 @@ public class Day17 extends Day {
     };
   }
 
-  private static void copyPartOfCave(Cave cave, long startingSrcY, long rowsToCopy, long startingDestY) {
-    for (long y = startingSrcY; y < (startingSrcY + rowsToCopy); y++) {
-      for (long x = cave.getMinX(); x <= cave.getMaxX(); x++) {
-        Point p = new Point(x, y);
-        if (cave.contains(p)) {
-          long newY = p.y + startingDestY;
-          cave.addPoint(new Point(p.x, newY));
-        }
-      }
-    }
-  }
-
-  private record MapKey(long rockIndex, long jetIndex, String caveTop) {}
-
-  private record CaveState(long droppedRockCount, long caveHeight) {}
-
   private static class Cave {
     private static final int CAVE_MIN_X = 0;
     private static final int CAVE_MAX_X = 6;
@@ -253,10 +250,6 @@ public class Day17 extends Day {
 
     boolean contains(Point p) {
       return points.contains(p);
-    }
-
-    void addPoint(Point p) {
-      points.add(p);
     }
 
     void addRock(Rock rock) {
@@ -280,24 +273,6 @@ public class Day17 extends Day {
       return CAVE_MAX_X;
     }
 
-    String topNToString(long n) {
-      StringBuilder sb = new StringBuilder();
-      long maxRow = points.stream().map(Point::y).max(Long::compareTo).orElse(0L);
-
-      for (long row = maxRow; row > maxRow - n; row--) {
-        for (long col = CAVE_MIN_X; col < CAVE_MAX_X; col++) {
-          Point c = new Point(col, row);
-          if (points.contains(c)) {
-            sb.append("#");
-          } else {
-            sb.append(".");
-          }
-        }
-        sb.append("\n");
-      }
-      return sb.toString();
-    }
-
     @Override
     public String toString() {
       StringBuilder sb = new StringBuilder();
@@ -306,7 +281,7 @@ public class Day17 extends Day {
       for (long row = maxRow + 3; row > 0; row--) {
         for (long col = CAVE_MIN_X; col < CAVE_MAX_X; col++) {
           Point c = new Point(col, row);
-          if (points.contains(c)) {
+          if (this.contains(c)) {
             sb.append("#");
           } else {
             sb.append(".");
