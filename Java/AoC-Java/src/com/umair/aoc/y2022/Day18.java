@@ -14,8 +14,8 @@ public class Day18 extends Day {
 
   @Override
   protected String part1(List<String> lines) {
-    List<Cube> cubes = lines.stream().map(Day18::parseCube).toList();
-    int allExposedSides = countExposedSides(cubes);
+    List<Pixel> pixels = lines.stream().map(Day18::parsePixel).toList();
+    int allExposedSides = countExposedSides(pixels);
     return Integer.toString(allExposedSides);
   }
 
@@ -28,23 +28,23 @@ public class Day18 extends Day {
    */
   @Override
   protected String part2(List<String> lines) {
-    List<Cube> lavaCubes = lines.stream().map(Day18::parseCube).toList();
-    Box box = buildBox(lavaCubes);
-    // Set the state of all lava cubes.
-    lavaCubes.forEach(c -> box.setCubeState(c, CubeState.LAVA));
+    List<Pixel> lavaPixels = lines.stream().map(Day18::parsePixel).toList();
+    Box box = buildBox(lavaPixels);
+    // Set the state of all lava pixels (cubes).
+    lavaPixels.forEach(c -> box.setPixelState(c, PixelState.LAVA));
     // Start filling the box with water. Uses Flood-Fill
     floodFillWithWater(box);
 
-    // Find all cubes whose state is AIR. These are the inner cubes that were not filled with
+    // Find all pixels whose state is AIR. These are the inner pixels that were not filled with
     // water during the previous step.
-    List<Cube> unfilledInnerCubes = box.cubeStateMap.entrySet().stream()
-        .filter(e -> e.getValue() == CubeState.AIR)
+    List<Pixel> unfilledInnerPixels = box.pixelStateMap.entrySet().stream()
+        .filter(e -> e.getValue() == PixelState.AIR)
         .map(Map.Entry::getKey)
         .toList();
 
 
-    int allExposedSides = countExposedSides(lavaCubes);
-    int innerExposedSides = countExposedSides(unfilledInnerCubes);
+    int allExposedSides = countExposedSides(lavaPixels);
+    int innerExposedSides = countExposedSides(unfilledInnerPixels);
     int outerExposedSides = allExposedSides - innerExposedSides;
     return Integer.toString(outerExposedSides);
   }
@@ -59,14 +59,14 @@ public class Day18 extends Day {
     return filenameFromDataFileNumber(2);
   }
 
-  private static int countExposedSides(List<Cube> cubes) {
-    int totalExposedSides = cubes.size() * 6;
+  private static int countExposedSides(List<Pixel> pixels) {
+    int totalExposedSides = pixels.size() * 6;
 
-    for (int i = 0; i < cubes.size(); i++) {
-      for (int j = i + 1; j < cubes.size(); j++) {
-        var c1 = cubes.get(i);
-        var c2 = cubes.get(j);
-        if (areCubesTouching(c1, c2)) {
+    for (int i = 0; i < pixels.size(); i++) {
+      for (int j = i + 1; j < pixels.size(); j++) {
+        var c1 = pixels.get(i);
+        var c2 = pixels.get(j);
+        if (arePixelsTouching(c1, c2)) {
           totalExposedSides -= 2;
         }
       }
@@ -75,21 +75,22 @@ public class Day18 extends Day {
   }
 
   private static void floodFillWithWater(Box box) {
-    Queue<Cube> queue = new ArrayDeque<>();
+    Queue<Pixel> queue = new ArrayDeque<>();
     queue.add(box.min);
-    // Set of cubes that have been added to the queue.
-    Set<Cube> processed = new HashSet<>();
+    // Pixels that have been added to the queue. Need this so that points are not processed a 2nd
+    // time
+    Set<Pixel> processed = new HashSet<>();
     processed.add(box.min);
 
     while (!queue.isEmpty()) {
-      Cube c = queue.poll();
-      assert(box.getCubeState(c) == CubeState.AIR);
-      // Fill the cube with water.
-      box.setCubeState(c, CubeState.WATER);
+      Pixel c = queue.poll();
+      assert(box.getPixelState(c) == PixelState.AIR);
+      // Fill the pixel with water.
+      box.setPixelState(c, PixelState.WATER);
 
-      List<Cube> neighbors = box.neighborsInside(c);
-      for (Cube n : neighbors) {
-        if (box.getCubeState(n) == CubeState.AIR && !processed.contains(n)) {
+      List<Pixel> neighbors = box.neighborsInside(c);
+      for (Pixel n : neighbors) {
+        if (box.getPixelState(n) == PixelState.AIR && !processed.contains(n)) {
           queue.add(n);
           processed.add(n);
         }
@@ -97,7 +98,7 @@ public class Day18 extends Day {
     }
   }
 
-  private static boolean areCubesTouching(Cube c1, Cube c2) {
+  private static boolean arePixelsTouching(Pixel c1, Pixel c2) {
     boolean result = (c1.x == c2.x && c1.y == c2.y && Math.abs(c1.z - c2.z) == 1) ||
         (c1.x == c2.x && c1.z == c2.z && Math.abs(c1.y - c2.y) == 1) ||
         (c1.z == c2.z && c1.y == c2.y && Math.abs(c1.x - c2.x) == 1);
@@ -106,7 +107,7 @@ public class Day18 extends Day {
 
   private static final Pattern linePattern = Pattern.compile("(.*),(.*),(.*)");
 
-  private static Cube parseCube(String line) {
+  private static Pixel parsePixel(String line) {
     Matcher m = linePattern.matcher(line);
     if (!m.matches()) {
       throw new IllegalStateException("Bad input line: " + line);
@@ -114,82 +115,82 @@ public class Day18 extends Day {
     int x = Integer.parseInt(m.group(1).strip());
     int y = Integer.parseInt(m.group(2).strip());
     int z = Integer.parseInt(m.group(3).strip());
-    return new Cube(x, y, z);
+    return new Pixel(x, y, z);
   }
 
-  private static Box buildBox(List<Cube> cubes) {
-    int minX = cubes.stream().mapToInt(Cube::x).min().orElseThrow() - 1;
-    int minY = cubes.stream().mapToInt(Cube::y).min().orElseThrow() - 1;
-    int minZ = cubes.stream().mapToInt(Cube::z).min().orElseThrow() - 1;
-    Cube minCube = new Cube(minX, minY, minZ);
+  private static Box buildBox(List<Pixel> pixels) {
+    int minX = pixels.stream().mapToInt(Pixel::x).min().orElseThrow() - 1;
+    int minY = pixels.stream().mapToInt(Pixel::y).min().orElseThrow() - 1;
+    int minZ = pixels.stream().mapToInt(Pixel::z).min().orElseThrow() - 1;
+    Pixel minPixel = new Pixel(minX, minY, minZ);
 
-    int maxX = cubes.stream().mapToInt(Cube::x).max().orElseThrow() + 1;
-    int maxY = cubes.stream().mapToInt(Cube::y).max().orElseThrow() + 1;
-    int maxZ = cubes.stream().mapToInt(Cube::z).max().orElseThrow() + 1;
-    Cube maxCube = new Cube(maxX, maxY, maxZ);
+    int maxX = pixels.stream().mapToInt(Pixel::x).max().orElseThrow() + 1;
+    int maxY = pixels.stream().mapToInt(Pixel::y).max().orElseThrow() + 1;
+    int maxZ = pixels.stream().mapToInt(Pixel::z).max().orElseThrow() + 1;
+    Pixel maxPixel = new Pixel(maxX, maxY, maxZ);
 
-    Box box = new Box(minCube, maxCube);
+    Box box = new Box(minPixel, maxPixel);
     return box;
   }
 
-  private record Cube(int x, int y, int z) {}
+  private record Pixel(int x, int y, int z) {}
 
-  private enum CubeState {
+  private enum PixelState {
     LAVA,
     AIR,
     WATER
   }
 
   private static class Box {
-    Cube min;
-    Cube max;
-    Map<Cube, CubeState> cubeStateMap = new HashMap<>();
+    private final Pixel min;
+    private final Pixel max;
+    private final Map<Pixel, PixelState> pixelStateMap = new HashMap<>();
 
-    private Box(Cube min, Cube max) {
+    private Box(Pixel min, Pixel max) {
       this.min = min;
       this.max = max;
-      fillBoxWith(this, CubeState.AIR);
+      fillBoxWith(this, PixelState.AIR);
     }
 
-    private void setCubeState(Cube cube, CubeState state) {
-      cubeStateMap.put(cube, state);
+    private void setPixelState(Pixel pixel, PixelState state) {
+      pixelStateMap.put(pixel, state);
     }
 
-    private CubeState getCubeState(Cube cube) {
-      if (!cubeStateMap.containsKey(cube)) {
-        throw new IllegalStateException("Cube is not inside the box: " + cube);
+    private PixelState getPixelState(Pixel pixel) {
+      if (!pixelStateMap.containsKey(pixel)) {
+        throw new IllegalStateException("Pixel is not inside the box: " + pixel);
       }
-      return cubeStateMap.get(cube);
+      return pixelStateMap.get(pixel);
     }
 
-    private boolean isInside(Cube cube) {
-      boolean validX = (cube.x >= min.x && cube.x <= max.x);
-      boolean validY = (cube.y >= min.y && cube.y <= max.y);
-      boolean validZ = (cube.z >= min.z && cube.z <= max.z);
+    private boolean isInside(Pixel pixel) {
+      boolean validX = (pixel.x >= min.x && pixel.x <= max.x);
+      boolean validY = (pixel.y >= min.y && pixel.y <= max.y);
+      boolean validZ = (pixel.z >= min.z && pixel.z <= max.z);
       return validX && validY && validZ;
     }
 
-    private List<Cube> neighborsInside(Cube cube) {
-      List<Cube> neighbors =  List.of(
-          new Cube(cube.x, cube.y, cube.z + 1),
-          new Cube(cube.x, cube.y, cube.z - 1),
-          new Cube(cube.x, cube.y + 1, cube.z),
-          new Cube(cube.x, cube.y - 1, cube.z),
-          new Cube(cube.x + 1, cube.y, cube.z),
-          new Cube(cube.x - 1, cube.y, cube.z)
+    private List<Pixel> neighborsInside(Pixel pixel) {
+      List<Pixel> neighbors =  List.of(
+          new Pixel(pixel.x, pixel.y, pixel.z + 1),
+          new Pixel(pixel.x, pixel.y, pixel.z - 1),
+          new Pixel(pixel.x, pixel.y + 1, pixel.z),
+          new Pixel(pixel.x, pixel.y - 1, pixel.z),
+          new Pixel(pixel.x + 1, pixel.y, pixel.z),
+          new Pixel(pixel.x - 1, pixel.y, pixel.z)
       );
 
-      List<Cube> filtered = neighbors.stream()
+      List<Pixel> filtered = neighbors.stream()
           .filter(this::isInside)
           .toList();
       return filtered;
     }
 
-    private static void fillBoxWith(Box box, CubeState state) {
+    private static void fillBoxWith(Box box, PixelState state) {
       for (int x = box.min.x; x <= box.max.x; x++) {
         for (int y = box.min.y; y <= box.max.y; y++) {
           for (int z = box.min.z; z <= box.max.z; z++) {
-            box.setCubeState(new Cube(x, y, z), state);
+            box.setPixelState(new Pixel(x, y, z), state);
           }
         }
       }
