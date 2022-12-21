@@ -19,6 +19,13 @@ public class Day18 extends Day {
     return Integer.toString(allExposedSides);
   }
 
+  /**
+   * Approach:
+   * - Create a box that completely surrounds the lava object.
+   * - Set each point (pixel) within the box as filled with AIR.
+   * - Set the pixels in the box that denote lava with state LAVA.
+   * - Fill the rest of the box with water. Use Flood-Fill algorithm.
+   */
   @Override
   protected String part2(List<String> lines) {
     List<Cube> lavaCubes = lines.stream().map(Day18::parseCube).toList();
