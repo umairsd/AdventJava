@@ -15,6 +15,8 @@ import java.util.stream.Collectors;
  */
 public class Day21 extends Day {
 
+  private static final String HUMAN_NAME = "humn";
+
   public Day21() {
     super(21, 2022);
   }
@@ -28,17 +30,84 @@ public class Day21 extends Day {
 
   @Override
   protected String part2(List<String> lines) {
-    return null;
+    Node root = parseTree(lines);
+    boolean isInLeft = isInTree(HUMAN_NAME, root.left);
+    long result;
+    if (isInLeft) {
+      // Get the value of the right subtree. This is the expected value that the left
+      // subtree should produce.
+      long rightResult = preorderCompute(root.right);
+      result = valueOfHumanNodeToGeneratedExpectedResult(root.left, rightResult, HUMAN_NAME);
+
+    } else {
+      // Get the value of the left subtree. This is the expected value that the right
+      // subtree should produce.
+      long leftResult = preorderCompute(root.left);
+      result = valueOfHumanNodeToGeneratedExpectedResult(root.right, leftResult, HUMAN_NAME);
+    }
+    return Long.toString(result);
   }
 
   @Override
   protected String part1Filename() {
-    return filenameFromDataFileNumber(1);
+    return filenameFromDataFileNumber(2);
   }
 
   @Override
   protected String part2Filename() {
-    return filenameFromDataFileNumber(1);
+    return filenameFromDataFileNumber(2);
+  }
+
+  private static long valueOfHumanNodeToGeneratedExpectedResult(
+      Node root,
+      long expectedResult,
+      String humanNodeName
+  ) {
+    if (root == null) {
+      throw new IllegalStateException();
+    }
+    if (root.name.equals(humanNodeName)) {
+      return expectedResult;
+    }
+
+    boolean isInLeft = isInTree(humanNodeName, root.left);
+    if (isInLeft) {
+      long rightResult = preorderCompute(root.right);
+      long expectedLeftResult = switch (root.operation) {
+        // ex = l + r; => l = ex - r
+        case ADD -> expectedResult - rightResult;
+        // ex = l - r; => l = ex + r
+        case SUBTRACT -> expectedResult + rightResult;
+        // ex = l * r; => l = ex / r
+        case MULTIPLY -> expectedResult / rightResult;
+        // ex = l / r; => l => ex * r
+        case DIVIDE -> expectedResult * rightResult;
+        default -> throw new IllegalStateException();
+      };
+      return valueOfHumanNodeToGeneratedExpectedResult(
+          root.left,
+          expectedLeftResult,
+          humanNodeName);
+
+    } else {
+      long leftResult = preorderCompute(root.left);
+      long expectedRightResult = switch (root.operation) {
+        // ex = l + r; => r = ex - l
+        case ADD -> expectedResult - leftResult;
+        // ex = l - r; => r = l - ex
+        case SUBTRACT -> leftResult - expectedResult;
+        // ex = l * r; => r = ex / l
+        case MULTIPLY -> expectedResult / leftResult;
+        // ex = l / r; => r = l / ex
+        case DIVIDE -> leftResult / expectedResult;
+        // default
+        default -> throw new IllegalStateException();
+      };
+      return valueOfHumanNodeToGeneratedExpectedResult(
+          root.right,
+          expectedRightResult,
+          humanNodeName);
+    }
   }
 
   private static long preorderCompute(Node root) {
@@ -55,6 +124,20 @@ public class Day21 extends Day {
       case DIVIDE -> leftValue / rightValue;
     };
     return result;
+  }
+
+  private static boolean isInTree(String nodeName, Node root) {
+    if (root == null) {
+      return false;
+    }
+
+    if (root.name.equals(nodeName)) {
+      return true;
+    }
+
+    boolean isInLeft = isInTree(nodeName, root.left);
+    boolean isInRight = isInTree(nodeName, root.right);
+    return isInLeft || isInRight;
   }
 
   private static Node parseTree(List<String> lines) {
@@ -89,9 +172,11 @@ public class Day21 extends Day {
   }
 
   private static Operation parseOperation(String s) {
-    if (s == null) { return Operation.LITERAL; }
+    if (s == null) {
+      return Operation.LITERAL;
+    }
 
-    return switch(s) {
+    return switch (s) {
       case "+" -> Operation.ADD;
       case "-" -> Operation.SUBTRACT;
       case "*" -> Operation.MULTIPLY;
@@ -127,7 +212,8 @@ public class Day21 extends Day {
     }
   }
 
-  private record NodeData(String name, String leftName, String op, String value, String rightName) { }
+  private record NodeData(String name, String leftName, String op, String value, String rightName) {
+  }
 
   private enum Operation {
     LITERAL,
