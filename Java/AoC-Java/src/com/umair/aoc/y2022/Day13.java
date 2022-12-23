@@ -67,12 +67,12 @@ public class Day13 extends Day {
 
   @Override
   protected String part1Filename() {
-    return filenameFromDataFileNumber(2);
+    return fileNameFromFileNumber(2);
   }
 
   @Override
   protected String part2Filename() {
-    return filenameFromDataFileNumber(2);
+    return fileNameFromFileNumber(2);
   }
 
   private static Packet buildDecoderPacket(int value) {

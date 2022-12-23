@@ -2,19 +2,12 @@ package com.umair.aoc.common;
 
 import com.umair.aoc.util.FileUtils;
 
-import java.text.DecimalFormat;
 import java.util.List;
 
 public abstract class Day {
 
-  private static final String RESOURCES_PATH_PREFIX = "./resources";
-  private static final String PATH_SEPARATOR = "/";
-  private static final String FILE_NAME_PREFIX = "day";
-  private static final String FILE_NAME_SUFFIX = "-data";
-  private static final String FILE_EXTENSION = ".txt";
-
-  protected int dayNumber;
-  protected int year;
+  private final int dayNumber;
+  private final int year;
 
   public Day(int day, int year) {
     this.dayNumber = day;
@@ -41,6 +34,14 @@ public abstract class Day {
     return result;
   }
 
+  public int getDayNumber() {
+    return dayNumber;
+  }
+
+  public int getYear() {
+    return year;
+  }
+
   protected abstract String part1(List<String> lines);
 
   protected abstract String part2(List<String> lines);
@@ -53,21 +54,7 @@ public abstract class Day {
     return FileUtils.readAllLinesFromFile(filename);
   }
 
-  protected String filenameFromDataFileNumber(int part) {
-    DecimalFormat dayFormat = new DecimalFormat("00");
-    DecimalFormat yearFormat = new DecimalFormat("0000");
-
-    // year/day<dayNumber>-part2.txt
-    String result = RESOURCES_PATH_PREFIX +
-        PATH_SEPARATOR +
-        yearFormat.format(year) +
-        PATH_SEPARATOR +
-        FILE_NAME_PREFIX +
-        dayFormat.format(dayNumber) +
-        FILE_NAME_SUFFIX +
-        part +
-        FILE_EXTENSION;
-
-    return result;
+  public String fileNameFromFileNumber(int number) {
+    return FileUtils.filenameForDayAndFileNumber(this, number);
   }
 }

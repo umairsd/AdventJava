@@ -46,12 +46,12 @@ public class Day12 extends Day {
 
   @Override
   protected String part1Filename() {
-    return filenameFromDataFileNumber(4);
+    return fileNameFromFileNumber(4);
   }
 
   @Override
   protected String part2Filename() {
-    return filenameFromDataFileNumber(4);
+    return fileNameFromFileNumber(4);
   }
 
   private static int dfsVisit(

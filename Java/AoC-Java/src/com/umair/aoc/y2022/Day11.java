@@ -85,12 +85,12 @@ public class Day11 extends Day {
 
   @Override
   protected String part1Filename() {
-    return filenameFromDataFileNumber(1);
+    return fileNameFromFileNumber(1);
   }
 
   @Override
   protected String part2Filename() {
-    return filenameFromDataFileNumber(1);
+    return fileNameFromFileNumber(1);
   }
 
   private static Monkey parseMonkey(List<String> lines) {

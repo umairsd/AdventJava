@@ -64,12 +64,12 @@ public class Day10 extends Day {
 
   @Override
   protected String part1Filename() {
-    return filenameFromDataFileNumber(3);
+    return fileNameFromFileNumber(3);
   }
 
   @Override
   protected String part2Filename() {
-    return filenameFromDataFileNumber(3);
+    return fileNameFromFileNumber(3);
   }
 
   /**

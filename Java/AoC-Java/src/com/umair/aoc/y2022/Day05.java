@@ -61,12 +61,12 @@ public class Day05 extends Day {
 
   @Override
   protected String part1Filename() {
-    return filenameFromDataFileNumber(2);
+    return fileNameFromFileNumber(2);
   }
 
   @Override
   protected String part2Filename() {
-    return filenameFromDataFileNumber(2);
+    return fileNameFromFileNumber(2);
   }
 
   private static String getTopsOfAllStacks(Map<Integer, List<String>> stackMap) {
