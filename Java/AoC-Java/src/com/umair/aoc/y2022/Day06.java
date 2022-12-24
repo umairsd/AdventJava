@@ -16,7 +16,6 @@ public class Day06 extends Day {
 
   @Override
   protected String part1(List<String> lines) {
-    assert(lines.size() == 1);
     String signal = lines.get(0);
 
     char[] characters = signal.toCharArray();
