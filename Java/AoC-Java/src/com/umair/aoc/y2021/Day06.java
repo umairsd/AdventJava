@@ -6,6 +6,10 @@ import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+/**
+ * Day 6: Lanternfish
+ * <a href="https://adventofcode.com/2021/day/6">2021, Day-06</a>
+ */
 public class Day06 extends Day {
 
   private static final int TIME_TO_SPAWN_PARENT = 6;
@@ -41,7 +45,8 @@ public class Day06 extends Day {
 
   @Override
   protected String part2(List<String> lines) {
-    Map<Long, Long> timerToCountMap = Arrays.stream(lines.get(0).strip().split(","))
+    String[] initialFish = lines.get(0).strip().split(",");
+    Map<Long, Long> timerToCountMap = Arrays.stream(initialFish)
         .map(String::strip)
         .map(Long::parseLong)
         .collect(Collectors.groupingBy(Function.identity(), Collectors.counting()));
@@ -52,7 +57,7 @@ public class Day06 extends Day {
       generations.add(g);
     }
 
-    long totalFish = generations.size();
+    long totalFish = initialFish.length;
 
     int iterationCount = 0;
     while (iterationCount < 256) {
@@ -75,7 +80,7 @@ public class Day06 extends Day {
       iterationCount++;
     }
 
-    return Long.toString(totalFish); // 1639643057051
+    return Long.toString(totalFish);
   }
 
   @Override
