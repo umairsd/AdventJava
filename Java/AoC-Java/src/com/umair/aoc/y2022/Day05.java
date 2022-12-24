@@ -24,7 +24,7 @@ public class Day05 extends Day {
       List<String> sourceStack = stackMap.get(instruction.source);
       List<String> destinationStack = stackMap.get(instruction.destination);
 
-      assert(remainingCount >= sourceStack.size());
+      assert(remainingCount > 0);
 
       while (remainingCount > 0) {
         String itemToMove = sourceStack.remove(sourceStack.size() - 1);
@@ -46,8 +46,6 @@ public class Day05 extends Day {
     for (MoveInstruction instruction : instructions) {
       List<String> sourceStack = stackMap.get(instruction.source);
       List<String> destinationStack = stackMap.get(instruction.destination);
-
-      assert (instruction.count >= sourceStack.size());
 
       int startIndex = sourceStack.size() - instruction.count;
       List<String> itemsToMove = sourceStack.subList(startIndex, sourceStack.size());

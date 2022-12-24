@@ -63,7 +63,7 @@ public class Day03 extends Day {
     List<Character> common = new ArrayList<>(l1);
     common.retainAll(l2);
 
-    assert(common.size() == 1);
+    assert(common.size() >= 1);
     return common.get(0);
   }
 
@@ -121,7 +121,7 @@ public class Day03 extends Day {
       common.retainAll(rucksacks.get(1).rucksackContents);
       common.retainAll(rucksacks.get(2).rucksackContents);
 
-      assert(common.size() == 1);
+      assert(common.size() >= 1);
       return common.get(0);
     }
   }
