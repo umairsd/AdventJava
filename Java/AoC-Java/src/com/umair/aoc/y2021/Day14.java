@@ -172,10 +172,6 @@ public class Day14 extends Day {
     Map<String, String> rules = new HashMap<>();
     for (String line : lines) {
       String[] tokens = line.strip().split("->");
-
-      assert (tokens[1].strip().length() == 2);
-      assert (tokens[1].strip().length() == 1);
-
       rules.put(tokens[0].strip(), tokens[1].strip());
     }
     return rules;
