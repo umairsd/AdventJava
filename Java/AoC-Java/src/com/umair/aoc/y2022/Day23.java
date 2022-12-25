@@ -35,21 +35,31 @@ public class Day23 extends Day {
       occupiedPositions = elves.stream().map(e -> e.currentPosition).collect(Collectors.toSet());
     }
 
-
-    int minRow = elves.stream().mapToInt(e -> e.currentPosition.row).min().orElseThrow();
-    int maxRow = elves.stream().mapToInt(e -> e.currentPosition.row).max().orElseThrow();
-    int minColumn = elves.stream().mapToInt(e -> e.currentPosition.column).min().orElseThrow();
-    int maxColumn = elves.stream().mapToInt(e -> e.currentPosition.column).max().orElseThrow();
-
-    int area = (maxRow - minRow + 1) * (maxColumn - minColumn + 1);
-    int emptyTileCount = area - elves.size();
-
+    int emptyTileCount = emptyTileCount(elves);
     return Integer.toString(emptyTileCount);
   }
 
   @Override
   protected String part2(List<String> lines) {
-    return null;
+    List<Elf> elves = parseElves(lines);
+    Set<Position> occupiedPositions = elves.stream()
+        .map(e -> e.currentPosition)
+        .collect(Collectors.toSet());
+    List<Direction> movementOrder = new LinkedList<>(List.of(
+        Direction.NORTH, Direction.SOUTH, Direction.WEST, Direction.EAST));
+
+    int round = 1;
+    while (executeOneRound(elves, occupiedPositions, movementOrder)) {
+      round++;
+
+      // Update the preferred direction of movement.
+      var d = movementOrder.remove(0);
+      movementOrder.add(d);
+      // Update occupied positions.
+      occupiedPositions = elves.stream().map(e -> e.currentPosition).collect(Collectors.toSet());
+    }
+
+    return Integer.toString(round);
   }
 
   @Override
@@ -59,7 +69,7 @@ public class Day23 extends Day {
 
   @Override
   protected String part2Filename() {
-    return fileNameFromFileNumber(1);
+    return fileNameFromFileNumber(2);
   }
 
   /**
@@ -107,6 +117,17 @@ public class Day23 extends Day {
     }
 
     return true;
+  }
+
+  private static int emptyTileCount(List<Elf> elves) {
+    int minRow = elves.stream().mapToInt(e -> e.currentPosition.row).min().orElseThrow();
+    int maxRow = elves.stream().mapToInt(e -> e.currentPosition.row).max().orElseThrow();
+    int minColumn = elves.stream().mapToInt(e -> e.currentPosition.column).min().orElseThrow();
+    int maxColumn = elves.stream().mapToInt(e -> e.currentPosition.column).max().orElseThrow();
+
+    int area = (maxRow - minRow + 1) * (maxColumn - minColumn + 1);
+    int emptyTileCount = area - elves.size();
+    return emptyTileCount;
   }
 
   private enum Direction {
@@ -202,18 +223,21 @@ public class Day23 extends Day {
       boolean hasNorthWest = occupiedPositions.contains(elf.neighborsMap.get(Direction.NORTH_WEST));
       return !hasNorthEast && !hasNorth && !hasNorthWest;
     }
+
     private static boolean isSouthEmpty(Set<Position> occupiedPositions, Elf elf) {
       boolean hasSouth = occupiedPositions.contains(elf.neighborsMap.get(Direction.SOUTH));
       boolean hasSouthEast = occupiedPositions.contains(elf.neighborsMap.get(Direction.SOUTH_EAST));
       boolean hasSouthWest = occupiedPositions.contains(elf.neighborsMap.get(Direction.SOUTH_WEST));
       return !hasSouthEast && !hasSouth && !hasSouthWest;
     }
+
     private static boolean isEastEmpty(Set<Position> occupiedPositions, Elf elf) {
       boolean hasEast = occupiedPositions.contains(elf.neighborsMap.get(Direction.EAST));
       boolean hasNorthEast = occupiedPositions.contains(elf.neighborsMap.get(Direction.NORTH_EAST));
       boolean hasSouthEast = occupiedPositions.contains(elf.neighborsMap.get(Direction.SOUTH_EAST));
       return !hasNorthEast && !hasEast && !hasSouthEast;
     }
+
     private static boolean isWestEmpty(Set<Position> occupiedPositions, Elf elf) {
       boolean hasWest = occupiedPositions.contains(elf.neighborsMap.get(Direction.WEST));
       boolean hasNorthWest = occupiedPositions.contains(elf.neighborsMap.get(Direction.NORTH_WEST));
@@ -222,8 +246,10 @@ public class Day23 extends Day {
     }
   }
 
-  private record Position(int row, int column) {}
+  private record Position(int row, int column) {
+  }
 
+  @SuppressWarnings("unused")
   private static String debugElves(List<Elf> elves) {
     Set<Position> occupiedPositions = elves.stream()
         .map(e -> e.currentPosition)
