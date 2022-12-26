@@ -6,6 +6,10 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+/**
+ * Day 22: Monkey Map
+ * <a href="https://adventofcode.com/2022/day/22">2022, Day-22</a>
+ */
 public class Day22 extends Day {
 
   private static final char WALL = '#';
