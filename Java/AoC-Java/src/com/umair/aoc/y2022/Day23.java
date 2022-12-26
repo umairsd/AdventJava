@@ -5,6 +5,10 @@ import com.umair.aoc.common.Day;
 import java.util.*;
 import java.util.stream.Collectors;
 
+/**
+ * Day 23: Unstable Diffusion
+ * <a href="https://adventofcode.com/2022/day/23">2022, Day-23</a>
+ */
 public class Day23 extends Day {
 
   public Day23() {
