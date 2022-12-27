@@ -2,6 +2,7 @@ package com.umair.aoc.y2022;
 
 import com.umair.aoc.common.Day;
 
+import java.awt.*;
 import java.util.*;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -12,6 +13,9 @@ import java.util.stream.Collectors;
  */
 public class Day24 extends Day {
 
+  private static final char EMPTY = '.';
+  private static final char WALL = '#';
+
   public Day24() {
     super(24, 2022);
   }
@@ -19,10 +23,27 @@ public class Day24 extends Day {
   @Override
   protected String part1(List<String> lines) {
     MapState mapState = parseMapState(lines);
-
     int steps = bfs(mapState.start, mapState.end, mapState, 0);
     return Integer.toString(steps);
   }
+
+  private record Step(int stepCount, Point location) {}
+
+  @Override
+  protected String part2(List<String> lines) {
+    return null;
+  }
+
+  @Override
+  protected String part1Filename() {
+    return fileNameFromFileNumber(2);
+  }
+
+  @Override
+  protected String part2Filename() {
+    return fileNameFromFileNumber(1);
+  }
+
 
   private static int bfs(
       Point start,
@@ -36,7 +57,7 @@ public class Day24 extends Day {
     stepsToMapState.put(stepsSoFar, initial);
     // Queue to maintain BFS traversal.
     Queue<Step> queue = new ArrayDeque<>();
-    queue.add(new Step(0, start));
+    queue.add(new Step(stepsSoFar, start));
     // To mark Steps that we have seen and processed.
     Set<Step> seen = new HashSet<>();
 
@@ -60,16 +81,15 @@ public class Day24 extends Day {
       }
       MapState nextMapState = stepsToMapState.get(nextStepCount);
 
+      // Can we stay in the current location?
+      if (!nextMapState.blizzardLocations.contains(currentStep.location)) {
+        queue.add(new Step(nextStepCount, currentStep.location));
+      }
+
       // How many neighboring positions will be open for the next state?
       List<Point> openNeighbors = nextMapState.openNeighborsOfPoint(currentStep.location);
-      if (openNeighbors.size() == 0) {
-        // There are no open neighbors. Just wait.
-        queue.add(new Step(nextStepCount, currentStep.location));
-
-      } else {
-        for (Point neighbor : openNeighbors) {
-          queue.add(new Step(nextStepCount, neighbor));
-        }
+      for (Point neighbor : openNeighbors) {
+        queue.add(new Step(nextStepCount, neighbor));
       }
     }
 
@@ -77,30 +97,13 @@ public class Day24 extends Day {
     throw new IllegalStateException("We never reached the end location.");
   }
 
-  private record Step(int stepCount, Point location) {}
-
-  @Override
-  protected String part2(List<String> lines) {
-    return null;
-  }
-
-  @Override
-  protected String part1Filename() {
-    return fileNameFromFileNumber(2);
-  }
-
-  @Override
-  protected String part2Filename() {
-    return fileNameFromFileNumber(1);
-  }
-
   private static MapState parseMapState(List<String> lines) {
     int rowCount = lines.size();
     int columnCount = lines.get(rowCount - 1).length();
 
     Point bottomRight = new Point(rowCount - 1, columnCount - 1);
-    Point start = new Point(0, lines.get(0).indexOf('.'));
-    Point end = new Point(lines.size() - 1, lines.get(lines.size() - 1).indexOf('.'));
+    Point start = new Point(0, lines.get(0).indexOf(EMPTY));
+    Point end = new Point(lines.size() - 1, lines.get(lines.size() - 1).indexOf(EMPTY));
 
     Set<Blizzard> blizzards = new HashSet<>();
     for (int row = 0; row < rowCount; row++) {
@@ -133,12 +136,16 @@ public class Day24 extends Day {
     private final Point end;
     private final Point bottomRight;
     private final Set<Blizzard> blizzards;
+    private final Set<Point> blizzardLocations;
 
     MapState(Point start, Point end, Point bottomRight, Set<Blizzard> blizzards) {
       this.start = start;
       this.end = end;
       this.bottomRight = bottomRight;
       this.blizzards = blizzards;
+      this.blizzardLocations = blizzards.stream()
+          .map(Blizzard::position)
+          .collect(Collectors.toSet());
     }
 
     private int getNextRowForBlizzard(Blizzard b) {
@@ -207,10 +214,6 @@ public class Day24 extends Day {
           new Point(point.row - 1, point.column)
       );
 
-      Set<Point> blizzardLocations = blizzards.stream()
-          .map(Blizzard::position)
-          .collect(Collectors.toSet());
-
       List<Point> filteredNeighbors = new ArrayList<>();
       for (Point p : neighbors) {
         if (p.equals(end) || (isInBounds(p) && !blizzardLocations.contains(p))) {
@@ -258,10 +261,10 @@ public class Day24 extends Day {
           Point p = new Point(row, column);
 
           if (p.equals(start) || p.equals(end)) {
-            sb.append('.');
+            sb.append(EMPTY);
           } else if (row == 0 || row == bottomRight.row ||
               column == 0 || column == bottomRight.column) {
-            sb.append('#');
+            sb.append(WALL);
           } else {
             if (blizzardLocations.containsKey(p)) {
               List<Blizzard> blizzards = blizzardLocations.get(p);
@@ -277,7 +280,7 @@ public class Day24 extends Day {
                 sb.append(blizzards.size());
               }
             } else {
-              sb.append('.');
+              sb.append(EMPTY);
             }
           }
         }
