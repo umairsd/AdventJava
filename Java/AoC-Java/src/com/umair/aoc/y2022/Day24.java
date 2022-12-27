@@ -18,44 +18,27 @@ public class Day24 extends Day {
 
   @Override
   protected String part1(List<String> lines) {
-    MapState mapState = parseMap(lines);
+    MapState mapState = parseMapState(lines);
 
-    Point expeditionLocation = new Point(0, lines.get(0).indexOf('.'));
-    Point end = new Point(lines.size() - 1, lines.get(lines.size() - 1).indexOf('.'));
-    Map<Integer, MapState> stepsToMapState = buildStepsToMapState(mapState, 50);
-
-    int steps = bfs(expeditionLocation, end, stepsToMapState);
+    int steps = bfs(mapState.start, mapState.end, mapState, 0);
     return Integer.toString(steps);
   }
 
-  private static Map<Integer, MapState> buildStepsToMapState(MapState mapState, int iterations) {
-    Map<Integer, MapState> stepsToMapStateMap = new HashMap<>();
-    int step = 0;
-    while (step < iterations) {
-      System.out.println("Minute " + step + ", ");
-      System.out.println(mapState);
-      stepsToMapStateMap.put(step, mapState);
-      mapState = mapState.getNextState();
-
-      step++;
-    }
-    return stepsToMapStateMap;
-  }
-
   private static int bfs(
-      Point expeditionLocation,
+      Point start,
       Point end,
-//      MapState mapState,
-      Map<Integer, MapState> stepsToMapState
+      MapState initial,
+      int stepsSoFar
   ) {
+
+    // A map between the current step number, and the corresponding map state.
+    Map<Integer, MapState> stepsToMapState = new HashMap<>();
+    stepsToMapState.put(stepsSoFar, initial);
     // Queue to maintain BFS traversal.
     Queue<Step> queue = new ArrayDeque<>();
-    // To mark Steps that we have seen: i.e. added to the queue.
+    queue.add(new Step(0, start));
+    // To mark Steps that we have seen and processed.
     Set<Step> seen = new HashSet<>();
-
-    Step step = new Step(0, expeditionLocation);
-    queue.add(step);
-    seen.add(step);
 
     while (!queue.isEmpty()) {
       Step currentStep = queue.poll();
@@ -65,17 +48,24 @@ public class Day24 extends Day {
       if (currentStep.location.equals(end)) {
         return currentStep.stepCount;
       }
+      // We've processed the current step. Add it to the set of seen steps.
+      seen.add(currentStep);
 
       int nextStepCount = currentStep.stepCount + 1;
+      if (!stepsToMapState.containsKey(nextStepCount)) {
+        // If the map does not contain a mapping for the next state, generate one from the current
+        // state.
+        MapState currentState = stepsToMapState.get(currentStep.stepCount);
+        stepsToMapState.put(nextStepCount, currentState.getNextState());
+      }
       MapState nextMapState = stepsToMapState.get(nextStepCount);
 
       // How many neighboring positions will be open for the next state?
       List<Point> openNeighbors = nextMapState.openNeighborsOfPoint(currentStep.location);
       if (openNeighbors.size() == 0) {
         // There are no open neighbors. Just wait.
-        Step nextStep = new Step(nextStepCount, currentStep.location);
-        queue.add(nextStep);
-        seen.add(nextStep);
+        queue.add(new Step(nextStepCount, currentStep.location));
+
       } else {
         for (Point neighbor : openNeighbors) {
           queue.add(new Step(nextStepCount, neighbor));
@@ -84,7 +74,7 @@ public class Day24 extends Day {
     }
 
     // If we never reach the end, something has gone wrong.
-    throw new IllegalStateException();
+    throw new IllegalStateException("We never reached the end location.");
   }
 
   private record Step(int stepCount, Point location) {}
@@ -96,7 +86,7 @@ public class Day24 extends Day {
 
   @Override
   protected String part1Filename() {
-    return fileNameFromFileNumber(1);
+    return fileNameFromFileNumber(2);
   }
 
   @Override
@@ -104,11 +94,13 @@ public class Day24 extends Day {
     return fileNameFromFileNumber(1);
   }
 
-  private static MapState parseMap(List<String> lines) {
+  private static MapState parseMapState(List<String> lines) {
     int rowCount = lines.size();
     int columnCount = lines.get(rowCount - 1).length();
+
     Point bottomRight = new Point(rowCount - 1, columnCount - 1);
-    Point expedition = new Point(0, lines.get(0).indexOf('.'));
+    Point start = new Point(0, lines.get(0).indexOf('.'));
+    Point end = new Point(lines.size() - 1, lines.get(lines.size() - 1).indexOf('.'));
 
     Set<Blizzard> blizzards = new HashSet<>();
     for (int row = 0; row < rowCount; row++) {
@@ -122,8 +114,7 @@ public class Day24 extends Day {
       }
     }
 
-    var mapState = new MapState(bottomRight, blizzards);
-    mapState.expedition = expedition;
+    var mapState = new MapState(start, end, bottomRight, blizzards);
     return mapState;
   }
 
@@ -138,11 +129,14 @@ public class Day24 extends Day {
   }
 
   private static class MapState {
-    Point expedition; // For debugging.
-    Point bottomRight;
-    Set<Blizzard> blizzards;
+    private final Point start;
+    private final Point end;
+    private final Point bottomRight;
+    private final Set<Blizzard> blizzards;
 
-    MapState(Point bottomRight, Set<Blizzard> blizzards) {
+    MapState(Point start, Point end, Point bottomRight, Set<Blizzard> blizzards) {
+      this.start = start;
+      this.end = end;
       this.bottomRight = bottomRight;
       this.blizzards = blizzards;
     }
@@ -198,7 +192,7 @@ public class Day24 extends Day {
      */
     private MapState getNextState() {
       Set<Blizzard> updatedBlizzards = blizzardsAfterOneStep(this);
-      MapState nextState = new MapState(this.bottomRight, updatedBlizzards);
+      MapState nextState = new MapState(this.start, this.end, this.bottomRight, updatedBlizzards);
       return nextState;
     }
 
@@ -217,13 +211,23 @@ public class Day24 extends Day {
           .map(Blizzard::position)
           .collect(Collectors.toSet());
 
-      List<Point> filteredNeighbors = neighbors.stream()
-          .filter(p -> p.row > 0 && p.row < bottomRight.row)
-          .filter(p -> p.column > 0 && p.column < bottomRight.column)
-          .filter(p -> !blizzardLocations.contains(p))
-          .toList();
-
+      List<Point> filteredNeighbors = new ArrayList<>();
+      for (Point p : neighbors) {
+        if (p.equals(end) || (isInBounds(p) && !blizzardLocations.contains(p))) {
+          filteredNeighbors.add(p);
+        }
+      }
       return filteredNeighbors;
+    }
+
+    /**
+     * Whether the current point is within the bounds of this map.
+     */
+    private boolean isInBounds(Point p) {
+      return p.row > 0 &&
+          p.row < bottomRight.row &&
+          p.column > 0 &&
+          p.column < bottomRight.column;
     }
 
     /**
@@ -253,8 +257,8 @@ public class Day24 extends Day {
         for (int column = 0; column <= bottomRight.column; column++) {
           Point p = new Point(row, column);
 
-          if (p.equals(expedition)) {
-            sb.append('E');
+          if (p.equals(start) || p.equals(end)) {
+            sb.append('.');
           } else if (row == 0 || row == bottomRight.row ||
               column == 0 || column == bottomRight.column) {
             sb.append('#');
