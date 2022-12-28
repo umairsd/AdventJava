@@ -2,7 +2,6 @@ package com.umair.aoc.y2022;
 
 import com.umair.aoc.common.Day;
 
-import java.awt.*;
 import java.util.*;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -23,15 +22,27 @@ public class Day24 extends Day {
   @Override
   protected String part1(List<String> lines) {
     MapState mapState = parseMapState(lines);
-    int steps = bfs(mapState.start, mapState.end, mapState, 0);
-    return Integer.toString(steps);
+    var bfsResult = bfsFromStartToEnd(mapState);
+    return Integer.toString(bfsResult.steps);
   }
-
-  private record Step(int stepCount, Point location) {}
 
   @Override
   protected String part2(List<String> lines) {
-    return null;
+    MapState mapState = parseMapState(lines);
+    var tripOneResult = bfsFromStartToEnd(mapState);
+
+    MapState tripTwoState = tripOneResult.mapState;
+    tripTwoState.start = mapState.end;
+    tripTwoState.end = mapState.start;
+    var tripTwoResult = bfsFromStartToEnd(tripTwoState);
+
+    MapState tripThreeState = tripTwoResult.mapState;
+    tripThreeState.start = mapState.start; // Same as trip 1
+    tripThreeState.end = mapState.end; // Same as trip 1
+    var tripThreeResult = bfsFromStartToEnd(tripThreeState);
+
+    int totalSteps = tripOneResult.steps + tripTwoResult.steps + tripThreeResult.steps;
+    return Integer.toString(totalSteps);
   }
 
   @Override
@@ -41,34 +52,32 @@ public class Day24 extends Day {
 
   @Override
   protected String part2Filename() {
-    return fileNameFromFileNumber(1);
+    return fileNameFromFileNumber(2);
   }
 
 
-  private static int bfs(
-      Point start,
-      Point end,
-      MapState initial,
-      int stepsSoFar
-  ) {
+  private static BFSResult bfsFromStartToEnd(MapState initial) {
 
     // A map between the current step number, and the corresponding map state.
     Map<Integer, MapState> stepsToMapState = new HashMap<>();
-    stepsToMapState.put(stepsSoFar, initial);
+    stepsToMapState.put(0, initial);
     // Queue to maintain BFS traversal.
     Queue<Step> queue = new ArrayDeque<>();
-    queue.add(new Step(stepsSoFar, start));
+    queue.add(new Step(0, initial.start));
     // To mark Steps that we have seen and processed.
     Set<Step> seen = new HashSet<>();
+
+    Point endLocation = initial.end;
 
     while (!queue.isEmpty()) {
       Step currentStep = queue.poll();
       if (seen.contains(currentStep)) {
         continue;
       }
-      if (currentStep.location.equals(end)) {
-        return currentStep.stepCount;
+      if (currentStep.location.equals(endLocation)) {
+        return new BFSResult(currentStep.stepCount, stepsToMapState.get(currentStep.stepCount));
       }
+
       // We've processed the current step. Add it to the set of seen steps.
       seen.add(currentStep);
 
@@ -96,6 +105,10 @@ public class Day24 extends Day {
     // If we never reach the end, something has gone wrong.
     throw new IllegalStateException("We never reached the end location.");
   }
+
+  private record BFSResult(int steps, MapState mapState) {}
+
+  private record Step(int stepCount, Point location) {}
 
   private static MapState parseMapState(List<String> lines) {
     int rowCount = lines.size();
@@ -132,8 +145,8 @@ public class Day24 extends Day {
   }
 
   private static class MapState {
-    private final Point start;
-    private final Point end;
+    private Point start;
+    private Point end;
     private final Point bottomRight;
     private final Set<Blizzard> blizzards;
     private final Set<Point> blizzardLocations;
