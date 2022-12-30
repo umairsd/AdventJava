@@ -8,6 +8,10 @@ import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
+/**
+ * Day 20: Grove Positioning System
+ * <a href="https://adventofcode.com/2022/day/20">2022, Day-20</a>
+ */
 public class Day20 extends Day {
 
   public Day20() {
