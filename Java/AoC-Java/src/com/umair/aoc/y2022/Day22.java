@@ -23,14 +23,14 @@ public class Day22 extends Day {
   protected String part1(List<String> lines) {
     int splitIndex = lines.indexOf("");
     Board board = Board.parseBoard(lines.subList(0, splitIndex));
-    List<Move> moves = Move.parseMoves(lines.get(lines.size() - 1));
+    List<Instruction> instructions = Instruction.parseInstructions(lines.get(lines.size() - 1));
 
     Position currentPosition = board.getStart();
     Direction currentDirection = Direction.RIGHT;
 
-    for (Move m : moves) {
-      switch (m.step) {
-        case MOVE -> currentPosition = switch (currentDirection) {
+    for (Instruction m : instructions) {
+      switch (m.instructionType) {
+        case FORWARD -> currentPosition = switch (currentDirection) {
           case DOWN -> board.moveVertically(m.distance, currentPosition);
           case LEFT -> board.moveHorizontally(-m.distance, currentPosition);
           case RIGHT -> board.moveHorizontally(m.distance, currentPosition);
@@ -218,41 +218,42 @@ public class Day22 extends Day {
     UP,
   }
 
-  private enum Step {
-    MOVE,
+  private enum InstructionType {
+    FORWARD,
     TURN_LEFT,
     TURN_RIGHT
   }
 
-  private record Move(Step step, int distance) {
-    private static Move parseMove(String s, int startIndex, int endIndex) {
+  private record Instruction(InstructionType instructionType, int distance) {
+
+    private static Instruction parseInstruction(String s, int startIndex, int endIndex) {
       String substring = s.substring(startIndex, endIndex);
-      Move m = new Move(Step.MOVE, Integer.parseInt(substring));
+      Instruction m = new Instruction(InstructionType.FORWARD, Integer.parseInt(substring));
       return m;
     }
 
-    private static List<Move> parseMoves(String line) {
+    private static List<Instruction> parseInstructions(String line) {
       int prevIndex = 0;
       int currentIndex = 0;
-      List<Move> moves = new ArrayList<>();
+      List<Instruction> instructions = new ArrayList<>();
 
       while (currentIndex < line.length()) {
         if (line.charAt(currentIndex) == 'R') {
-          moves.add(Move.parseMove(line, prevIndex, currentIndex));
-          moves.add(new Move(Step.TURN_RIGHT, 0));
+          instructions.add(Instruction.parseInstruction(line, prevIndex, currentIndex));
+          instructions.add(new Instruction(InstructionType.TURN_RIGHT, 0));
           prevIndex = currentIndex + 1;
 
         } else if (line.charAt(currentIndex) == 'L') {
-          moves.add(Move.parseMove(line, prevIndex, currentIndex));
-          moves.add(new Move(Step.TURN_LEFT, 0));
+          instructions.add(Instruction.parseInstruction(line, prevIndex, currentIndex));
+          instructions.add(new Instruction(InstructionType.TURN_LEFT, 0));
           prevIndex = currentIndex + 1;
         }
 
         currentIndex++;
       }
 
-      moves.add(Move.parseMove(line, prevIndex, currentIndex));
-      return moves;
+      instructions.add(Instruction.parseInstruction(line, prevIndex, currentIndex));
+      return instructions;
     }
   }
 
