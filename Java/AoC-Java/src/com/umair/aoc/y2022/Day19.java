@@ -14,6 +14,7 @@ import java.util.regex.Pattern;
 public class Day19 extends Day {
 
   private static final int TOTAL_ROUNDS_PART1 = 24;
+  private static final int TOTAL_ROUNDS_PART2 = 32;
 
   public Day19() {
     super(19, 2022);
@@ -40,7 +41,21 @@ public class Day19 extends Day {
 
   @Override
   protected String part2(List<String> lines) {
-    return null;
+    List<Blueprint> blueprints = lines.stream().map(Day19::parseBlueprint).limit(3).toList();
+    int result = 1;
+
+    for (Blueprint blueprint : blueprints) {
+      // Start with enough ore to build an ore-robot, to bootstrap the entire operation.
+      // This requires that we add an extra turn.
+      ProductionState initialState = new ProductionState();
+      initialState.ore = blueprint.oreSpec.oreCost;
+      initialState.robotTypeToConstruct = RobotType.ORE;
+
+      int geodes = findMostGeodes(blueprint, TOTAL_ROUNDS_PART2 + 1, initialState);
+      result *= geodes;
+    }
+
+    return Integer.toString(result);
   }
 
   @Override
@@ -50,7 +65,7 @@ public class Day19 extends Day {
 
   @Override
   protected String part2Filename() {
-    return fileNameFromFileNumber(1);
+    return fileNameFromFileNumber(2);
   }
 
   private static final Pattern linePattern = Pattern.compile("Blueprint (.*): " +
