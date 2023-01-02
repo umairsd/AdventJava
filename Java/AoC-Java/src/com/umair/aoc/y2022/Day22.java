@@ -22,8 +22,8 @@ public class Day22 extends Day {
   @Override
   protected String part1(List<String> lines) {
     int splitIndex = lines.indexOf("");
-    Board board = parseBoard(lines.subList(0, splitIndex));
-    List<Move> moves = parseMoves(lines.get(lines.size() - 1));
+    Board board = Board.parseBoard(lines.subList(0, splitIndex));
+    List<Move> moves = Move.parseMoves(lines.get(lines.size() - 1));
 
     Position currentPosition = board.getStart();
     Direction currentDirection = Direction.RIGHT;
@@ -79,58 +79,6 @@ public class Day22 extends Day {
     return fileNameFromFileNumber(1);
   }
 
-  private static Board parseBoard(List<String> lines) {
-    int rowCount = lines.size();
-    int columnsCount = lines.stream().map(String::length).max(Integer::compare).orElseThrow();
-    Board board = new Board(rowCount, columnsCount);
-
-    for (int row = 0; row < rowCount; row++) {
-      String line = lines.get(row);
-      int column = 0;
-      while (column < line.length()) {
-        board.setValueAt(row, column, line.charAt(column));
-        column++;
-      }
-
-      while (column < columnsCount) {
-        board.setValueAt(row, column, VOID);
-        column++;
-      }
-    }
-
-    return board;
-  }
-
-  private static List<Move> parseMoves(String line) {
-    int prevIndex = 0;
-    int currentIndex = 0;
-    List<Move> moves = new ArrayList<>();
-
-    while (currentIndex < line.length()) {
-      if (line.charAt(currentIndex) == 'R') {
-        moves.add(parseMove(line, prevIndex, currentIndex));
-        moves.add(new Move(Step.TURN_RIGHT, 0));
-        prevIndex = currentIndex + 1;
-
-      } else if (line.charAt(currentIndex) == 'L') {
-        moves.add(parseMove(line, prevIndex, currentIndex));
-        moves.add(new Move(Step.TURN_LEFT, 0));
-        prevIndex = currentIndex + 1;
-      }
-
-      currentIndex++;
-    }
-
-    moves.add(parseMove(line, prevIndex, currentIndex));
-    return moves;
-  }
-
-  private static Move parseMove(String s, int startIndex, int endIndex) {
-    String substring = s.substring(startIndex, endIndex);
-    Move m = new Move(Step.MOVE, Integer.parseInt(substring));
-    return m;
-  }
-
   private static class Board {
     private final char[][] grid;
     private final int rowCount;
@@ -142,10 +90,10 @@ public class Day22 extends Day {
       this.grid = new char[rowCount][columnCount];
     }
 
-    private Day22.Position getStart() {
+    private Position getStart() {
       for (int c = 0; c < grid[0].length; c++) {
         if (grid[0][c] == '.') {
-          return new Day22.Position(0, c);
+          return new Position(0, c);
         }
       }
       throw new IllegalStateException();
@@ -159,7 +107,7 @@ public class Day22 extends Day {
       return this.grid[row][column];
     }
 
-    private Day22.Position moveHorizontally(int distance, Day22.Position start) {
+    private Position moveHorizontally(int distance, Position start) {
       int stepsToMove = Math.abs(distance);
       boolean isMovingRight = distance > 0;
       char value = isMovingRight ? '>' : '<';
@@ -175,7 +123,7 @@ public class Day22 extends Day {
         stepsToMove--;
       } while (currentColumn.isPresent() && stepsToMove >= 0);
 
-      return new Day22.Position(start.row, column);
+      return new Position(start.row, column);
     }
 
     private Optional<Integer> getNextColumn(
@@ -201,7 +149,7 @@ public class Day22 extends Day {
       }
     }
 
-    private Day22.Position moveVertically(int distance, Day22.Position start) {
+    private Position moveVertically(int distance, Position start) {
       int stepsToMove = Math.abs(distance) + 1;
       boolean isMovingDown = distance > 0;
       char value = isMovingDown ? 'v' : '^';
@@ -218,14 +166,10 @@ public class Day22 extends Day {
         stepsToMove--;
       } while (currentRow.isPresent() && stepsToMove > 0);
 
-      return new Day22.Position(row, start.column);
+      return new Position(row, start.column);
     }
 
-    private Optional<Integer> getNextRow(
-        int row,
-        int column,
-        boolean isMovingDown
-    ) {
+    private Optional<Integer> getNextRow(int row, int column, boolean isMovingDown) {
       int possibleNextRow = isMovingDown
           ? (row + 1) % rowCount
           : Math.floorMod(row - 1, rowCount);
@@ -243,6 +187,28 @@ public class Day22 extends Day {
         return Optional.of(possibleNextRow);
       }
     }
+
+    private static Board parseBoard(List<String> lines) {
+      int rowCount = lines.size();
+      int columnsCount = lines.stream().map(String::length).max(Integer::compare).orElseThrow();
+      Board board = new Board(rowCount, columnsCount);
+
+      for (int row = 0; row < rowCount; row++) {
+        String line = lines.get(row);
+        int column = 0;
+        while (column < line.length()) {
+          board.setValueAt(row, column, line.charAt(column));
+          column++;
+        }
+
+        while (column < columnsCount) {
+          board.setValueAt(row, column, VOID);
+          column++;
+        }
+      }
+
+      return board;
+    }
   }
 
   private enum Direction {
@@ -259,6 +225,35 @@ public class Day22 extends Day {
   }
 
   private record Move(Step step, int distance) {
+    private static Move parseMove(String s, int startIndex, int endIndex) {
+      String substring = s.substring(startIndex, endIndex);
+      Move m = new Move(Step.MOVE, Integer.parseInt(substring));
+      return m;
+    }
+
+    private static List<Move> parseMoves(String line) {
+      int prevIndex = 0;
+      int currentIndex = 0;
+      List<Move> moves = new ArrayList<>();
+
+      while (currentIndex < line.length()) {
+        if (line.charAt(currentIndex) == 'R') {
+          moves.add(Move.parseMove(line, prevIndex, currentIndex));
+          moves.add(new Move(Step.TURN_RIGHT, 0));
+          prevIndex = currentIndex + 1;
+
+        } else if (line.charAt(currentIndex) == 'L') {
+          moves.add(Move.parseMove(line, prevIndex, currentIndex));
+          moves.add(new Move(Step.TURN_LEFT, 0));
+          prevIndex = currentIndex + 1;
+        }
+
+        currentIndex++;
+      }
+
+      moves.add(Move.parseMove(line, prevIndex, currentIndex));
+      return moves;
+    }
   }
 
   private record Position(int row, int column) {
