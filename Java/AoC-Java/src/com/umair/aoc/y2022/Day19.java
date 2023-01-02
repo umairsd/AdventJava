@@ -13,6 +13,8 @@ import java.util.regex.Pattern;
  */
 public class Day19 extends Day {
 
+  private static final int TOTAL_ROUNDS_PART1 = 24;
+
   public Day19() {
     super(19, 2022);
   }
@@ -29,8 +31,7 @@ public class Day19 extends Day {
       initialState.ore = blueprint.oreSpec.oreCost;
       initialState.robotTypeToConstruct = RobotType.ORE;
 
-      int geodes = findMostGeodes(blueprint, 24 + 1, initialState);
-      System.out.println("-- Id: " + blueprint.id + ", geodes: " + geodes);
+      int geodes = findMostGeodes(blueprint, TOTAL_ROUNDS_PART1 + 1, initialState);
       qualityLevel += blueprint.id * geodes;
     }
 
@@ -44,7 +45,7 @@ public class Day19 extends Day {
 
   @Override
   protected String part1Filename() {
-    return fileNameFromFileNumber(1);
+    return fileNameFromFileNumber(2);
   }
 
   @Override
@@ -187,30 +188,26 @@ public class Day19 extends Day {
     while (!isRobotConstructed && timeRemaining > 0) {
       switch (state.robotTypeToConstruct) {
         case ORE -> {
-          if (state.ore >= blueprint.oreSpec.oreCost) {
-            state.ore -= blueprint.oreSpec.oreCost;
+          if (canBuildRobot(blueprint.oreSpec, state)) {
+            useResourcesForBuildingRobot(blueprint.oreSpec, state);
             isRobotConstructed = true;
           }
         }
         case CLAY -> {
-          if (state.clay >= blueprint.claySpec.clayCost) {
-            state.clay -= blueprint.claySpec.clayCost;
+          if (canBuildRobot(blueprint.claySpec, state)) {
+            useResourcesForBuildingRobot(blueprint.claySpec, state);
             isRobotConstructed = true;
           }
         }
         case OBSIDIAN -> {
-          if (state.ore >= blueprint.obsidianSpec.oreCost &&
-              state.clay >= blueprint.obsidianSpec.clayCost) {
-            state.ore -= blueprint.obsidianSpec.oreCost;
-            state.clay -= blueprint.obsidianSpec.clayCost;
+          if (canBuildRobot(blueprint.obsidianSpec, state)) {
+            useResourcesForBuildingRobot(blueprint.obsidianSpec, state);
             isRobotConstructed = true;
           }
         }
         case GEODE -> {
-          if (state.ore >= blueprint.geodeSpec.oreCost &&
-              state.obsidian >= blueprint.geodeSpec.obsidianCost) {
-            state.ore -= blueprint.geodeSpec.oreCost;
-            state.obsidian -= blueprint.geodeSpec.obsidianCost;
+          if (canBuildRobot(blueprint.geodeSpec, state)) {
+            useResourcesForBuildingRobot(blueprint.geodeSpec, state);
             isRobotConstructed = true;
           }
         }
@@ -235,31 +232,13 @@ public class Day19 extends Day {
     int maxGeodes = state.geode;
     if (timeRemaining > 0) {
       var robots = List.of(RobotType.ORE, RobotType.CLAY, RobotType.OBSIDIAN, RobotType.GEODE);
-
       for (RobotType nextRobot : robots) {
-        // We can build any of the 4 robots as a next state. Let's evaluate which paths are not
-        // viable.
-
-        if (nextRobot == RobotType.OBSIDIAN && state.clayRobots == 0) {
-          // No clay robots, so can't build any obsidian robots.
-          continue;
-        }
-        if (nextRobot == RobotType.GEODE && state.obsidianRobots == 0) {
-          // No obsidian robots, so can't build any geode robots
+        var possibleNextState = generateNextState(state, blueprint, nextRobot);
+        if (possibleNextState.isEmpty()) {
           continue;
         }
 
-        // Don't build more robots for a resource than can be consumed.
-        if ((nextRobot == RobotType.ORE && state.oreRobots == blueprint.maxOrePerTurn) ||
-            (nextRobot == RobotType.CLAY && state.clayRobots == blueprint.maxClayPerTurn) ||
-            (nextRobot == RobotType.OBSIDIAN &&
-                state.obsidianRobots == blueprint.maxObsidianPerTurn)
-        ) {
-          continue;
-        }
-
-        ProductionState nextState = new ProductionState(state);
-        nextState.robotTypeToConstruct = nextRobot;
+        ProductionState nextState = possibleNextState.get();
         int numGeodes = findMostGeodes(blueprint, timeRemaining, nextState);
         maxGeodes = Math.max(maxGeodes, numGeodes);
       }
