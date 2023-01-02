@@ -64,55 +64,50 @@ public class Day19 extends Day {
       throw new IllegalStateException("Bad input line: " + line);
     }
 
-    String blueprintId = m.group(1);
-    RobotSpec oreRobotSpec =
-        new RobotSpec(RobotType.ORE, Integer.parseInt(m.group(2)), 0, 0);
+    int id = Integer.parseInt(m.group(1));
+    RobotSpec oreSpec = new RobotSpec(RobotType.ORE,
+        Integer.parseInt(m.group(2)),   // Ore
+        0,                              // Clay
+        0);                             // Obsidian
 
-    RobotSpec clayRobotSpec =
-        new RobotSpec(RobotType.CLAY, 0, Integer.parseInt(m.group(3)), 0);
+    RobotSpec claySpec = new RobotSpec(RobotType.CLAY,
+        Integer.parseInt(m.group(3)),   // Ore
+        0,                              // Clay
+        0);                             // Obsidian
 
-    RobotSpec obsidianRobotSpec = new RobotSpec(
-        RobotType.OBSIDIAN,
-        Integer.parseInt(m.group(4)), // Ore
-        Integer.parseInt(m.group(5)), // Clay
-        0);                           // Obsidian
+    RobotSpec obsidianSpec = new RobotSpec(RobotType.OBSIDIAN,
+        Integer.parseInt(m.group(4)),   // Ore
+        Integer.parseInt(m.group(5)),   // Clay
+        0);                             // Obsidian
 
-    RobotSpec geodeRobotSpec = new RobotSpec(
-        RobotType.GEODE,
+    RobotSpec geodeSpec = new RobotSpec(RobotType.GEODE,
         Integer.parseInt(m.group(6)),   // Ore
         0,                              // Clay
         Integer.parseInt(m.group(7)));  // Obsidian
 
-    Blueprint blueprint = new Blueprint(
-        Integer.parseInt(blueprintId),
-        oreRobotSpec,
-        clayRobotSpec,
-        obsidianRobotSpec,
-        geodeRobotSpec);
+    int maxOrePerTurn = Math.max(oreSpec.oreCost, Math.max(claySpec.oreCost, obsidianSpec.oreCost));
 
+    Blueprint blueprint = new Blueprint(
+        id,
+        oreSpec,
+        claySpec,
+        obsidianSpec,
+        geodeSpec,
+        maxOrePerTurn,
+        obsidianSpec.clayCost,
+        geodeSpec.obsidianCost);
     return blueprint;
   }
 
-  private record Blueprint(int id, RobotSpec oreSpec, RobotSpec claySpec, RobotSpec obsidianSpec, RobotSpec geodeSpec) {
-
-    private int maxOreUsePerTurn() {
-      return Math.max(
-          Math.max(oreSpec.oreCost, claySpec.oreCost),
-          Math.max(obsidianSpec.oreCost, geodeSpec.oreCost));
-    }
-
-    private int maxClayUsePerTurn() {
-      return Math.max(
-          Math.max(oreSpec.clayCost, claySpec.clayCost),
-          Math.max(obsidianSpec.clayCost, geodeSpec.clayCost));
-    }
-
-    private int maxObsidianUsePerTurn() {
-      return Math.max(
-          Math.max(oreSpec.obsidianCost, claySpec.obsidianCost),
-          Math.max(obsidianSpec.obsidianCost, geodeSpec.obsidianCost));
-    }
-
+  private record Blueprint(
+      int id,
+      RobotSpec oreSpec,
+      RobotSpec claySpec,
+      RobotSpec obsidianSpec,
+      RobotSpec geodeSpec,
+      int maxOrePerTurn,
+      int maxClayPerTurn,
+      int maxObsidianPerTurn) {
     @Override
     public String toString() {
       return "{id=" + id +
@@ -120,6 +115,7 @@ public class Day19 extends Day {
           ", " + claySpec +
           ", " + obsidianSpec +
           ", " + geodeSpec +
+          ", Limits=(" + maxOrePerTurn + ", " + maxClayPerTurn + ", " + maxObsidianPerTurn + ")" +
           '}';
     }
   }
@@ -241,12 +237,29 @@ public class Day19 extends Day {
       var robots = List.of(RobotType.ORE, RobotType.CLAY, RobotType.OBSIDIAN, RobotType.GEODE);
 
       for (RobotType nextRobot : robots) {
-        var possibleNextState = generateNextState(state, blueprint, nextRobot);
-        if (possibleNextState.isEmpty()) {
+        // We can build any of the 4 robots as a next state. Let's evaluate which paths are not
+        // viable.
+
+        if (nextRobot == RobotType.OBSIDIAN && state.clayRobots == 0) {
+          // No clay robots, so can't build any obsidian robots.
+          continue;
+        }
+        if (nextRobot == RobotType.GEODE && state.obsidianRobots == 0) {
+          // No obsidian robots, so can't build any geode robots
           continue;
         }
 
-        ProductionState nextState = possibleNextState.get();
+        // Don't build more robots for a resource than can be consumed.
+        if ((nextRobot == RobotType.ORE && state.oreRobots == blueprint.maxOrePerTurn) ||
+            (nextRobot == RobotType.CLAY && state.clayRobots == blueprint.maxClayPerTurn) ||
+            (nextRobot == RobotType.OBSIDIAN &&
+                state.obsidianRobots == blueprint.maxObsidianPerTurn)
+        ) {
+          continue;
+        }
+
+        ProductionState nextState = new ProductionState(state);
+        nextState.robotTypeToConstruct = nextRobot;
         int numGeodes = findMostGeodes(blueprint, timeRemaining, nextState);
         maxGeodes = Math.max(maxGeodes, numGeodes);
       }
@@ -273,10 +286,9 @@ public class Day19 extends Day {
     }
 
     // Don't build more robots for a resource than can be consumed.
-    if ((nextRobot == RobotType.ORE && state.oreRobots == blueprint.maxOreUsePerTurn()) ||
-        (nextRobot == RobotType.CLAY && state.clayRobots == blueprint.maxClayUsePerTurn()) ||
-        (nextRobot == RobotType.OBSIDIAN &&
-            state.obsidianRobots == blueprint.maxObsidianUsePerTurn())
+    if ((nextRobot == RobotType.ORE && state.oreRobots == blueprint.maxOrePerTurn) ||
+        (nextRobot == RobotType.CLAY && state.clayRobots == blueprint.maxClayPerTurn) ||
+        (nextRobot == RobotType.OBSIDIAN && state.obsidianRobots == blueprint.maxObsidianPerTurn)
     ) {
       return Optional.empty();
     }
