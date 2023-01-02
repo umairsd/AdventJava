@@ -68,6 +68,76 @@ public class Day19 extends Day {
     return fileNameFromFileNumber(2);
   }
 
+  private static int findMostGeodes(
+      Blueprint blueprint,
+      int timeRemaining,
+      ProductionState state
+  ) {
+    boolean isRobotConstructed = false;
+
+    while (!isRobotConstructed && timeRemaining > 0) {
+      switch (state.robotTypeToConstruct) {
+        case ORE -> {
+          if (state.canBuildRobot(blueprint.oreSpec)) {
+            state.useResourcesForBuildingRobot(blueprint.oreSpec);
+            isRobotConstructed = true;
+          }
+        }
+        case CLAY -> {
+          if (state.canBuildRobot(blueprint.claySpec)) {
+            state.useResourcesForBuildingRobot(blueprint.claySpec);
+            isRobotConstructed = true;
+          }
+        }
+        case OBSIDIAN -> {
+          if (state.canBuildRobot(blueprint.obsidianSpec)) {
+            state.useResourcesForBuildingRobot(blueprint.obsidianSpec);
+            isRobotConstructed = true;
+          }
+        }
+        case GEODE -> {
+          if (state.canBuildRobot(blueprint.geodeSpec)) {
+            state.useResourcesForBuildingRobot(blueprint.geodeSpec);
+            isRobotConstructed = true;
+          }
+        }
+      }
+
+      state.ore += state.oreRobots;
+      state.clay += state.clayRobots;
+      state.obsidian += state.obsidianRobots;
+      state.geode += state.geodeRobots;
+      timeRemaining--;
+
+      if (isRobotConstructed) {
+        switch (state.robotTypeToConstruct) {
+          case ORE -> state.oreRobots++;
+          case CLAY -> state.clayRobots++;
+          case OBSIDIAN -> state.obsidianRobots++;
+          case GEODE -> state.geodeRobots++;
+        }
+      }
+    }
+
+    int maxGeodes = state.geode;
+    if (timeRemaining > 0) {
+      var robots = List.of(RobotType.ORE, RobotType.CLAY, RobotType.OBSIDIAN, RobotType.GEODE);
+      for (RobotType nextRobot : robots) {
+        var possibleNextState = state.generateNextState(blueprint, nextRobot);
+        if (possibleNextState.isEmpty()) {
+          continue;
+        }
+
+        ProductionState nextState = possibleNextState.get();
+        int numGeodes = findMostGeodes(blueprint, timeRemaining, nextState);
+        maxGeodes = Math.max(maxGeodes, numGeodes);
+      }
+    }
+
+    return maxGeodes;
+  }
+
+
   private static final Pattern linePattern = Pattern.compile("Blueprint (.*): " +
       "Each ore robot costs (.*) ore. " +
       "Each clay robot costs (.*) ore. " +
@@ -183,6 +253,45 @@ public class Day19 extends Day {
       this.robotTypeToConstruct = other.robotTypeToConstruct;
     }
 
+
+    private boolean canBuildRobot(RobotSpec robotSpec) {
+      return this.ore >= robotSpec.oreCost &&
+          this.clay >= robotSpec.clayCost &&
+          this.obsidian >= robotSpec.obsidianCost;
+    }
+
+    private void useResourcesForBuildingRobot(RobotSpec robotSpec) {
+      this.ore -= robotSpec.oreCost;
+      this.clay -= robotSpec.clayCost;
+      this.obsidian -= robotSpec.obsidianCost;
+    }
+
+    private Optional<ProductionState> generateNextState(Blueprint blueprint, RobotType nextRobot) {
+      // We can build any of the 4 robots as a next state. Let's evaluate which paths are not
+      // viable.
+
+      if (nextRobot == RobotType.OBSIDIAN && this.clayRobots == 0) {
+        // No clay robots, so can't build any obsidian robots.
+        return Optional.empty();
+      }
+      if (nextRobot == RobotType.GEODE && this.obsidianRobots == 0) {
+        // No obsidian robots, so can't build any geode robots
+        return Optional.empty();
+      }
+
+      // Don't build more robots for a resource than can be consumed.
+      if ((nextRobot == RobotType.ORE && this.oreRobots == blueprint.maxOrePerTurn) ||
+          (nextRobot == RobotType.CLAY && this.clayRobots == blueprint.maxClayPerTurn) ||
+          (nextRobot == RobotType.OBSIDIAN && this.obsidianRobots == blueprint.maxObsidianPerTurn)
+      ) {
+        return Optional.empty();
+      }
+
+      ProductionState nextState = new ProductionState(this);
+      nextState.robotTypeToConstruct = nextRobot;
+      return Optional.of(nextState);
+    }
+
     @Override
     public String toString() {
       return "{" +
@@ -191,116 +300,5 @@ public class Day19 extends Day {
           "robots=(" + oreRobots + ", " + clayRobots + ", " + obsidianRobots + ", " + geodeRobots +
           ")}";
     }
-  }
-
-  private static int findMostGeodes(
-      Blueprint blueprint,
-      int timeRemaining,
-      ProductionState state
-  ) {
-    boolean isRobotConstructed = false;
-
-    while (!isRobotConstructed && timeRemaining > 0) {
-      switch (state.robotTypeToConstruct) {
-        case ORE -> {
-          if (canBuildRobot(blueprint.oreSpec, state)) {
-            useResourcesForBuildingRobot(blueprint.oreSpec, state);
-            isRobotConstructed = true;
-          }
-        }
-        case CLAY -> {
-          if (canBuildRobot(blueprint.claySpec, state)) {
-            useResourcesForBuildingRobot(blueprint.claySpec, state);
-            isRobotConstructed = true;
-          }
-        }
-        case OBSIDIAN -> {
-          if (canBuildRobot(blueprint.obsidianSpec, state)) {
-            useResourcesForBuildingRobot(blueprint.obsidianSpec, state);
-            isRobotConstructed = true;
-          }
-        }
-        case GEODE -> {
-          if (canBuildRobot(blueprint.geodeSpec, state)) {
-            useResourcesForBuildingRobot(blueprint.geodeSpec, state);
-            isRobotConstructed = true;
-          }
-        }
-      }
-
-      state.ore += state.oreRobots;
-      state.clay += state.clayRobots;
-      state.obsidian += state.obsidianRobots;
-      state.geode += state.geodeRobots;
-      timeRemaining--;
-
-      if (isRobotConstructed) {
-        switch (state.robotTypeToConstruct) {
-          case ORE -> state.oreRobots++;
-          case CLAY -> state.clayRobots++;
-          case OBSIDIAN -> state.obsidianRobots++;
-          case GEODE -> state.geodeRobots++;
-        }
-      }
-    }
-
-    int maxGeodes = state.geode;
-    if (timeRemaining > 0) {
-      var robots = List.of(RobotType.ORE, RobotType.CLAY, RobotType.OBSIDIAN, RobotType.GEODE);
-      for (RobotType nextRobot : robots) {
-        var possibleNextState = generateNextState(state, blueprint, nextRobot);
-        if (possibleNextState.isEmpty()) {
-          continue;
-        }
-
-        ProductionState nextState = possibleNextState.get();
-        int numGeodes = findMostGeodes(blueprint, timeRemaining, nextState);
-        maxGeodes = Math.max(maxGeodes, numGeodes);
-      }
-    }
-
-    return maxGeodes;
-  }
-
-  private static Optional<ProductionState> generateNextState(
-      ProductionState state,
-      Blueprint blueprint,
-      RobotType nextRobot
-  ) {
-    // We can build any of the 4 robots as a next state. Let's evaluate which paths are not
-    // viable.
-
-    if (nextRobot == RobotType.OBSIDIAN && state.clayRobots == 0) {
-      // No clay robots, so can't build any obsidian robots.
-      return Optional.empty();
-    }
-    if (nextRobot == RobotType.GEODE && state.obsidianRobots == 0) {
-      // No obsidian robots, so can't build any geode robots
-      return Optional.empty();
-    }
-
-    // Don't build more robots for a resource than can be consumed.
-    if ((nextRobot == RobotType.ORE && state.oreRobots == blueprint.maxOrePerTurn) ||
-        (nextRobot == RobotType.CLAY && state.clayRobots == blueprint.maxClayPerTurn) ||
-        (nextRobot == RobotType.OBSIDIAN && state.obsidianRobots == blueprint.maxObsidianPerTurn)
-    ) {
-      return Optional.empty();
-    }
-
-    ProductionState nextState = new ProductionState(state);
-    nextState.robotTypeToConstruct = nextRobot;
-    return Optional.of(nextState);
-  }
-
-  private static boolean canBuildRobot(RobotSpec robotSpec, ProductionState state) {
-    return state.ore >= robotSpec.oreCost &&
-        state.clay >= robotSpec.clayCost &&
-        state.obsidian >= robotSpec.obsidianCost;
-  }
-
-  private static void useResourcesForBuildingRobot(RobotSpec robotSpec, ProductionState state) {
-    state.ore -= robotSpec.oreCost;
-    state.clay -= robotSpec.clayCost;
-    state.obsidian -= robotSpec.obsidianCost;
   }
 }
