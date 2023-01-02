@@ -53,13 +53,7 @@ public class Day22 extends Day {
       }
     }
 
-    int facing = switch (currentDirection) {
-      case RIGHT -> 0;
-      case DOWN -> 1;
-      case LEFT -> 2;
-      case UP -> 3;
-    };
-
+    int facing = currentDirection.score();
     int password = 1000 * (currentPosition.row + 1) + 4 * (currentPosition.column + 1) + facing;
     return Integer.toString(password);
   }
@@ -71,7 +65,7 @@ public class Day22 extends Day {
 
   @Override
   protected String part1Filename() {
-    return fileNameFromFileNumber(2);
+    return fileNameFromFileNumber(1);
   }
 
   @Override
@@ -126,11 +120,7 @@ public class Day22 extends Day {
       return new Position(start.row, column);
     }
 
-    private Optional<Integer> getNextColumn(
-        int row,
-        int column,
-        boolean isMovingRight
-    ) {
+    private Optional<Integer> getNextColumn(int row, int column, boolean isMovingRight) {
       int possibleNextColumn = isMovingRight
           ? (column + 1) % columnCount
           : Math.floorMod(column - 1, columnCount);
@@ -188,6 +178,19 @@ public class Day22 extends Day {
       }
     }
 
+    @Override
+    public String toString() {
+      StringBuilder sb = new StringBuilder();
+      for (int row = 0; row < rowCount; row++) {
+        for (int column = 0; column < columnCount; column++) {
+          sb.append(grid[row][column]);
+        }
+        sb.append("\n");
+      }
+
+      return sb.toString();
+    }
+
     private static Board parseBoard(List<String> lines) {
       int rowCount = lines.size();
       int columnsCount = lines.stream().map(String::length).max(Integer::compare).orElseThrow();
@@ -215,7 +218,16 @@ public class Day22 extends Day {
     RIGHT,
     DOWN,
     LEFT,
-    UP,
+    UP;
+
+    private int score() {
+      return switch (this) {
+        case RIGHT -> 0;
+        case DOWN -> 1;
+        case LEFT -> 2;
+        case UP -> 3;
+      };
+    }
   }
 
   private enum InstructionType {
