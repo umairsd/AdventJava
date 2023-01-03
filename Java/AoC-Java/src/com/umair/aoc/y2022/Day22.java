@@ -313,10 +313,6 @@ public class Day22 extends Day {
   }
 
   private record Position(int row, int column) {
-    private Position applyOffset(Position p) {
-      return new Position(row + p.row, column + p.column);
-    }
-
     private Position add(Position p) {
       return new Position(row + p.row, column + p.column);
     }
@@ -714,6 +710,7 @@ public class Day22 extends Day {
       return topLeft.row + size - 1;
     }
 
+    @SuppressWarnings("BooleanMethodIsAlwaysInverted")
     boolean contains(Position position) {
       return position.row >= minRow() && position.row <= maxRow() &&
           position.column >= minColumn() && position.column <= maxColumn();
