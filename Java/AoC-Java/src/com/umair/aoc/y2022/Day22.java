@@ -46,6 +46,19 @@ public class Day22 extends Day {
     int password = orientation.calculatePassword();
     return Integer.toString(password);
   }
+
+  /**
+   * Based on <a href="https://todd.ginsberg.com/post/advent-of-code/2022/day22/">...</a>
+   */
+  protected String part1Alternate(List<String> lines) {
+    int splitIndex = lines.indexOf("");
+    Cube cube = Cube.parseCube(lines.subList(0, splitIndex));
+    List<Instruction> instructions = Instruction.parseInstructions(lines.get(lines.size() - 1));
+
+    CubeFace startingFace = Cube.cubeFaceMap.get(1);
+    Orientation finalOrientation = followInstructionsPart1(instructions, startingFace, cube);
+
+    int password = finalOrientation.calculatePassword();
     return Integer.toString(password);
   }
 
@@ -305,6 +318,269 @@ public class Day22 extends Day {
     private int calculatePassword() {
       int password = 1000 * (position.row + 1) + 4 * (position.column + 1) + direction.points();
       return password;
+    }
+  }
+
+  private static Orientation followInstructionsPart1(
+      List<Instruction> instructions,
+      CubeFace startingFace,
+      Cube cube
+  ) {
+    CubeFace cubeFace = startingFace;
+    var orientation = new Orientation(cubeFace.topLeft, Direction.RIGHT);
+
+    for (Instruction m : instructions) {
+      switch (m.instructionType) {
+        case FORWARD -> {
+          boolean shouldKeepMoving = true;
+          int count = 0;
+          while (count++ < m.distance && shouldKeepMoving) {
+            Orientation nextOrientation = orientation.moveByOne();
+            CubeFace nextCubeFace = cubeFace;
+
+            if (!cubeFace.contains(nextOrientation.position)) {
+              // Moved off the face of this cube. Figure out our next cube.
+              var transition = cubeFace.getTransitionForDirection(orientation.direction);
+              nextOrientation = new Orientation(
+                  transition.transitionToFaceWithinCube(cube, orientation.position),
+                  transition.enterDirection);
+              nextCubeFace = cube.getCubeFaceMap().get(transition.destinationId);
+            }
+
+            if (cube.blockedPositions.contains(nextOrientation.position)) {
+              // Can't move here.
+              shouldKeepMoving = false;
+            } else {
+              orientation = nextOrientation;
+              cubeFace = nextCubeFace;
+            }
+          }
+        }
+        case TURN_LEFT ->
+            orientation = new Orientation(orientation.position, orientation.direction.turnLeft());
+        case TURN_RIGHT ->
+            orientation = new Orientation(orientation.position, orientation.direction.turnRight());
+      }
+    }
+
+    return orientation;
+  }
+
+  private record Transition(int sourceId, int destinationId, Direction exitDirection, Direction enterDirection) {
+    // moveByOneWithinCube
+    Position transitionToFaceWithinCube(Cube cube, Position position) {
+      if (exitDirection == Direction.RIGHT && enterDirection == Direction.RIGHT) {
+        CubeFace destinationCubeFace = cube.getCubeFaceMap().get(destinationId);
+        return new Position(position.row, destinationCubeFace.minColumn());
+
+      } else if (exitDirection == Direction.DOWN && enterDirection == Direction.DOWN) {
+        CubeFace destinationCubeFace = cube.getCubeFaceMap().get(destinationId);
+        return new Position(destinationCubeFace.minRow(), position.column);
+
+      } else if (exitDirection == Direction.UP && enterDirection == Direction.UP) {
+        CubeFace destinationCubeFace = cube.getCubeFaceMap().get(destinationId);
+        return new Position(destinationCubeFace.maxRow(), position.column);
+
+      } else if (exitDirection == Direction.LEFT && enterDirection == Direction.LEFT) {
+        CubeFace destinationCubeFace = cube.getCubeFaceMap().get(destinationId);
+        return new Position(position.row, destinationCubeFace.maxColumn());
+
+      } else {
+        throw new IllegalStateException(
+            "Part 1: No transition from " + exitDirection + " to " + enterDirection);
+      }
+    }
+  }
+
+  private record Cube(Set<Position> blockedPositions) {
+    private static final Map<Integer, CubeFace> cubeFaceMap = new HashMap<>();
+
+    /*
+            +-----+-----+
+            |     |     |
+            |  1  |  2  |
+            |     |     |
+            +-----+-----+
+            |     |
+            |  3  |
+            |     |
+      +-----+-----+
+      |     |     |
+      |  4  |  5  |
+      |     |     |
+      +-----+-----+
+      |     |
+      |  6  |
+      |     |
+      +-----+
+
+     */
+    static {
+      var cube1 = new CubeFace.CubeFaceBuilder()
+          .setId(1)
+          .setSize(50)
+          .setTopLeft(new Position(0, 50))
+          .setUp(new Transition(1, 5, Direction.UP, Direction.UP))
+          .setRight(new Transition(1, 2, Direction.RIGHT, Direction.RIGHT))
+          .setDown(new Transition(1, 3, Direction.DOWN, Direction.DOWN))
+          .setLeft(new Transition(1, 2, Direction.LEFT, Direction.LEFT))
+          .build();
+      cubeFaceMap.put(cube1.id, cube1);
+
+      cubeFaceMap.put(2, new CubeFace.CubeFaceBuilder()
+          .setId(2)
+          .setSize(50)
+          .setTopLeft(new Position(0, 100))
+          .setUp(new Transition(2, 2, Direction.UP, Direction.UP))
+          .setRight(new Transition(2, 1, Direction.RIGHT, Direction.RIGHT))
+          .setDown(new Transition(2, 2, Direction.DOWN, Direction.DOWN))
+          .setLeft(new Transition(2, 1, Direction.LEFT, Direction.LEFT))
+          .build());
+
+      cubeFaceMap.put(3, new CubeFace.CubeFaceBuilder()
+          .setId(3)
+          .setSize(50)
+          .setTopLeft(new Position(50, 50))
+          .setUp(new Transition(3, 1, Direction.UP, Direction.UP))
+          .setRight(new Transition(3, 3, Direction.RIGHT, Direction.RIGHT))
+          .setDown(new Transition(3, 5, Direction.DOWN, Direction.DOWN))
+          .setLeft(new Transition(3, 3, Direction.LEFT, Direction.LEFT))
+          .build());
+
+      cubeFaceMap.put(4, new CubeFace.CubeFaceBuilder()
+          .setId(4)
+          .setSize(50)
+          .setTopLeft(new Position(100, 0))
+          .setUp(new Transition(4, 6, Direction.UP, Direction.UP))
+          .setRight(new Transition(4, 5, Direction.RIGHT, Direction.RIGHT))
+          .setDown(new Transition(4, 6, Direction.DOWN, Direction.DOWN))
+          .setLeft(new Transition(4, 5, Direction.LEFT, Direction.LEFT))
+          .build());
+
+      cubeFaceMap.put(5, new CubeFace.CubeFaceBuilder()
+          .setId(5)
+          .setSize(50)
+          .setTopLeft(new Position(100, 50))
+          .setUp(new Transition(5, 3, Direction.UP, Direction.UP))
+          .setRight(new Transition(5, 4, Direction.RIGHT, Direction.RIGHT))
+          .setDown(new Transition(5, 1, Direction.DOWN, Direction.DOWN))
+          .setLeft(new Transition(5, 4, Direction.LEFT, Direction.LEFT))
+          .build());
+
+      cubeFaceMap.put(6, new CubeFace.CubeFaceBuilder()
+          .setId(6)
+          .setSize(50)
+          .setTopLeft(new Position(150, 0))
+          .setUp(new Transition(6, 4, Direction.UP, Direction.UP))
+          .setRight(new Transition(6, 6, Direction.RIGHT, Direction.RIGHT))
+          .setDown(new Transition(6, 4, Direction.DOWN, Direction.DOWN))
+          .setLeft(new Transition(6, 6, Direction.LEFT, Direction.LEFT))
+          .build());
+    }
+
+    private Map<Integer, CubeFace> getCubeFaceMap() {
+      return Cube.cubeFaceMap;
+    }
+
+    private static Cube parseCube(List<String> lines) {
+      int rowCount = lines.size();
+      Set<Position> blockedPositions = new HashSet<>();
+
+      for (int row = 0; row < rowCount; row++) {
+        String line = lines.get(row);
+        int column = 0;
+        while (column < line.length()) {
+          if (line.charAt(column) == WALL) {
+            blockedPositions.add(new Position(row, column));
+          }
+          column++;
+        }
+      }
+
+      return new Cube(blockedPositions);
+    }
+
+  }
+
+  private record CubeFace(int id, int size, Position topLeft, Transition up, Transition right, Transition down, Transition left) {
+
+    int minColumn() {
+      return topLeft.column;
+    }
+
+    int maxColumn() {
+      return topLeft.column + size - 1;
+    }
+
+    int minRow() {
+      return topLeft.row;
+    }
+
+    int maxRow() {
+      return topLeft.row + size - 1;
+    }
+
+    boolean contains(Position position) {
+      return position.row >= minRow() && position.row <= maxRow() &&
+          position.column >= minColumn() && position.column <= maxColumn();
+    }
+
+    Transition getTransitionForDirection(Direction direction) {
+      return switch (direction) {
+        case RIGHT -> right;
+        case DOWN -> down;
+        case LEFT -> left;
+        case UP -> up;
+      };
+    }
+
+    private static class CubeFaceBuilder {
+      private int id;
+      private int size;
+      private Position topLeft;
+      private Transition up;
+      private Transition right;
+      private Transition down;
+      private Transition left;
+
+      private CubeFaceBuilder setId(int id) {
+        this.id = id;
+        return this;
+      }
+
+      private CubeFaceBuilder setSize(int size) {
+        this.size = size;
+        return this;
+      }
+
+      private CubeFaceBuilder setTopLeft(Position topLeft) {
+        this.topLeft = topLeft;
+        return this;
+      }
+
+      private CubeFaceBuilder setUp(Transition up) {
+        this.up = up;
+        return this;
+      }
+
+      private CubeFaceBuilder setDown(Transition down) {
+        this.down = down;
+        return this;
+      }
+
+      private CubeFaceBuilder setLeft(Transition left) {
+        this.left = left;
+        return this;
+      }
+
+      private CubeFaceBuilder setRight(Transition right) {
+        this.right = right;
+        return this;
+      }
+
+      private CubeFace build() {
+        return new CubeFace(id, size, topLeft, up, right, down, left);
+      }
     }
   }
 }
