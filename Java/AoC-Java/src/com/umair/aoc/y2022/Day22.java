@@ -62,9 +62,20 @@ public class Day22 extends Day {
     return Integer.toString(password);
   }
 
+  /**
+   * Based on <a href="https://todd.ginsberg.com/post/advent-of-code/2022/day22/">...</a>
+   */
   @Override
   protected String part2(List<String> lines) {
-    return null;
+    int splitIndex = lines.indexOf("");
+    Cube cube = Cube.parseCube(lines.subList(0, splitIndex));
+    List<Instruction> instructions = Instruction.parseInstructions(lines.get(lines.size() - 1));
+
+    CubeFace startingFace = Cube.cubeFaceMap.get(11);
+    Orientation finalOrientation = followInstructionsPart2(instructions, startingFace, cube);
+
+    int password = finalOrientation.calculatePassword();
+    return Integer.toString(password);
   }
 
   @Override
@@ -305,6 +316,18 @@ public class Day22 extends Day {
     private Position applyOffset(Position p) {
       return new Position(row + p.row, column + p.column);
     }
+
+    private Position add(Position p) {
+      return new Position(row + p.row, column + p.column);
+    }
+
+    private Position subtract(Position p) {
+      return new Position(row - p.row, column - p.column);
+    }
+
+    private Position flip() {
+      return new Position(column, row);
+    }
   }
 
   private record Orientation(Position position, Direction direction) {
@@ -312,7 +335,7 @@ public class Day22 extends Day {
      * Move by 1 in the orientation's direction.
      */
     private Orientation moveByOne() {
-      return new Orientation(position.applyOffset(direction.movementOffset()), direction);
+      return new Orientation(position.add(direction.movementOffset()), direction);
     }
 
     private int calculatePassword() {
@@ -342,7 +365,52 @@ public class Day22 extends Day {
               // Moved off the face of this cube. Figure out our next cube.
               var transition = cubeFace.getTransitionForDirection(orientation.direction);
               nextOrientation = new Orientation(
-                  transition.transitionToFaceWithinCube(cube, orientation.position),
+                  transition.transitionToFaceWithinCubePart1(cube, orientation.position),
+                  transition.enterDirection);
+              nextCubeFace = cube.getCubeFaceMap().get(transition.destinationId);
+            }
+
+            if (cube.blockedPositions.contains(nextOrientation.position)) {
+              // Can't move here.
+              shouldKeepMoving = false;
+            } else {
+              orientation = nextOrientation;
+              cubeFace = nextCubeFace;
+            }
+          }
+        }
+        case TURN_LEFT ->
+            orientation = new Orientation(orientation.position, orientation.direction.turnLeft());
+        case TURN_RIGHT ->
+            orientation = new Orientation(orientation.position, orientation.direction.turnRight());
+      }
+    }
+
+    return orientation;
+  }
+
+  private static Orientation followInstructionsPart2(
+      List<Instruction> instructions,
+      CubeFace startingFace,
+      Cube cube
+  ) {
+    CubeFace cubeFace = startingFace;
+    var orientation = new Orientation(cubeFace.topLeft, Direction.RIGHT);
+
+    for (Instruction m : instructions) {
+      switch (m.instructionType) {
+        case FORWARD -> {
+          boolean shouldKeepMoving = true;
+          int count = 0;
+          while (count++ < m.distance && shouldKeepMoving) {
+            Orientation nextOrientation = orientation.moveByOne();
+            CubeFace nextCubeFace = cubeFace;
+
+            if (!cubeFace.contains(nextOrientation.position)) {
+              // Moved off the face of this cube. Figure out our next cube.
+              var transition = cubeFace.getTransitionForDirection(orientation.direction);
+              nextOrientation = new Orientation(
+                  transition.transitionToFaceWithinCubePart2(cube, orientation.position),
                   transition.enterDirection);
               nextCubeFace = cube.getCubeFaceMap().get(transition.destinationId);
             }
@@ -367,23 +435,87 @@ public class Day22 extends Day {
   }
 
   private record Transition(int sourceId, int destinationId, Direction exitDirection, Direction enterDirection) {
-    // moveByOneWithinCube
-    Position transitionToFaceWithinCube(Cube cube, Position position) {
+
+    private static Position rescale(Position p, Cube cube, Transition transition) {
+      var destinationCubeFace = cube.getCubeFaceMap().get(transition.destinationId);
+      var sourceCubeFace = cube.getCubeFaceMap().get(transition.sourceId);
+
+      return destinationCubeFace.scaleUp(sourceCubeFace.scaleDown(p));
+    }
+
+    private static Position flipRescaled(Position p, Cube cube, Transition transition) {
+      var destinationCubeFace = cube.getCubeFaceMap().get(transition.destinationId);
+      var sourceCubeFace = cube.getCubeFaceMap().get(transition.sourceId);
+
+      return destinationCubeFace.scaleUp(sourceCubeFace.scaleDown(p).flip());
+    }
+
+    Position transitionToFaceWithinCubePart1(Cube cube, Position position) {
+      CubeFace destinationCubeFace = cube.getCubeFaceMap().get(destinationId);
+
       if (exitDirection == Direction.RIGHT && enterDirection == Direction.RIGHT) {
-        CubeFace destinationCubeFace = cube.getCubeFaceMap().get(destinationId);
         return new Position(position.row, destinationCubeFace.minColumn());
 
       } else if (exitDirection == Direction.DOWN && enterDirection == Direction.DOWN) {
-        CubeFace destinationCubeFace = cube.getCubeFaceMap().get(destinationId);
         return new Position(destinationCubeFace.minRow(), position.column);
 
       } else if (exitDirection == Direction.UP && enterDirection == Direction.UP) {
-        CubeFace destinationCubeFace = cube.getCubeFaceMap().get(destinationId);
         return new Position(destinationCubeFace.maxRow(), position.column);
 
       } else if (exitDirection == Direction.LEFT && enterDirection == Direction.LEFT) {
-        CubeFace destinationCubeFace = cube.getCubeFaceMap().get(destinationId);
         return new Position(position.row, destinationCubeFace.maxColumn());
+
+      } else {
+        throw new IllegalStateException(
+            "Part 1: No transition from " + exitDirection + " to " + enterDirection);
+      }
+    }
+
+    Position transitionToFaceWithinCubePart2(Cube cube, Position start) {
+      CubeFace sourceCubeFace = cube.getCubeFaceMap().get(sourceId);
+      CubeFace destinationCubeFace = cube.getCubeFaceMap().get(destinationId);
+
+      if (exitDirection == Direction.UP && enterDirection == Direction.UP) {
+        var newColumn = Transition.rescale(start, cube, this).column;
+        return new Position(destinationCubeFace.maxRow(), newColumn);
+
+      } else if (exitDirection == Direction.RIGHT && enterDirection == Direction.RIGHT) {
+        var newRow = Transition.rescale(start, cube, this).row;
+        return new Position(newRow, destinationCubeFace.minColumn());
+
+      } else if (exitDirection == Direction.LEFT && enterDirection == Direction.LEFT) {
+        var newRow = Transition.rescale(start, cube, this).row;
+        return new Position(newRow, destinationCubeFace.maxColumn());
+
+      } else if (exitDirection == Direction.DOWN && enterDirection == Direction.DOWN) {
+        var newColumn = Transition.rescale(start, cube, this).column;
+        return new Position(destinationCubeFace.minRow(), newColumn);
+
+      } else if (exitDirection == Direction.UP && enterDirection == Direction.RIGHT) {
+        var newRow = flipRescaled(start, cube, this).row;
+        return new Position(newRow, destinationCubeFace.minColumn());
+
+      } else if (exitDirection == Direction.RIGHT && enterDirection == Direction.UP) {
+        var newColumn = flipRescaled(start, cube, this).column;
+        return new Position(destinationCubeFace.maxRow(), newColumn);
+
+      } else if (exitDirection == Direction.RIGHT && enterDirection == Direction.LEFT) {
+        return new Position(
+            destinationCubeFace.maxRow() - sourceCubeFace.scaleDown(start).row,
+            destinationCubeFace.maxColumn());
+
+      } else if (exitDirection == Direction.LEFT && enterDirection == Direction.RIGHT) {
+        return new Position(
+            destinationCubeFace.maxRow() - sourceCubeFace.scaleDown(start).row,
+            destinationCubeFace.minColumn());
+
+      } else if (exitDirection == Direction.LEFT && enterDirection == Direction.DOWN) {
+        var newColumn = flipRescaled(start, cube, this).column;
+        return new Position(destinationCubeFace.minRow(), newColumn);
+
+      } else if (exitDirection == Direction.DOWN && enterDirection == Direction.LEFT) {
+        var newRow = flipRescaled(start, cube, this).row;
+        return new Position(newRow, destinationCubeFace.maxColumn());
 
       } else {
         throw new IllegalStateException(
@@ -416,6 +548,7 @@ public class Day22 extends Day {
 
      */
     static {
+      // Part 1 Cubes:
       var cube1 = new CubeFace.CubeFaceBuilder()
           .setId(1)
           .setSize(50)
@@ -476,6 +609,67 @@ public class Day22 extends Day {
           .setDown(new Transition(6, 4, Direction.DOWN, Direction.DOWN))
           .setLeft(new Transition(6, 6, Direction.LEFT, Direction.LEFT))
           .build());
+
+      // Part 2 Cubes:
+      cubeFaceMap.put(11, new CubeFace.CubeFaceBuilder()
+          .setId(11)
+          .setSize(50)
+          .setTopLeft(new Position(0, 50))
+          .setUp(new Transition(11, 16, Direction.UP, Direction.RIGHT))
+          .setRight(new Transition(11, 12, Direction.RIGHT, Direction.RIGHT))
+          .setDown(new Transition(11, 13, Direction.DOWN, Direction.DOWN))
+          .setLeft(new Transition(11, 14, Direction.LEFT, Direction.RIGHT))
+          .build());
+
+      cubeFaceMap.put(12, new CubeFace.CubeFaceBuilder()
+          .setId(12)
+          .setSize(50)
+          .setTopLeft(new Position(0, 100))
+          .setUp(new Transition(12, 16, Direction.UP, Direction.UP))
+          .setRight(new Transition(12, 15, Direction.RIGHT, Direction.LEFT))
+          .setDown(new Transition(12, 13, Direction.DOWN, Direction.LEFT))
+          .setLeft(new Transition(12, 11, Direction.LEFT, Direction.LEFT))
+          .build());
+
+      cubeFaceMap.put(13, new CubeFace.CubeFaceBuilder()
+          .setId(13)
+          .setSize(50)
+          .setTopLeft(new Position(50, 50))
+          .setUp(new Transition(13, 11, Direction.UP, Direction.UP))
+          .setRight(new Transition(13, 12, Direction.RIGHT, Direction.UP))
+          .setDown(new Transition(13, 15, Direction.DOWN, Direction.DOWN))
+          .setLeft(new Transition(13, 14, Direction.LEFT, Direction.DOWN))
+          .build());
+
+      cubeFaceMap.put(14, new CubeFace.CubeFaceBuilder()
+          .setId(14)
+          .setSize(50)
+          .setTopLeft(new Position(100, 0))
+          .setUp(new Transition(14, 13, Direction.UP, Direction.RIGHT))
+          .setRight(new Transition(14, 15, Direction.RIGHT, Direction.RIGHT))
+          .setDown(new Transition(14, 16, Direction.DOWN, Direction.DOWN))
+          .setLeft(new Transition(14, 11, Direction.LEFT, Direction.RIGHT))
+          .build());
+
+      cubeFaceMap.put(15, new CubeFace.CubeFaceBuilder()
+          .setId(15)
+          .setSize(50)
+          .setTopLeft(new Position(100, 50))
+          .setUp(new Transition(15, 13, Direction.UP, Direction.UP))
+          .setRight(new Transition(15, 12, Direction.RIGHT, Direction.LEFT))
+          .setDown(new Transition(15, 16, Direction.DOWN, Direction.LEFT))
+          .setLeft(new Transition(15, 14, Direction.LEFT, Direction.LEFT))
+          .build());
+
+      cubeFaceMap.put(16, new CubeFace.CubeFaceBuilder()
+          .setId(16)
+          .setSize(50)
+          .setTopLeft(new Position(150, 0))
+          .setUp(new Transition(16, 14, Direction.UP, Direction.UP))
+          .setRight(new Transition(16, 15, Direction.RIGHT, Direction.UP))
+          .setDown(new Transition(16, 12, Direction.DOWN, Direction.DOWN))
+          .setLeft(new Transition(16, 11, Direction.LEFT, Direction.DOWN))
+          .build());
     }
 
     private Map<Integer, CubeFace> getCubeFaceMap() {
@@ -523,6 +717,14 @@ public class Day22 extends Day {
     boolean contains(Position position) {
       return position.row >= minRow() && position.row <= maxRow() &&
           position.column >= minColumn() && position.column <= maxColumn();
+    }
+
+    private Position scaleUp(Position p) {
+      return p.add(topLeft);
+    }
+
+    private Position scaleDown(Position p) {
+      return p.subtract(topLeft);
     }
 
     Transition getTransitionForDirection(Direction direction) {

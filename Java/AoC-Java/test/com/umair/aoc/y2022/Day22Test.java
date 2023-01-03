@@ -36,5 +36,6 @@ class Day22Test extends DayTestBase {
 
   @Test
   void testPart2_Full() {
+    runPartForDayWithFileNumber(1, new Day22(), 2, "122153");
   }
 }
