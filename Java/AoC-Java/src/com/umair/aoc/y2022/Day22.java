@@ -23,28 +23,27 @@ public class Day22 extends Day {
     Board board = Board.parseBoard(lines.subList(0, splitIndex));
     List<Instruction> instructions = Instruction.parseInstructions(lines.get(lines.size() - 1));
 
-    Position currentPosition = board.getStart();
-    Direction currentDirection = Direction.RIGHT;
+    Orientation orientation = new Orientation(board.getStart(), Direction.RIGHT);
 
     for (Instruction m : instructions) {
       switch (m.instructionType) {
-        case FORWARD -> currentPosition = switch (currentDirection) {
-          case DOWN -> board.moveVertically(m.distance, currentPosition);
-          case LEFT -> board.moveHorizontally(-m.distance, currentPosition);
-          case RIGHT -> board.moveHorizontally(m.distance, currentPosition);
-          case UP -> board.moveVertically(-m.distance, currentPosition);
-        };
-        case TURN_LEFT -> // Counterclockwise.
-            currentDirection = currentDirection.turnLeft();
-        case TURN_RIGHT -> // Clockwise.
-            currentDirection = currentDirection.turnRight();
+        case FORWARD -> {
+          var newPosition = switch (orientation.direction) {
+            case DOWN -> board.moveVertically(m.distance, orientation.position);
+            case LEFT -> board.moveHorizontally(-m.distance, orientation.position);
+            case RIGHT -> board.moveHorizontally(m.distance, orientation.position);
+            case UP -> board.moveVertically(-m.distance, orientation.position);
+          };
+          orientation = new Orientation(newPosition, orientation.direction);
+        }
+        case TURN_LEFT ->
+            orientation = new Orientation(orientation.position, orientation.direction.turnLeft());
+        case TURN_RIGHT ->
+            orientation = new Orientation(orientation.position, orientation.direction.turnRight());
       }
     }
 
-    int directionScore = currentDirection.points();
-    int password = 1000 * (currentPosition.row + 1)
-        + 4 * (currentPosition.column + 1)
-        + directionScore;
+    int password = orientation.calculatePassword();
     return Integer.toString(password);
   }
     return Integer.toString(password);
@@ -62,7 +61,7 @@ public class Day22 extends Day {
 
   @Override
   protected String part2Filename() {
-    return fileNameFromFileNumber(1);
+    return fileNameFromFileNumber(2);
   }
 
   private static class Board {
