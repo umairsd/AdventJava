@@ -2,9 +2,7 @@ package com.umair.aoc.y2022;
 
 import com.umair.aoc.common.Day;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 /**
  * Day 22: Monkey Map
@@ -37,24 +35,18 @@ public class Day22 extends Day {
           case UP -> board.moveVertically(-m.distance, currentPosition);
         };
         case TURN_LEFT -> // Counterclockwise.
-            currentDirection = switch (currentDirection) {
-              case RIGHT -> Direction.UP;
-              case DOWN -> Direction.RIGHT;
-              case LEFT -> Direction.DOWN;
-              case UP -> Direction.LEFT;
-            };
+            currentDirection = currentDirection.turnLeft();
         case TURN_RIGHT -> // Clockwise.
-            currentDirection = switch (currentDirection) {
-              case RIGHT -> Direction.DOWN;
-              case DOWN -> Direction.LEFT;
-              case LEFT -> Direction.UP;
-              case UP -> Direction.RIGHT;
-            };
+            currentDirection = currentDirection.turnRight();
       }
     }
 
-    int facing = currentDirection.score();
-    int password = 1000 * (currentPosition.row + 1) + 4 * (currentPosition.column + 1) + facing;
+    int directionScore = currentDirection.points();
+    int password = 1000 * (currentPosition.row + 1)
+        + 4 * (currentPosition.column + 1)
+        + directionScore;
+    return Integer.toString(password);
+  }
     return Integer.toString(password);
   }
 
@@ -65,7 +57,7 @@ public class Day22 extends Day {
 
   @Override
   protected String part1Filename() {
-    return fileNameFromFileNumber(1);
+    return fileNameFromFileNumber(2);
   }
 
   @Override
@@ -220,12 +212,40 @@ public class Day22 extends Day {
     LEFT,
     UP;
 
-    private int score() {
+    private int points() {
       return switch (this) {
         case RIGHT -> 0;
         case DOWN -> 1;
         case LEFT -> 2;
         case UP -> 3;
+      };
+    }
+
+    private Position movementOffset() {
+      return switch (this) {
+        case RIGHT -> new Position(0, 1);
+        case DOWN -> new Position(1, 0);
+        case LEFT -> new Position(0, -1);
+        case UP -> new Position(-1, 0);
+      };
+    }
+
+    // Anti-Clockwise.
+    private Direction turnLeft() {
+      return switch (this) {
+        case RIGHT -> UP;
+        case DOWN -> RIGHT;
+        case LEFT -> DOWN;
+        case UP -> LEFT;
+      };
+    }
+
+    private Direction turnRight() {
+      return switch (this) {
+        case RIGHT -> DOWN;
+        case DOWN -> LEFT;
+        case LEFT -> UP;
+        case UP -> RIGHT;
       };
     }
   }
@@ -270,5 +290,22 @@ public class Day22 extends Day {
   }
 
   private record Position(int row, int column) {
+    private Position applyOffset(Position p) {
+      return new Position(row + p.row, column + p.column);
+    }
+  }
+
+  private record Orientation(Position position, Direction direction) {
+    /**
+     * Move by 1 in the orientation's direction.
+     */
+    private Orientation moveByOne() {
+      return new Orientation(position.applyOffset(direction.movementOffset()), direction);
+    }
+
+    private int calculatePassword() {
+      int password = 1000 * (position.row + 1) + 4 * (position.column + 1) + direction.points();
+      return password;
+    }
   }
 }
