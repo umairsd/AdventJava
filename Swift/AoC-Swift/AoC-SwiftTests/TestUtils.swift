@@ -4,6 +4,7 @@ import Foundation
 import XCTest
 
 private let folderName = "InputDataForTests"
+private let fileExtension = ".txt"
 
 struct TestUtils {
 
@@ -21,12 +22,14 @@ struct TestUtils {
     return lines
   }
 
-  func loadData(for filename: String) throws -> Data {
-    try Data(contentsOf: fileURL(for: filename))
+  func loadData(for filename: String, fileExtension: String = fileExtension) throws -> Data {
+    try Data(contentsOf: fileURL(for: filename, fileExtension: fileExtension))
   }
 
-  func fileURL(for filename: String) -> URL {
-    fileDirectory().appendingPathComponent(filename)
+  func fileURL(for filename: String, fileExtension: String) -> URL {
+    let directoryURL = fileDirectory()
+    let fileURL = directoryURL.appending(path: "\(filename)\(fileExtension)")
+    return fileURL
   }
 
   func fileDirectory(for filename: String = #file) -> URL {
