@@ -5,8 +5,11 @@ import Foundation
 class Y2021Day01: Day {
   var dayNumber: Int = 1
   var year: Int = 2021
+  var dataFileNumber: Int
 
-  required init() {}
+  required init(dataFileNumber: Int) {
+    self.dataFileNumber = dataFileNumber
+  }
   
   func part1(_ lines: [String]) -> String {
     guard !lines.isEmpty else {
@@ -48,13 +51,4 @@ class Y2021Day01: Day {
 
     return "\(count)"
   }
-  
-  func part1Filename() -> String {
-    return "day01-data2"
-  }
-  
-  func part2Filename() -> String {
-    return "day01-data2"
-  }
-
 }
