@@ -19,13 +19,13 @@ final class Y2022Day02Test: XCTestCase {
   func testPart2_Example() throws {
     let day = Y2022Day02(dataFileNumber: 1)
     let lines = TestUtils().loadTestData(from: day.dataFilename())
-//    XCTAssertEqual(day.part2(lines), "")
+    XCTAssertEqual(day.part2(lines), "12")
   }
 
   func testPart2_Full() throws {
     let day = Y2022Day02(dataFileNumber: 2)
     let lines = TestUtils().loadTestData(from: day.dataFilename())
-//    XCTAssertEqual(day.part2(lines), "")
+    XCTAssertEqual(day.part2(lines), "13193")
   }
   
 }

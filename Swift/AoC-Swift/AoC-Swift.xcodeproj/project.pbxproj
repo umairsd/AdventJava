@@ -36,6 +36,8 @@
 		805BF6452967544B0064CAFF /* Y2022Day01.swift in Sources */ = {isa = PBXBuildFile; fileRef = 805BF6402967538B0064CAFF /* Y2022Day01.swift */; };
 		805BF648296754B60064CAFF /* y2022-day01-data1.txt in Resources */ = {isa = PBXBuildFile; fileRef = 805BF647296754B60064CAFF /* y2022-day01-data1.txt */; };
 		805BF64A296754CE0064CAFF /* y2022-day01-data2.txt in Resources */ = {isa = PBXBuildFile; fileRef = 805BF649296754CE0064CAFF /* y2022-day01-data2.txt */; };
+		80DFB580296DEE7B00217023 /* y2022-day02-data1.txt in Resources */ = {isa = PBXBuildFile; fileRef = 80DFB57F296DEE7B00217023 /* y2022-day02-data1.txt */; };
+		80DFB582296DEE8900217023 /* y2022-day02-data2.txt in Resources */ = {isa = PBXBuildFile; fileRef = 80DFB581296DEE8900217023 /* y2022-day02-data2.txt */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -77,6 +79,10 @@
 		805BF649296754CE0064CAFF /* y2022-day01-data2.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = "y2022-day01-data2.txt"; sourceTree = "<group>"; };
 		805BF64B296759720064CAFF /* y2022-day01-data1.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = "y2022-day01-data1.txt"; sourceTree = "<group>"; };
 		805BF64C296759720064CAFF /* y2022-day01-data2.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = "y2022-day01-data2.txt"; sourceTree = "<group>"; };
+		80DFB57F296DEE7B00217023 /* y2022-day02-data1.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = "y2022-day02-data1.txt"; sourceTree = "<group>"; };
+		80DFB581296DEE8900217023 /* y2022-day02-data2.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = "y2022-day02-data2.txt"; sourceTree = "<group>"; };
+		80DFB583296DEEA300217023 /* y2022-day02-data1.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = "y2022-day02-data1.txt"; sourceTree = "<group>"; };
+		80DFB584296DEEA300217023 /* y2022-day02-data2.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = "y2022-day02-data2.txt"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -208,6 +214,8 @@
 				8041D3BE292E97E900287CC2 /* y2021-day01-data2.txt */,
 				805BF64B296759720064CAFF /* y2022-day01-data1.txt */,
 				805BF64C296759720064CAFF /* y2022-day01-data2.txt */,
+				80DFB583296DEEA300217023 /* y2022-day02-data1.txt */,
+				80DFB584296DEEA300217023 /* y2022-day02-data2.txt */,
 			);
 			path = InputDataForTests;
 			sourceTree = "<group>";
@@ -243,6 +251,8 @@
 			children = (
 				805BF647296754B60064CAFF /* y2022-day01-data1.txt */,
 				805BF649296754CE0064CAFF /* y2022-day01-data2.txt */,
+				80DFB57F296DEE7B00217023 /* y2022-day02-data1.txt */,
+				80DFB581296DEE8900217023 /* y2022-day02-data2.txt */,
 			);
 			path = 2022;
 			sourceTree = "<group>";
@@ -349,6 +359,8 @@
 			files = (
 				8041D3BC292E93E900287CC2 /* y2021-day01-data1.txt in Resources */,
 				805BF64A296754CE0064CAFF /* y2022-day01-data2.txt in Resources */,
+				80DFB582296DEE8900217023 /* y2022-day02-data2.txt in Resources */,
+				80DFB580296DEE7B00217023 /* y2022-day02-data1.txt in Resources */,
 				805BF648296754B60064CAFF /* y2022-day01-data1.txt in Resources */,
 				8041D3BF292E97E900287CC2 /* y2021-day01-data2.txt in Resources */,
 			);
