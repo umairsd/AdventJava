@@ -9,7 +9,7 @@ struct Runner {
   ///
   /// - Parameter year: The year for which to load and run the test cases.
   func run(for year: Int) {
-    print("== Running Tests for the year \(year) ==")
+    print("\n\n== Running Tests for the year \(year) ==")
 
     let prefix = getClassNamePrefix()
     let yearString = "Y\(year)"
