@@ -13,7 +13,7 @@ class Y2022Day02: Day {
   }
 
   func part1(_ lines: [String]) -> String {
-    let gameRounds = lines.map(parseSpecificMoveStrategy(from:)).compactMap { $0 }
+    let gameRounds = lines.compactMap(parseSpecificMoveStrategy(from:))
     let score = gameRounds
       .map { $0.scoreForHuman() }
       .reduce(0, +)
@@ -21,7 +21,7 @@ class Y2022Day02: Day {
   }
 
   func part2(_ lines: [String]) -> String {
-    let gameRounds = lines.map(parseDesiredOutcomeStrategy(from:)).compactMap { $0 }
+    let gameRounds = lines.compactMap(parseDesiredOutcomeStrategy(from:))
     let score = gameRounds
       .map { $0.score() }
       .reduce(0, +)
