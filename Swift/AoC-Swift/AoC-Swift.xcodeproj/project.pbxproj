@@ -10,6 +10,11 @@
 		80101A6E296DC78F003055DC /* Y2022Day02.swift in Sources */ = {isa = PBXBuildFile; fileRef = 80101A6D296DC78F003055DC /* Y2022Day02.swift */; };
 		80101A6F296DC78F003055DC /* Y2022Day02.swift in Sources */ = {isa = PBXBuildFile; fileRef = 80101A6D296DC78F003055DC /* Y2022Day02.swift */; };
 		80101A71296DE731003055DC /* Y2022Day02Test.swift in Sources */ = {isa = PBXBuildFile; fileRef = 80101A70296DE731003055DC /* Y2022Day02Test.swift */; };
+		8024F852298AF935002A5624 /* Y2022Day04.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8024F851298AF935002A5624 /* Y2022Day04.swift */; };
+		8024F853298AF935002A5624 /* Y2022Day04.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8024F851298AF935002A5624 /* Y2022Day04.swift */; };
+		8024F855298AF972002A5624 /* Y2022Day04Test.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8024F854298AF972002A5624 /* Y2022Day04Test.swift */; };
+		8024F857298AF9D0002A5624 /* y2022-day04-data1.txt in Resources */ = {isa = PBXBuildFile; fileRef = 8024F856298AF9D0002A5624 /* y2022-day04-data1.txt */; };
+		8024F859298AF9EC002A5624 /* y2022-day04-data2.txt in Resources */ = {isa = PBXBuildFile; fileRef = 8024F858298AF9EC002A5624 /* y2022-day04-data2.txt */; };
 		8041D3A3292E829400287CC2 /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8041D3A2292E829400287CC2 /* main.swift */; };
 		8041D3AE292E831A00287CC2 /* Day.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8041D3AD292E831A00287CC2 /* Day.swift */; };
 		8041D3B0292E835000287CC2 /* Y2021Day01.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8041D3AF292E835000287CC2 /* Y2021Day01.swift */; };
@@ -61,6 +66,12 @@
 /* Begin PBXFileReference section */
 		80101A6D296DC78F003055DC /* Y2022Day02.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Y2022Day02.swift; sourceTree = "<group>"; };
 		80101A70296DE731003055DC /* Y2022Day02Test.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Y2022Day02Test.swift; sourceTree = "<group>"; };
+		8024F851298AF935002A5624 /* Y2022Day04.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Y2022Day04.swift; sourceTree = "<group>"; };
+		8024F854298AF972002A5624 /* Y2022Day04Test.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Y2022Day04Test.swift; sourceTree = "<group>"; };
+		8024F856298AF9D0002A5624 /* y2022-day04-data1.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = "y2022-day04-data1.txt"; sourceTree = "<group>"; };
+		8024F858298AF9EC002A5624 /* y2022-day04-data2.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = "y2022-day04-data2.txt"; sourceTree = "<group>"; };
+		8024F85A298AFA12002A5624 /* y2022-day04-data2.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = "y2022-day04-data2.txt"; sourceTree = "<group>"; };
+		8024F85B298AFA12002A5624 /* y2022-day04-data1.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = "y2022-day04-data1.txt"; sourceTree = "<group>"; };
 		8041D39F292E829400287CC2 /* AoC-Swift */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = "AoC-Swift"; sourceTree = BUILT_PRODUCTS_DIR; };
 		8041D3A2292E829400287CC2 /* main.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = main.swift; sourceTree = "<group>"; };
 		8041D3AB292E82D800287CC2 /* y2021-day01-data1.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = "y2021-day01-data1.txt"; sourceTree = "<group>"; };
@@ -229,6 +240,8 @@
 				80DFB584296DEEA300217023 /* y2022-day02-data2.txt */,
 				80DFB58E296F208200217023 /* y2022-day03-data1.txt */,
 				80DFB58F296F208200217023 /* y2022-day03-data2.txt */,
+				8024F85B298AFA12002A5624 /* y2022-day04-data1.txt */,
+				8024F85A298AFA12002A5624 /* y2022-day04-data2.txt */,
 			);
 			path = InputDataForTests;
 			sourceTree = "<group>";
@@ -247,6 +260,7 @@
 				805BF6402967538B0064CAFF /* Y2022Day01.swift */,
 				80101A6D296DC78F003055DC /* Y2022Day02.swift */,
 				80DFB589296F03E200217023 /* Y2022Day03.swift */,
+				8024F851298AF935002A5624 /* Y2022Day04.swift */,
 			);
 			path = 2022;
 			sourceTree = "<group>";
@@ -257,6 +271,7 @@
 				805BF643296754480064CAFF /* Y2022Day01Test.swift */,
 				80101A70296DE731003055DC /* Y2022Day02Test.swift */,
 				80DFB58C296F043500217023 /* Y2022Day03Test.swift */,
+				8024F854298AF972002A5624 /* Y2022Day04Test.swift */,
 			);
 			path = 2022;
 			sourceTree = "<group>";
@@ -270,6 +285,8 @@
 				80DFB581296DEE8900217023 /* y2022-day02-data2.txt */,
 				80DFB585296F03A500217023 /* y2022-day03-data1.txt */,
 				80DFB587296F03B300217023 /* y2022-day03-data2.txt */,
+				8024F856298AF9D0002A5624 /* y2022-day04-data1.txt */,
+				8024F858298AF9EC002A5624 /* y2022-day04-data2.txt */,
 			);
 			path = 2022;
 			sourceTree = "<group>";
@@ -378,8 +395,10 @@
 				80DFB588296F03B300217023 /* y2022-day03-data2.txt in Resources */,
 				80DFB586296F03A500217023 /* y2022-day03-data1.txt in Resources */,
 				805BF64A296754CE0064CAFF /* y2022-day01-data2.txt in Resources */,
+				8024F859298AF9EC002A5624 /* y2022-day04-data2.txt in Resources */,
 				80DFB582296DEE8900217023 /* y2022-day02-data2.txt in Resources */,
 				80DFB580296DEE7B00217023 /* y2022-day02-data1.txt in Resources */,
+				8024F857298AF9D0002A5624 /* y2022-day04-data1.txt in Resources */,
 				805BF648296754B60064CAFF /* y2022-day01-data1.txt in Resources */,
 				8041D3BF292E97E900287CC2 /* y2021-day01-data2.txt in Resources */,
 			);
@@ -404,6 +423,7 @@
 				8041D3C2292E985C00287CC2 /* Constants.swift in Sources */,
 				805BF6412967538B0064CAFF /* Y2022Day01.swift in Sources */,
 				8041D3C7292EA6DD00287CC2 /* Bundle+.swift in Sources */,
+				8024F852298AF935002A5624 /* Y2022Day04.swift in Sources */,
 				8041D3AE292E831A00287CC2 /* Day.swift in Sources */,
 				8041D3A3292E829400287CC2 /* main.swift in Sources */,
 				8041D3C4292E99E700287CC2 /* Runner.swift in Sources */,
@@ -435,8 +455,10 @@
 				805BF62A296674640064CAFF /* FileUtils.swift in Sources */,
 				805BF63C29667B800064CAFF /* TestUtils.swift in Sources */,
 				805BF63A29667B2D0064CAFF /* Y2021Day01Test.swift in Sources */,
+				8024F855298AF972002A5624 /* Y2022Day04Test.swift in Sources */,
 				805BF627296674640064CAFF /* Constants.swift in Sources */,
 				805BF629296674640064CAFF /* Bundle+.swift in Sources */,
+				8024F853298AF935002A5624 /* Y2022Day04.swift in Sources */,
 				805BF62B296674640064CAFF /* Runner.swift in Sources */,
 				80DFB58D296F043500217023 /* Y2022Day03Test.swift in Sources */,
 				805BF6452967544B0064CAFF /* Y2022Day01.swift in Sources */,
