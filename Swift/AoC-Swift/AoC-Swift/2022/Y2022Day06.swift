@@ -4,7 +4,8 @@ import Foundation
 
 class Y2022Day06: Day {
 
-  private static let startOfMessageWidth = 4
+  private static let startOfPacketMarkerWidth = 4
+  private static let startOfMessageMarkerWidth = 14
   
   var dayNumber: Int = 6
   var year: Int = 2022
@@ -15,20 +16,42 @@ class Y2022Day06: Day {
   }
 
   func part1(_ lines: [String]) -> String {
-    let packetWidth = Self.startOfMessageWidth
+    guard let i = endIndexOfUniqueBlock(in: lines[0], width: Self.startOfPacketMarkerWidth) else {
+      fatalError("Unable to find the start of packet marker.")
+    }
+    // The problem expects 1-based indexing.
+    return "\(i + 1)"
+  }
 
-    let lineArray = Array(lines[0])
-    var charCountMap = lineArray.prefix(packetWidth).reduce(into: [:]) { partialResult, c in
-      partialResult[c, default: 0] += 1
+  func part2(_ lines: [String]) -> String {
+    guard let i = endIndexOfUniqueBlock(in: lines[0], width: Self.startOfMessageMarkerWidth) else {
+      fatalError("Unable to find the start of message marker.")
+    }
+    // The problem expects 1-based indexing.
+    return "\(i + 1)"
+
+  }
+
+  /// Finds the ending index of the first block of size `width` where all characters within
+  /// the block are unique.
+  private func endIndexOfUniqueBlock(in line: String, width: Int) -> Int? {
+    guard width > 0 else {
+      return nil
     }
 
-    var startOfPacketIdx: Int?
+    let lineArray = Array(line)
+    // A map of characters to their counts. Represents a sliding window.
+    var charCountMap = lineArray
+      .prefix(width)
+      .reduce(into: [:]) { countsMap, c in
+        countsMap[c, default: 0] += 1
+      }
 
-    for i in packetWidth..<lineArray.count {
-      let previous = lineArray[i - packetWidth]
+    for i in width..<lineArray.count {
+      let previous = lineArray[i - width]
       let current = lineArray[i]
 
-      // Remove from the previous character from the map
+      // Remove the previous character from the 'sliding window'
       charCountMap[previous, default: 0] -= 1
       if let v = charCountMap[previous], v == 0 {
         charCountMap.removeValue(forKey: previous)
@@ -37,22 +60,11 @@ class Y2022Day06: Day {
       // Add the current character.
       charCountMap[current, default: 0] += 1
 
-      if charCountMap.count == packetWidth {
-        startOfPacketIdx = i
-        break
+      if charCountMap.count == width {
+        return i
       }
     }
 
-    guard let idx = startOfPacketIdx else {
-      fatalError("Unable to find the start of packet marker.")
-    }
-
-    // The problem expects 1-based indexing.
-    let startOfPacketMarker = idx + 1
-    return "\(startOfPacketMarker)"
-  }
-
-  func part2(_ lines: [String]) -> String {
-    ""
+    return nil
   }
 }
