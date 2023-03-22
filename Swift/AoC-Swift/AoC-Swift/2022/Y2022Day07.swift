@@ -26,10 +26,23 @@ class Y2022Day07: Day {
   
 
   func part2(_ lines: [String]) -> String {
-    ""
+    guard let root = parseFileSystem(from: lines) else {
+      return ""
+    }
+
+    let totalUsedSpace = root.size()
+    let totalFilesystemSize = 70_000_000
+    let spacedNeededForUpgrade = 30_000_000
+
+    let availableSpace = totalFilesystemSize - totalUsedSpace
+    let spacedToBeDeleted = spacedNeededForUpgrade - availableSpace
+
+    var filteredNodes: [FileSystemNode] = []
+    root.filter(into: &filteredNodes) { $0.isDirectory() && $0.size() >= spacedToBeDeleted }
+
+    let sortedSizes = filteredNodes.map { $0.size() }.sorted()
+    return "\(sortedSizes.first ?? 0)"
   }
-
-
 }
 
 
