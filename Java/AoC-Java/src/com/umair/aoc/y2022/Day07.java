@@ -103,8 +103,10 @@ public class Day07 extends Day {
     return totalSizeOfChildren;
   }
 
-  private static final String LINE_START_COMMAND = "$";
-  private static final String LINE_START_CD = "$ cd";
+
+  private static final String COMMAND_LS = "$ ls";
+  private static final String COMMAND_CD = "$ cd";
+  private static final String COMMAND_GO_UP = "$ cd ..";
 
   private static FSNode parseFilesystem(List<String> lines) {
     FSNode root = new FSNode("/", FileType.DIRECTORY);
@@ -114,26 +116,28 @@ public class Day07 extends Day {
     stack.push(root);
 
     for (String line : lines.stream().skip(1).toList()) {
-      if (line.startsWith(LINE_START_COMMAND)) {
-        if (line.startsWith(LINE_START_CD)) {
-          String[] tokens = line.split(" ");
-          String path = tokens[2].strip();
+      if (line.equals(COMMAND_LS) || line.isBlank()) {
+        //noinspection UnnecessaryContinue
+        continue;
+      } else if (line.trim().equals(COMMAND_GO_UP)) {
+        stack.pop();
+        currentNode = stack.peek();
 
-          if (path.equals("..")) {
-            stack.pop();
-            currentNode = stack.peek();
+      } else if (line.trim().startsWith(COMMAND_CD)) {
+        String[] tokens = line.split(" ");
+        String directoryName = tokens[2].strip();
 
-          } else if (currentNode.children.containsKey(path)) {
-            currentNode = currentNode.children.get(path);
-            stack.push(currentNode);
-
-          } else {
-            throw new IllegalArgumentException();
-          }
+        if (currentNode.children.containsKey(directoryName)) {
+          currentNode = currentNode.children.get(directoryName);
+          stack.push(currentNode);
+        } else {
+          // Input Assumption: Must do an `ls` in a directory before changing into a subdirectory.
+          // This means that the `children` dictionary already contains the key `directoryName`
+          throw new IllegalArgumentException("Must do an `ls` before changing into a directory.");
         }
       } else {
-        FSNode file = parseFSNode(line);
-        currentNode.children.put(file.name, file);
+        FSNode node = parseFSNode(line);
+        currentNode.children.put(node.name, node);
       }
     }
     return root;
