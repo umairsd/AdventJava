@@ -303,6 +303,7 @@
 				806ADE16298BFC9D002CD6E1 /* Y2022Day05.swift */,
 				80AC9D90299EAFA1000F97A6 /* Y2022Day06.swift */,
 				80DE6B5629CA5C7B00FF0C3E /* Y2022Day07.swift */,
+				80DE6B5B29CA6D5700FF0C3E /* New Group */,
 			);
 			path = 2022;
 			sourceTree = "<group>";
@@ -340,6 +341,13 @@
 				80DE6B5229CA5C3D00FF0C3E /* y2022-day07-data2.txt */,
 			);
 			path = 2022;
+			sourceTree = "<group>";
+		};
+		80DE6B5B29CA6D5700FF0C3E /* New Group */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			name = "New Group";
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
