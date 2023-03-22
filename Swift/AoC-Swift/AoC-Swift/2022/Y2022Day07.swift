@@ -19,15 +19,8 @@ class Y2022Day07: Day {
     }
 
     var filteredNodes: [FileSystemNode] = []
-    // Filter directories with size that's less than 100_000
-    root.filter(into: &filteredNodes) { node in
-      if case .directory = node {
-        return node.size() <= 100_000
-      }
-      return false
-    }
-
-    let total = filteredNodes.map( { $0.size() }).reduce(0, +)
+    root.filter(into: &filteredNodes) { $0.isDirectory() && $0.size() <= 100_000 }
+    let total = filteredNodes.map { $0.size() }.reduce(0, +)
     return "\(total)"
   }
   
@@ -36,39 +29,77 @@ class Y2022Day07: Day {
     ""
   }
 
+
 }
 
-/// Represents a file system node.
-fileprivate enum FileSystemNode {
 
-  case file(name: String, size: Int)
-  case directory(name: String, size: Int, children: [FileSystemNode])
+/// Represents contents of a directory.
+fileprivate class DirectoryData {
+  let name: String
+  var size: Int?
+  var children: [String: FileSystemNode] = [:]
+
+  init(_ name: String) {
+    self.name = name
+  }
+}
+
+/// Represents contents of a file.
+fileprivate class FileData {
+  let name: String
+  let size: Int
+
+  init(_ name: String, size: Int) {
+    self.name = name
+    self.size = size
+  }
+}
+
+fileprivate enum FileSystemNode {
+  case file(data: FileData)
+  case directory(data: DirectoryData)
+
+  func isFile() -> Bool {
+    switch self {
+      case .file:
+        return true
+      case .directory:
+        return false
+    }
+  }
+
+  func isDirectory() -> Bool {
+    return !isFile()
+  }
 
   func size() -> Int {
     switch self {
-      case .file(_, let size):
-        return size
-      case .directory(_, let size, _):
+      case .file(let fData):
+        return fData.size
+
+      case .directory(let dData):
+        guard let size = dData.size else {
+          fatalError("Error: data has not been parsed completely.")
+        }
         return size
     }
   }
 
   func filter(into result: inout [FileSystemNode], _ isIncluded: (FileSystemNode) -> Bool) {
+    if isIncluded(self) {
+      result.append(self)
+    }
+
     switch self {
       case .file:
-        if isIncluded(self) {
-          result.append(self)
-        }
         return
-      case .directory(_, _, let children):
-        if isIncluded(self) {
-          result.append(self)
-        }
-        for c in children {
-          c.filter(into: &result, isIncluded)
+      case .directory(let dData):
+        for childNode in dData.children.values {
+          childNode.filter(into: &result, isIncluded)
         }
     }
   }
+
 }
 
 
@@ -78,11 +109,15 @@ extension Y2022Day07 {
 
   private static let listFilesCommand = "$ ls"
   private static let goUpOneLevelCommand = "$ cd .."
+  private static let nameRef = Reference(String.self)
+  private static let sizeRef = Reference(Int.self)
 
   private static let commandCD = Regex {
     "$ cd "
-    Capture {
+    TryCapture(as: nameRef) {
       OneOrMore(.any)
+    } transform: { match in
+      String(match)
     }
   }
 
@@ -92,95 +127,131 @@ extension Y2022Day07 {
 
   private static let directoryRegex = Regex {
     "dir "
-    Capture {
+    TryCapture(as: nameRef) {
       OneOrMore(.any)
+    } transform: { match in
+      String(match)
     }
   }
 
   private static let fileRegex = Regex {
-    Capture {
+    TryCapture(as: sizeRef) {
       OneOrMore(.digit)
+    } transform: { match in
+      Int(match)
     }
     " "
-    Capture {
+    TryCapture(as: nameRef) {
       OneOrMore(.any)
+    } transform: { match in
+      String(match)
     }
   }
 
 
   private func parseFileSystem(from lines: [String]) -> FileSystemNode? {
-    let map = buildDirectoryMap(from: lines)
-    let root = buildFileSystemNode(from: "dir /", map)
+    guard let root = parseRawDataIntoTree(from: lines) else {
+      return nil
+    }
+
+    // Second phase: Compute directory sizes
+    traverseToPopulateDirectorySize(root)
     return root
   }
 
+  @discardableResult
+  private func traverseToPopulateDirectorySize(_ root: FileSystemNode) -> Int {
+    switch root {
+      case .file(let fData):
+        return fData.size
 
-  private func buildDirectoryMap(from lines: [String]) -> [String: [String]] {
-    var map: [String: [String]] = [:]
+      case .directory(let dData):
+        if let size = dData.size {
+          return size
+        }
+        var total = 0
+        for childNode in dData.children.values {
+          total += traverseToPopulateDirectorySize(childNode)
+        }
+        dData.size = total
+        return total
+    }
+  }
+
+  private func parseRawDataIntoTree(from lines: [String]) -> FileSystemNode? {
+    guard !lines.isEmpty else { return nil }
+    let root = FileSystemNode.directory(data: DirectoryData("/"))
+
     // A stack to maintain the current directory.
-    var stack: [String] = []
+    var stack: [FileSystemNode] = []
+    stack.append(root)
+    var currentNode = root
 
-    for line in lines {
-      if line == Self.listFilesCommand {
+    for line in lines.suffix(from: 1) {
+      if line == Self.listFilesCommand || line.isEmpty {
         continue
       }
       else if line == Self.goUpOneLevelCommand {
         // Going up a level.
         stack.removeLast()
+        guard let last = stack.last else {
+          fatalError("")
+        }
+        currentNode = last
       }
       else if line.starts(with: Self.commandCD) {
         guard let match = line.firstMatch(of: Self.commandCD) else {
           continue
         }
-        // Store the key in the form "dir <name>", as the lines are also stored in this form.
-        // This makes it easier to recursively build the `FileSystemNode` structure.
-        let name = "dir \(String(match.1))"
-        stack.append(name)
+        guard case let .directory(directoryData) = currentNode else {
+          fatalError("WTF: Somehow a file got added to the stack.")
+        }
+
+        let childDirectoryName = match[Self.nameRef]
+        guard let childNode = directoryData.children[childDirectoryName] else {
+          // Assumption: The set of input commands will always do an `ls` inside a directory
+          // before `cd` into a subdirectory.
+          fatalError("Error: Have no done an `ls` prior to `cd` into a subdirectory.")
+        }
+
+        currentNode = childNode
+        stack.append(currentNode)
       }
       else {
-        guard let dirName = stack.last else {
-          fatalError("Attempting to process a file even though there's no directory on the stack")
+        guard case let .directory(directoryData) = currentNode else {
+          fatalError("WTF: Somehow a file got added to the stack.")
         }
-        guard !line.isEmpty else {
+        guard let (childName, childNode) = parseFileSystemNode(from: line) else {
           continue
         }
-        map[dirName, default: []].append(line)
+
+        directoryData.children[childName] = childNode
       }
     }
-    return map
+    return root
   }
 
+  private func parseFileSystemNode(from line: String?) -> (String, FileSystemNode)? {
+    guard let line = line else {
+      return nil
+    }
 
-  private func buildFileSystemNode(
-    from line: String,
-    _ directoryMap: [String: [String]]
-  ) -> FileSystemNode? {
-
-    if line.starts(with: Self.directoryRegex) {
-      guard let result = line.firstMatch(of: Self.directoryRegex) else { return nil }
-      let name = String(result.1)
-
-      // The key is in the form "dir <name>". `values` is the list of directory contents.
-      guard let values = directoryMap[line] else {
+    if line.starts(with: Self.fileRegex) {
+      guard let match = line.firstMatch(of: Self.fileRegex) else {
         return nil
       }
-
-      let childrenNodes = values.compactMap { buildFileSystemNode(from: $0, directoryMap) }
-      let size = childrenNodes.map( { $0.size() }).reduce(0, +)
-      return .directory(name: name, size: size, children: childrenNodes)
-
+      let name = match[Self.nameRef]
+      let file = FileData(name, size: match[Self.sizeRef])
+      return (name, .file(data: file))
     }
-    else if line.starts(with: Self.fileRegex) {
-      guard let result = line.firstMatch(of: Self.fileRegex) else { return nil }
-      guard let size = Int(result.1) else { return nil }
-
-      let name = String(result.2)
-      return .file(name: name, size: size)
-
+    else if line.starts(with: Self.directoryRegex) {
+      guard let match = line.firstMatch(of: Self.directoryRegex) else {
+        return nil
+      }
+      let name = match[Self.nameRef]
+      let directory = DirectoryData(name)
+      return (name, .directory(data: directory))
     }
-    else {
-      fatalError("Bad data. Should not happen")
-    }
+    return nil
   }
 }
-
