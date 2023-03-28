@@ -40,7 +40,17 @@ class Y2022Day08: Day {
   }
 
   func part2(_ lines: [String]) -> String {
-    ""
+    let trees = parseTrees(lines)
+    var maxScenicScore = Int.min
+
+    for row in 0..<trees.count {
+      for column in 0..<trees[row].count {
+        let score = scenicScore(trees, row, column)
+        maxScenicScore = max(maxScenicScore, score)
+      }
+    }
+
+    return "\(maxScenicScore)"
   }
 }
 
@@ -59,6 +69,61 @@ extension Y2022Day08 {
       })
 
     return trees
+  }
+
+
+  private func scenicScore(_ trees: [[Int]], _ row: Int, _ column: Int) -> Int {
+    let rowCount = trees.count
+    let columnCount = trees[0].count
+    let treeHeight = trees[row][column]
+
+    // Look towards the left.
+    var seenOnLeft = 0
+    var c = column - 1
+    while c >= 0 {
+      seenOnLeft += 1
+      if trees[row][c] >= treeHeight {
+        // A tree as tall as `treeHeight` blocks our view, we cannot look any further.
+        break
+      }
+      c -= 1
+    }
+
+    // Look towards the right.
+    var seenOnRight = 0
+    c = column + 1
+    while c < columnCount {
+      seenOnRight += 1
+      if trees[row][c] >= treeHeight {
+        break
+      }
+      c += 1
+    }
+
+    // Look above.
+    var seenAbove = 0
+    var r = row - 1
+    while r >= 0 {
+      seenAbove += 1
+      if trees[r][column] >= treeHeight {
+        break
+      }
+      r -= 1
+    }
+
+    // Look below.
+    var seenBelow = 0
+    r = row + 1
+    while r < rowCount {
+      seenBelow += 1
+      if trees[r][column] >= treeHeight {
+        break
+      }
+      r += 1
+    }
+
+    let score = seenOnLeft * seenOnRight * seenAbove * seenBelow
+    return score
   }
 
 
