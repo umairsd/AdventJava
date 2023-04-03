@@ -303,6 +303,8 @@
 				80DE6B5429CA5C6000FF0C3E /* y2022-day07-data2.txt */,
 				80EB255729D2044F00372256 /* y2022-day08-data1.txt */,
 				80EB255829D2044F00372256 /* y2022-day08-data2.txt */,
+				8084BE0629DB195F003D0AB6 /* y2022-day09-data1.txt */,
+				8084BE0829DB196E003D0AB6 /* y2022-day09-data2.txt */,
 			);
 			path = InputDataForTests;
 			sourceTree = "<group>";
@@ -366,8 +368,6 @@
 				80DE6B5229CA5C3D00FF0C3E /* y2022-day07-data2.txt */,
 				80EB255329D2037700372256 /* y2022-day08-data1.txt */,
 				80EB255429D2037700372256 /* y2022-day08-data2.txt */,
-				8084BE0629DB195F003D0AB6 /* y2022-day09-data1.txt */,
-				8084BE0829DB196E003D0AB6 /* y2022-day09-data2.txt */,
 			);
 			path = 2022;
 			sourceTree = "<group>";
