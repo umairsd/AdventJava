@@ -39,12 +39,66 @@ class Y2022Day09: Day {
 
 
   func part2(_ lines: [String]) -> String {
-    ""
+    let moves = parseMoves(from: lines)
+
+    guard let rope = Rope(length: 10) else {
+      fatalError("Unable to create a rope.")
+    }
+
+    var tailPositions = Set<Position>()
+    tailPositions.insert(rope.tail)
+
+    for move in moves {
+      var step = 0
+      while step < move.distance {
+        // Move the head by one step.
+        rope.head = rope.head.moveByOne(move.direction)
+
+        // Move all the other knots.
+        for i in 1..<rope.knots.count {
+          // Move the i-th knot such that it follows the knot (i - 1)
+          let previousKnot = rope.knots[i - 1]
+          rope.knots[i] = rope.knots[i].translatePosition(to: previousKnot)
+        }
+
+        tailPositions.insert(rope.tail)
+        step += 1
+      }
+    }
+
+    return "\(tailPositions.count)"
   }
 }
 
 
 // MARK: - Helper Data Types
+
+fileprivate class Rope {
+  var knots: [Position]
+
+  var head: Position {
+    get {
+      return knots.first!
+    }
+    set {
+      knots[0] = newValue
+    }
+  }
+
+  var tail: Position {
+    return knots.last!
+  }
+
+  init?(length: Int) {
+    guard length >= 2 else {
+      return nil
+    }
+    knots = []
+    for _ in 0..<length {
+      knots.append(Position(row: 0, column: 0))
+    }
+  }
+}
 
 fileprivate enum Direction: String {
   case up = "U"
