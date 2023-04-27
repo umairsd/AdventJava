@@ -172,6 +172,8 @@
 		80F337CF29FAE5140038A454 /* Y2022Day10Test.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Y2022Day10Test.swift; sourceTree = "<group>"; };
 		80F337D129FAE65B0038A454 /* y2022-day10-data1.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = "y2022-day10-data1.txt"; sourceTree = "<group>"; };
 		80F337D329FAE66A0038A454 /* y2022-day10-data2.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = "y2022-day10-data2.txt"; sourceTree = "<group>"; };
+		80F337D529FAED2F0038A454 /* y2022-day10-data2.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = "y2022-day10-data2.txt"; sourceTree = "<group>"; };
+		80F337D629FAED2F0038A454 /* y2022-day10-data1.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = "y2022-day10-data1.txt"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -390,6 +392,8 @@
 				8084BE0D29DC6BBF003D0AB6 /* y2022-day09-data1.txt */,
 				8084BE0C29DC6BBF003D0AB6 /* y2022-day09-data2.txt */,
 				8084BE0A29DC6BAB003D0AB6 /* y2022-day09-data3.txt */,
+				80F337D629FAED2F0038A454 /* y2022-day10-data1.txt */,
+				80F337D529FAED2F0038A454 /* y2022-day10-data2.txt */,
 			);
 			path = 2022;
 			sourceTree = "<group>";
