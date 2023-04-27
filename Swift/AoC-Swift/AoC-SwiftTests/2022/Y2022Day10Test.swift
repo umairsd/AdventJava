@@ -10,7 +10,7 @@ final class Y2022Day10Test: XCTestCase {
     XCTAssertEqual(day.part1(lines), "13140")
   }
 
-  func DISABLED_testPart1_Full() throws {
+  func testPart1_Full() throws {
     let day = Y2022Day10(dataFileNumber: 2)
     let lines = TestUtils().loadTestData(from: day.dataFilename())
     XCTAssertEqual(day.part1(lines), "16480")
