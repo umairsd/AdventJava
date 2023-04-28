@@ -9,8 +9,8 @@ class Y2022Day10: Day {
   var year: Int = 2022
   var dataFileNumber: Int = 2
 
-
   private static let maxCycles = 240
+  private static let crtRowCount = 6
 
   required init(dataFileNumber: Int) {
     self.dataFileNumber = dataFileNumber
@@ -21,17 +21,35 @@ class Y2022Day10: Day {
 
     let checkpointCycles = [20,60, 100, 140, 180, 220]
     let registerHistory = simulate(instructions, forCycles: Self.maxCycles)
-
     let signalStrength = checkpointCycles
       .reduce(0) { subTotal, cycle in
         subTotal + (registerHistory[cycle - 1] * cycle)
       }
-
     return "\(signalStrength)"
   }
 
   func part2(_ lines: [String]) -> String {
-    ""
+    let instructions = parseInstructions(from: lines)
+    let registerHistory = simulate(instructions, forCycles: Self.maxCycles)
+    let crtWidth = Self.maxCycles / Self.crtRowCount
+
+    var display = CRTDisplay(height: Self.crtRowCount, width: crtWidth)
+    var spritePosition = 1
+
+    // `cycle` is the next cycle that will end.
+    for cycle in 1...Self.maxCycles {
+      let row = (cycle - 1) / crtWidth
+      let column = (cycle - 1) % crtWidth
+
+      let delta = abs(spritePosition - column)
+      display.screen[row][column] = delta <= 1 ? .lit : .dark
+
+      // End cycle
+      spritePosition = registerHistory[cycle]
+    }
+
+    let result = display.description
+    return result
   }
 
 
@@ -39,7 +57,7 @@ class Y2022Day10: Day {
     _ instructions: [Instruction],
     forCycles maxCyles: Int = maxCycles
   ) -> [Int] {
-    var register: [Int] = Array<Int>(repeating: 0, count: maxCyles)
+    var register: [Int] = Array<Int>(repeating: 0, count: maxCyles + 1)
     var registerX = 1
 
     // The next cycle that ends.
@@ -79,9 +97,40 @@ class Y2022Day10: Day {
 
 // MARK: - Helpful Types
 
+private struct CRTDisplay: CustomStringConvertible {
+  var screen: [[Pixel]]
+  let height: Int
+  let width: Int
+
+  init(height: Int, width: Int) {
+    self.height = height
+    self.width = width
+
+    screen = Array(
+      repeating: Array(repeating: .blank, count: width),
+      count: height)
+  }
+
+  var description: String {
+    var result = ""
+    for row in screen {
+      row.forEach { result.append($0.rawValue) }
+      result.append("\n")
+    }
+    return result
+  }
+
+}
+
 private enum Instruction {
   case noop
   case addx(value: Int)
+}
+
+private enum Pixel: Character {
+  case lit = "#"
+  case dark = "."
+  case blank = " "
 }
 
 
