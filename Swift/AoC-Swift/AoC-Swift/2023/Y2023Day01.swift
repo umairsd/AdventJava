@@ -2,6 +2,8 @@
 
 import Foundation
 
+/// --- Day 1: Trebuchet?! ---
+/// https://adventofcode.com/2023/day/1
 class Y2023Day01: Day {
   var dayNumber: Int = 1
   var year: Int = 2023
