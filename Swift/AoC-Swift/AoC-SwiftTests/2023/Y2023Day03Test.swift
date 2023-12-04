@@ -8,13 +8,13 @@ final class Y2023Day03Test: XCTestCase {
   func testPart1_Example() throws {
     let day = DayType(dataFileNumber: 1)
     let lines = TestUtils().loadTestData(from: day.dataFilename())
-    XCTAssertEqual(day.part1(lines), "")
+    XCTAssertEqual(day.part1(lines), "4361")
   }
 
   func testPart1_Full() throws {
     let day = DayType(dataFileNumber: 2)
     let lines = TestUtils().loadTestData(from: day.dataFilename())
-    XCTAssertEqual(day.part1(lines), "")
+    XCTAssertEqual(day.part1(lines), "553079")
   }
 
   func testPart2_Example() throws {
