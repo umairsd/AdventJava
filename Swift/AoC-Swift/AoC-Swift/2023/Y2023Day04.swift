@@ -16,13 +16,30 @@ class Y2023Day04: Day {
 
   func part1(_ lines: [String]) -> String {
     let cards = lines.compactMap { parseCard($0) }
-    let totalScore = cards.map { $0.score() }.reduce(0, +)
+    let totalScore = cards.map { $0.score }.reduce(0, +)
     return "\(totalScore)"
   }
 
 
   func part2(_ lines: [String]) -> String {
-    ""
+    let cards = lines.compactMap { parseCard($0) }
+
+    // Map of cardId to the corresponding count.
+    var cardCounts: [Int: Int] = [:]
+    cards.forEach { cardCounts[$0.cardId] = 1 }
+
+    for i in 0..<cards.count {
+      let currentCard = cards[i]
+      let countOfCurrentCard = cardCounts[currentCard.cardId]!
+      let score = currentCard.matchingCount
+      (0..<score).forEach {
+        let cardToAdd = cards[i + 1 + $0]
+        cardCounts[cardToAdd.cardId] = cardCounts[cardToAdd.cardId]! + countOfCurrentCard
+      }
+    }
+
+    let totalCards = cardCounts.values.reduce(0, +)
+    return "\(totalCards)"
   }
 }
 
@@ -85,10 +102,14 @@ fileprivate struct Card {
   let cardId: Int
   let winningNumbers: Set<Int>
   let numbers: [Int]
+  let matchingCount: Int
+  let score: Int
 
-  func score() -> Int {
-    let count = numbers.filter { winningNumbers.contains($0) }.count
-    let s = (count > 0) ? Int(pow(Double(2), Double(count - 1))) : 0
-    return s
+  init(cardId: Int, winningNumbers: Set<Int>, numbers: [Int]) {
+    self.cardId = cardId
+    self.winningNumbers = winningNumbers
+    self.numbers = numbers
+    matchingCount = numbers.filter { winningNumbers.contains($0) }.count
+    score = (matchingCount > 0) ? Int(pow(Double(2), Double(matchingCount - 1))) : 0
   }
 }
