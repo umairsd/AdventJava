@@ -29,7 +29,7 @@ class Y2023Day05: Day {
     let locations = seeds.map { seed in
       var transformedResult = seed
       for group in groups {
-        transformedResult = group.transform(transformedResult)
+        transformedResult = group.convert(transformedResult)
       }
       return transformedResult
     }
@@ -40,7 +40,32 @@ class Y2023Day05: Day {
 
   
   func part2(_ lines: [String]) -> String {
-    ""
+    let seedRanges = parseSeedRanges(lines[0])
+
+    let mapSections: [[String]] = lines[1...]
+      .split(separator: "")
+      .map { Array($0) }
+    assert(mapSections.count == 7)
+    // List of transform groups, in the order in which they appear in the input.
+    let groups: [TransformGroup] = mapSections
+      .map { TransformGroup(transforms: parseTransforms($0)) }
+
+    var inputRanges = seedRanges // Input to the first step.
+    // In part 2, instead of transforming a number through a series of mappers, we need to
+    // transform ranges.
+    for transformGroup in groups {
+      var transformedResult: [ClosedRange<Int>] = []
+      for range in inputRanges {
+        transformedResult.append(contentsOf: transformGroup.convert(range))
+      }
+      inputRanges = transformedResult
+    }
+
+    let sortedRanges = inputRanges.sorted { r1, r2  in
+      r1.lowerBound < r2.lowerBound
+    }
+    let result = sortedRanges.first?.lowerBound ?? -1
+    return "\(result)"
   }
 }
 
@@ -94,6 +119,19 @@ extension Y2023Day05 {
   }
 
 
+  func parseSeedRanges(_ line: String) -> [ClosedRange<Int>] {
+    guard let match = line.firstMatch(of: Self.seedsRegex) else {
+      return []
+    }
+    let data = match[Self.seedListRef]
+    var seedRanges: [ClosedRange<Int>] = []
+    for i in 0..<(data.count - 1) {
+      seedRanges.append(data[i]...(data[i] + data[i + 1] - 1))
+    }
+    return seedRanges
+  }
+
+
   func parseTransforms(_ lines: [String]) -> [Transform] {
     let t = lines.compactMap { parseTransform($0) }
     return t
@@ -104,10 +142,10 @@ extension Y2023Day05 {
     guard let match = line.firstMatch(of: Self.intervalLineRegex) else {
       return nil
     }
-    let destinationStart = match[Self.destinationStartRef]
-    let sourceStart = match[Self.sourceStartRef]
-    let length = match[Self.rangeLengthRef]
-    return Transform(sourceStart: sourceStart, destinationStart: destinationStart, length: length)
+    return Transform(
+      sourceStart: match[Self.sourceStartRef],
+      destinationStart: match[Self.destinationStartRef],
+      rangeLength: match[Self.rangeLengthRef])
   }
 
 }
@@ -121,37 +159,123 @@ extension Y2023Day05 {
 struct TransformGroup {
   let transforms: [Transform]
 
-  func transform(_ number: Int) -> Int {
+  /// Transforms a single number.
+  func convert(_ number: Int) -> Int {
     let filteredTransforms = transforms.filter { $0.contains(number) }
     assert(filteredTransforms.count <= 1)
     if filteredTransforms.count == 1 {
-      return filteredTransforms.first!.apply(number)
+      return filteredTransforms.first!.convert(number)
     }
     return number
+  }
+
+
+  func convert(_ range: ClosedRange<Int>) -> [ClosedRange<Int>] {
+    var unconvertedRanges = [range]
+
+    for transform in transforms {
+      var transformedRanges: [ClosedRange<Int>] = []
+
+      while !unconvertedRanges.isEmpty {
+        let unconvertedRange = unconvertedRanges.removeFirst()
+        let mapping = transform.convert(unconvertedRange)
+
+        if let converted = mapping.converted {
+          transformedRanges.append(converted)
+          unconvertedRanges.append(contentsOf: mapping.unconverted)
+        } else {
+          // If no part of the range could be converted, it means that it translates as is.
+          transformedRanges.append(unconvertedRange)
+        }
+      }
+
+      // The input of the next step is the output of the current step.
+      unconvertedRanges = transformedRanges
+    }
+
+    return unconvertedRanges
   }
 }
 
 
 struct Transform {
-  let sourceRange: Range<Int>
+  let sourceRange: ClosedRange<Int>
   let destinationStart: Int
-  let length: Int
+  let rangeLength: Int
 
-  init(sourceStart: Int, destinationStart: Int, length: Int) {
-    self.sourceRange = sourceStart..<(sourceStart + length)
+  init(sourceStart: Int, destinationStart: Int, rangeLength: Int) {
+    self.sourceRange = sourceStart...(sourceStart + rangeLength - 1)
     self.destinationStart = destinationStart
-    self.length = length
+    self.rangeLength = rangeLength
   }
 
   func contains(_ number: Int) -> Bool {
     sourceRange.contains(number)
   }
 
-  func apply(_ number: Int) -> Int {
+
+  func convert(_ number: Int) -> Int {
     if sourceRange.contains(number) {
-      let delta = number - sourceRange.lowerBound
-      return destinationStart + delta
+      return mapToRange(number)
     }
     return number
   }
+
+
+  private func mapToRange(_ number: Int) -> Int {
+    assert(sourceRange.contains(number))
+    let delta = number - sourceRange.lowerBound
+    return destinationStart + delta
+  }
+
+
+  /// Transforms a Range. Parts of the range that cannot be transformed are returned as new
+  /// ranges.
+  func convert(
+    _ range: ClosedRange<Int>
+  ) -> (converted: ClosedRange<Int>?, unconverted: [ClosedRange<Int>]) {
+
+    if !range.overlaps(sourceRange) {
+      // Range is entirely outside the source range.
+      return (nil, [range])
+
+    } else if range.lowerBound >= sourceRange.lowerBound && 
+                range.upperBound <= sourceRange.upperBound {
+      // There's overlap, and range is entirely within the source range.
+      assert(sourceRange.contains(range.lowerBound))
+      assert(sourceRange.contains(range.upperBound))
+
+      let convertedRange = mapToRange(range.lowerBound) ... mapToRange(range.upperBound)
+      return (convertedRange, [])
+
+    } else if range.lowerBound < sourceRange.lowerBound {
+      // There's overlap, and range starts before the source range...
+      if range.upperBound <= sourceRange.upperBound {
+        // (a) ... and ends within it.
+        assert(sourceRange.contains(range.upperBound))
+
+        // The first element of the converted range is the destinationStart
+        let convertedRange = destinationStart ... mapToRange(range.upperBound)
+        let unconvertedRange = range.lowerBound ... (sourceRange.lowerBound - 1)
+        return (convertedRange, [unconvertedRange])
+
+      } else {
+        // (b) ... and ends after it.
+        let convertedRange = destinationStart ... destinationStart + rangeLength - 1
+
+        let leftUnconvertedRange = range.lowerBound ... (sourceRange.lowerBound - 1)
+        let rightUnconvertedRange = (sourceRange.upperBound + 1) ... range.upperBound
+        return (convertedRange, [leftUnconvertedRange, rightUnconvertedRange])
+      }
+
+    } else {
+      // There's overlap, and the range starts after the source range's start, and ends after
+      // the source range's end.
+      assert(contains(range.lowerBound))
+      let convertedRange = mapToRange(range.lowerBound) ... destinationStart + rangeLength - 1
+      let unconvertedRange = (sourceRange.upperBound + 1) ... range.upperBound
+      return (convertedRange, [unconvertedRange])
+    }
+  }
+
 }
