@@ -21,15 +21,17 @@ class Y2023Day05: Day {
       .split(separator: "")
       .map { Array($0) }
     assert(mapSections.count == 7)
+    // List of transform groups, in the order in which they appear in the input.
+    let groups: [TransformGroup] = mapSections
+      .map { TransformGroup(transforms: parseTransforms($0)) }
 
-    // List of maps, in the order in which they appear in the input.
-    let mappers: [IntegerMapper] = mapSections.map { IntegerMapper(intervals: parseIntervals($0)) }
+
     let locations = seeds.map { seed in
-      var v = seed
-      for mapper in mappers {
-        v = mapper.transform(v)
+      var transformedResult = seed
+      for group in groups {
+        transformedResult = group.transform(transformedResult)
       }
-      return v
+      return transformedResult
     }
 
     let result = locations.min() ?? -1
@@ -92,20 +94,20 @@ extension Y2023Day05 {
   }
 
 
-  func parseIntervals(_ lines: [String]) -> [Interval] {
-    let intervals = lines.compactMap { parseInterval($0) }
-    return intervals
+  func parseTransforms(_ lines: [String]) -> [Transform] {
+    let t = lines.compactMap { parseTransform($0) }
+    return t
   }
 
 
-  func parseInterval(_ line: String) -> Interval? {
+  func parseTransform(_ line: String) -> Transform? {
     guard let match = line.firstMatch(of: Self.intervalLineRegex) else {
       return nil
     }
     let destinationStart = match[Self.destinationStartRef]
     let sourceStart = match[Self.sourceStartRef]
     let length = match[Self.rangeLengthRef]
-    return Interval(sourceStart: sourceStart, destinationStart: destinationStart, length: length)
+    return Transform(sourceStart: sourceStart, destinationStart: destinationStart, length: length)
   }
 
 }
@@ -114,44 +116,42 @@ extension Y2023Day05 {
 // MARK: - Helper types.
 
 
-/// A special map that maintains a list of `Interval`s, and transforms a given integer into a
+/// A special map that maintains a list of `Tranform`s, and transforms a given integer into a
 /// new integer based on these intervals.
-struct IntegerMapper {
-  let intervals: [Interval]
+struct TransformGroup {
+  let transforms: [Transform]
 
   func transform(_ number: Int) -> Int {
-    let filteredIntervals = intervals.filter { $0.contains(number) }
-    assert(filteredIntervals.count <= 1)
-    if filteredIntervals.count == 1 {
-      return filteredIntervals.first!.transform(number)
+    let filteredTransforms = transforms.filter { $0.contains(number) }
+    assert(filteredTransforms.count <= 1)
+    if filteredTransforms.count == 1 {
+      return filteredTransforms.first!.apply(number)
     }
     return number
   }
 }
 
 
-struct Interval {
-  let sourceStart: Int
+struct Transform {
+  let sourceRange: Range<Int>
   let destinationStart: Int
   let length: Int
-  private let sourceEnd: Int
 
   init(sourceStart: Int, destinationStart: Int, length: Int) {
-    self.sourceStart = sourceStart
+    self.sourceRange = sourceStart..<(sourceStart + length)
     self.destinationStart = destinationStart
     self.length = length
-    self.sourceEnd = sourceStart + length - 1
   }
 
   func contains(_ number: Int) -> Bool {
-    return number >= sourceStart && number <= sourceEnd
+    sourceRange.contains(number)
   }
 
-  func transform(_ source: Int) -> Int {
-    if contains(source) {
-      let delta = source - sourceStart
+  func apply(_ number: Int) -> Int {
+    if sourceRange.contains(number) {
+      let delta = number - sourceRange.lowerBound
       return destinationStart + delta
     }
-    return source
+    return number
   }
 }
