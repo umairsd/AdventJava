@@ -38,7 +38,7 @@ class Y2023Day05: Day {
     return "\(result)"
   }
 
-  
+
   func part2(_ lines: [String]) -> String {
     let seedRanges = parseSeedRanges(lines[0])
 
@@ -50,18 +50,23 @@ class Y2023Day05: Day {
     let groups: [TransformGroup] = mapSections
       .map { TransformGroup(transforms: parseTransforms($0)) }
 
-    var inputRanges = seedRanges // Input to the first step.
-    // In part 2, instead of transforming a number through a series of mappers, we need to
-    // transform ranges.
-    for transformGroup in groups {
-      var transformedResult: [ClosedRange<Int>] = []
-      for range in inputRanges {
-        transformedResult.append(contentsOf: transformGroup.convert(range))
+    var convertedRanges: [ClosedRange<Int>] = []
+    for seedRange in seedRanges {
+      var inputRanges = [seedRange]
+
+      for transformGroup in groups {
+        var transformedResult: [ClosedRange<Int>] = []
+        for range in inputRanges {
+          let x = transformGroup.convert(range)
+          transformedResult.append(contentsOf: x)
+        }
+        // Output of each transform step becomes the input for the next step.
+        inputRanges = transformedResult
       }
-      inputRanges = transformedResult
+      convertedRanges.append(contentsOf: inputRanges)
     }
 
-    let sortedRanges = inputRanges.sorted { r1, r2  in
+    let sortedRanges = convertedRanges.sorted { r1, r2  in
       r1.lowerBound < r2.lowerBound
     }
     let result = sortedRanges.first?.lowerBound ?? -1
@@ -125,8 +130,10 @@ extension Y2023Day05 {
     }
     let data = match[Self.seedListRef]
     var seedRanges: [ClosedRange<Int>] = []
-    for i in 0..<(data.count - 1) {
+    var i = 0
+    while i < (data.count - 1) {
       seedRanges.append(data[i]...(data[i] + data[i + 1] - 1))
+      i += 2
     }
     return seedRanges
   }
@@ -172,28 +179,31 @@ struct TransformGroup {
 
   func convert(_ range: ClosedRange<Int>) -> [ClosedRange<Int>] {
     var unconvertedRanges = [range]
+    var result: [ClosedRange<Int>] = []
 
     for transform in transforms {
-      var transformedRanges: [ClosedRange<Int>] = []
+      var rangesToBeProcessed: [ClosedRange<Int>] = []
 
       while !unconvertedRanges.isEmpty {
         let unconvertedRange = unconvertedRanges.removeFirst()
         let mapping = transform.convert(unconvertedRange)
 
         if let converted = mapping.converted {
-          transformedRanges.append(converted)
+          result.append(converted)
           unconvertedRanges.append(contentsOf: mapping.unconverted)
         } else {
-          // If no part of the range could be converted, it means that it translates as is.
-          transformedRanges.append(unconvertedRange)
+          // If no part of the range could be converted, it means that it either translates as is
+          // or needs to be considered by the next transform.
+          rangesToBeProcessed.append(unconvertedRange)
         }
       }
 
       // The input of the next step is the output of the current step.
-      unconvertedRanges = transformedRanges
+      unconvertedRanges = rangesToBeProcessed
     }
 
-    return unconvertedRanges
+    result.append(contentsOf: unconvertedRanges)
+    return result
   }
 }
 
