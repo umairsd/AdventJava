@@ -20,33 +20,23 @@ class Y2023Day05: Day {
     let mapSections: [[String]] = lines[1...]
       .split(separator: "")
       .map { Array($0) }
-
     assert(mapSections.count == 7)
 
-    let seedToSoilMap = IntervalMap(intervals: parseIntervals(mapSections[0]))
-    let soilToFertilizerMap = IntervalMap(intervals: parseIntervals(mapSections[1]))
-    let fertilizerToWaterMap = IntervalMap(intervals: parseIntervals(mapSections[2]))
-    let waterToLightMap = IntervalMap(intervals: parseIntervals(mapSections[3]))
-    let lightToTemperatureMap = IntervalMap(intervals: parseIntervals(mapSections[4]))
-    let temperatureToHumidityMap = IntervalMap(intervals: parseIntervals(mapSections[5]))
-    let humidityToLocationMap = IntervalMap(intervals: parseIntervals(mapSections[6]))
-
+    // List of maps, in the order in which they appear in the input.
+    let mappers: [IntegerMapper] = mapSections.map { IntegerMapper(intervals: parseIntervals($0)) }
     let locations = seeds.map { seed in
-      let soil = seedToSoilMap.value(for: seed)
-      let fertilizer = soilToFertilizerMap.value(for: soil)
-      let water = fertilizerToWaterMap.value(for: fertilizer)
-      let light = waterToLightMap.value(for: water)
-      let temperature = lightToTemperatureMap.value(for: light)
-      let humidity = temperatureToHumidityMap.value(for: temperature)
-      let location = humidityToLocationMap.value(for: humidity)
-      return location
+      var v = seed
+      for mapper in mappers {
+        v = mapper.transform(v)
+      }
+      return v
     }
 
-    let result = locations.sorted().first ?? -1
-
+    let result = locations.min() ?? -1
     return "\(result)"
   }
 
+  
   func part2(_ lines: [String]) -> String {
     ""
   }
@@ -124,14 +114,14 @@ extension Y2023Day05 {
 // MARK: - Helper types.
 
 
-/// A map that maintains a list of intervals, and maps a given value to a matching range.
-struct IntervalMap {
+/// A special map that maintains a list of `Interval`s, and transforms a given integer into a
+/// new integer based on these intervals.
+struct IntegerMapper {
   let intervals: [Interval]
 
-  func value(for number: Int) -> Int {
+  func transform(_ number: Int) -> Int {
     let filteredIntervals = intervals.filter { $0.contains(number) }
     assert(filteredIntervals.count <= 1)
-
     if filteredIntervals.count == 1 {
       return filteredIntervals.first!.transform(number)
     }
