@@ -21,7 +21,7 @@ class Y2023Day06: Day {
 
     var waysToWin: [Int] = []
     for (time, maxDistance) in zip(times, distances) {
-      let count = waysToCoverDistance(maxDistance, within: time)
+      let count = waysToCoverDistance_Brute(maxDistance, within: time)
       waysToWin.append(count)
     }
 
@@ -31,14 +31,22 @@ class Y2023Day06: Day {
 
 
   func part2(_ lines: [String]) -> String {
-    ""
+    assert(lines.count >= 2)
+    let times = parseTimes(lines[0])
+    let distances = parseDistances(lines[1])
+
+    let totalTime = Int(times.map { "\($0)" }.joined()) ?? 0
+    let totalDistance = Int(distances.map { "\($0)" }.joined()) ?? 0
+
+    let waysToWin = waysToCoverDistance(totalDistance, within: totalTime)
+    return "\(waysToWin)"
   }
 
 
   // MARK: - Private
 
 
-  private func waysToCoverDistance(_ maxDistance: Int, within time: Int) -> Int {
+  private func waysToCoverDistance_Brute(_ maxDistance: Int, within time: Int) -> Int {
     var distance = 0
     var winCount = 0
     for timeToHold in 0...time {
@@ -52,6 +60,29 @@ class Y2023Day06: Day {
     return winCount
   }
 
+
+  /// We only need the index of the first first win, and the index of the last win.
+  private func waysToCoverDistance(_ maxDistance: Int, within time: Int) -> Int {
+    var begin = 0
+    for timeToHold in 0...time {
+      let timeRemaining = time - timeToHold
+      if timeToHold * timeRemaining > maxDistance {
+        begin = timeToHold
+        break
+      }
+    }
+
+    var end = 0
+    for timeToHold in (begin...time).reversed() {
+      let timeRemaining = time - timeToHold
+      if timeToHold * timeRemaining > maxDistance {
+        end = timeToHold
+        break
+      }
+    }
+
+    return end - begin + 1
+  }
 }
 
 
@@ -78,4 +109,7 @@ extension Y2023Day06 {
       .compactMap { Int($0) }
     return timeValues
   }
+
+
+//  private func parseBigInteger(_ line: String) -> Int {
 }
