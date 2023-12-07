@@ -210,6 +210,8 @@
 		8099DA472B216B7700A9CC34 /* Y2023Day06Test.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Y2023Day06Test.swift; sourceTree = "<group>"; };
 		8099DA492B216B9700A9CC34 /* y2023-day06-data1.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = "y2023-day06-data1.txt"; sourceTree = "<group>"; };
 		8099DA4B2B216BB100A9CC34 /* y2023-day06-data2.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = "y2023-day06-data2.txt"; sourceTree = "<group>"; };
+		8099DA4F2B216CE100A9CC34 /* y2023-day06-data1.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = "y2023-day06-data1.txt"; sourceTree = "<group>"; };
+		8099DA502B216CE100A9CC34 /* y2023-day06-data2.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = "y2023-day06-data2.txt"; sourceTree = "<group>"; };
 		80AC9D90299EAFA1000F97A6 /* Y2022Day06.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Y2022Day06.swift; sourceTree = "<group>"; };
 		80AC9D93299EB052000F97A6 /* Y2022Day06Test.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Y2022Day06Test.swift; sourceTree = "<group>"; };
 		80AC9D95299EB0A0000F97A6 /* y2022-day06-data1.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = "y2022-day06-data1.txt"; sourceTree = "<group>"; };
@@ -285,8 +287,8 @@
 				8099DA352B1E076D00A9CC34 /* y2023-day04-data2.txt */,
 				8099DA392B1F5F8800A9CC34 /* y2023-day05-data1.txt */,
 				8099DA3B2B1F5F9200A9CC34 /* y2023-day05-data2.txt */,
-				8099DA492B216B9700A9CC34 /* y2023-day06-data1.txt */,
-				8099DA4B2B216BB100A9CC34 /* y2023-day06-data2.txt */,
+				8099DA4F2B216CE100A9CC34 /* y2023-day06-data1.txt */,
+				8099DA502B216CE100A9CC34 /* y2023-day06-data2.txt */,
 			);
 			path = 2023;
 			sourceTree = "<group>";
@@ -455,6 +457,8 @@
 				8099DA382B1E0A1F00A9CC34 /* y2023-day04-data2.txt */,
 				8099DA432B1F605700A9CC34 /* y2023-day05-data1.txt */,
 				8099DA422B1F605700A9CC34 /* y2023-day05-data2.txt */,
+				8099DA492B216B9700A9CC34 /* y2023-day06-data1.txt */,
+				8099DA4B2B216BB100A9CC34 /* y2023-day06-data2.txt */,
 			);
 			path = InputDataForTests;
 			sourceTree = "<group>";
