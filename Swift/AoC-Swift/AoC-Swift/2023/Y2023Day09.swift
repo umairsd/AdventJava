@@ -15,10 +15,61 @@ class Y2023Day09: Day {
   }
 
   func part1(_ lines: [String]) -> String {
-    ""
+    let sequences = lines
+      .filter { !$0.isEmpty }
+      .compactMap { parseSequence($0) }
+
+    let nextValues = sequences.map { nextValueForSequence($0) }
+    let result = nextValues.reduce(0, +)
+    return "\(result)"
   }
+
 
   func part2(_ lines: [String]) -> String {
     ""
+  }
+
+
+  private func nextValueForSequence(_ sequence: [Int]) -> Int {
+    guard sequence.count >= 2 else {
+      return 0
+    }
+
+    var steps: [[Int]] = []
+    steps.append(sequence)
+
+    var currentSequence = sequence
+    while !currentSequence.allSatisfy({ $0 == 0 }) {
+      currentSequence = diffSequence(currentSequence)
+      steps.append(currentSequence)
+    }
+
+    var nextValue = 0 // lastSequence is zero.
+    for sequence in steps.reversed() {
+      nextValue = nextValue + sequence.last!
+    }
+    return nextValue
+  }
+
+
+  /// A sequence containing the difference between each value.
+  private func diffSequence(_ sequence: [Int]) -> [Int] {
+    guard sequence.count >= 2 else {
+      fatalError()
+    }
+    var diff: [Int] = []
+    for i in 1..<sequence.count {
+      diff.append(sequence[i] - sequence[i - 1])
+    }
+    return diff
+  }
+}
+
+// MARK: - Parsing
+
+extension Y2023Day09 {
+
+  func parseSequence(_ line: String) -> [Int] {
+    line.split(separator: " ").compactMap { Int($0.trimmingCharacters(in: .whitespaces)) }
   }
 }
