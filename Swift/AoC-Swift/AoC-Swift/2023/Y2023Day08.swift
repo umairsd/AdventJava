@@ -18,10 +18,39 @@ class Y2023Day08: Day {
     let directions = parseDirections(lines.first!)
     let graph = parseGraph(Array(lines.dropFirst()))
 
+    let steps = stepsFrom(graph.root, following: directions) { $0.name == "ZZZ" }
+    return "\(steps)"
+  }
+
+
+  func part2(_ lines: [String]) -> String {
+    let directions = parseDirections(lines.first!)
+    let graph = parseGraph(Array(lines.dropFirst()))
+
+    let startingNodes: [Node] = graph.nodesMap.values.filter { $0.name.last == "A" }
+    var steps: [Int] = []
+    for node in startingNodes {
+      let s = stepsFrom(node, following: directions) { $0.name.last == "Z" }
+      steps.append(s)
+    }
+
+    let firstNum = steps.first!
+    let totalSteps: Int = steps.dropFirst().reduce(firstNum) { partialResult, n in
+      lcm(partialResult, n)
+    }
+    return "\(totalSteps)"
+  }
+
+
+  private func stepsFrom(
+    _ node: Node,
+    following directions: [Direction],
+    toNode matching: (Node) -> Bool
+  ) -> Int {
     var steps = 0
     var i = 0
-    var currentNode = graph.root!
-    while currentNode.name != "ZZZ" {
+    var currentNode = node
+    while !matching(currentNode) {
       let direction = directions[i]
       currentNode = switch direction {
       case .left:
@@ -33,38 +62,20 @@ class Y2023Day08: Day {
       i = (i + 1) % directions.count
     }
 
-    return "\(steps)"
+    return steps
+  }
+  
+
+  private func gcd(_ a: Int, _ b: Int) -> Int {
+    if b == 0 {
+      return a
+    }
+    return gcd(b, a % b)
   }
 
 
-  func part2(_ lines: [String]) -> String {
-    let directions = parseDirections(lines.first!)
-    let graph = parseGraph(Array(lines.dropFirst()))
-
-    var steps = 0
-    var i = 0
-    let nodesA: [Node] = graph.nodesMap.values.filter { $0.name.last == "A" }
-    var currentNodes = nodesA
-
-    while !currentNodes.allSatisfy({ $0.name.last == "Z" }) {
-      let direction = directions[i]
-
-      switch direction {
-      case .left:
-        for i in 0..<currentNodes.count {
-          currentNodes[i] = currentNodes[i].left
-        }
-      case .right:
-        for i in 0..<currentNodes.count {
-          currentNodes[i] = currentNodes[i].right
-        }
-      }
-
-      steps += 1
-      i = (i + 1) % directions.count
-    }
-
-    return "\(steps)"
+  func lcm(_ a: Int, _ b: Int) -> Int {
+    return a * b / gcd(a, b)
   }
 }
 

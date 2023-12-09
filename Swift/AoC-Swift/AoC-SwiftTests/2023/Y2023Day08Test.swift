@@ -29,9 +29,9 @@ final class Y2023Day08Test: XCTestCase {
     XCTAssertEqual(day.part2(lines), "6")
   }
 
-  func DISABLEDtestPart2_Full() throws {
+  func testPart2_Full() throws {
     let day = DayType(dataFileNumber: 2)
     let lines = TestUtils().loadTestData(from: day.dataFilename())
-    XCTAssertEqual(day.part2(lines), "")
+    XCTAssertEqual(day.part2(lines), "15690466351717")
   }
 }
