@@ -15,13 +15,42 @@ class Y2023Day07: Day {
     self.dataFileNumber = dataFileNumber
   }
 
-  
+
   func part1(_ lines: [String]) -> String {
+    let cardSortOrder: [Card: Int] = [
+      Card(name: "A"): 0,
+      Card(name: "K"): 1,
+      Card(name: "Q"): 2,
+      Card(name: "J"): 3,
+      Card(name: "T"): 4,
+      Card(name: "9"): 5,
+      Card(name: "8"): 6,
+      Card(name: "7"): 7,
+      Card(name: "6"): 8,
+      Card(name: "5"): 9,
+      Card(name: "4"): 10,
+      Card(name: "3"): 11,
+      Card(name: "2"): 12
+    ]
+
     let deals = lines.compactMap { parseHands($0) }
-    let sortedDeals = deals.sorted { h1, h2 in
-      // Note: reverse order.
-      h1.hand > h2.hand
-    }
+
+    let sortedDeals = deals.sorted { lhs, rhs in
+      if lhs.hand.handType().sortOrder() < rhs.hand.handType().sortOrder() {
+        return true
+      } else if lhs.hand.handType().sortOrder() > rhs.hand.handType().sortOrder() {
+        return false
+      } else {
+        // Equal!
+        for (cardL, cardR) in zip(lhs.hand.cards, rhs.hand.cards) {
+          if cardL == cardR {
+            continue
+          }
+          return cardSortOrder[cardL]! < cardSortOrder[cardR]!
+        }
+      }
+      return true
+    }.reversed()
 
     var totalWinnings = 0
     for (rank, handInfo) in sortedDeals.enumerated() {
@@ -32,7 +61,49 @@ class Y2023Day07: Day {
 
 
   func part2(_ lines: [String]) -> String {
-    ""
+    let cardSortOrder: [Card: Int] = [
+      Card(name: "A"): 0,
+      Card(name: "K"): 1,
+      Card(name: "Q"): 2,
+      Card(name: "T"): 4,
+      Card(name: "9"): 5,
+      Card(name: "8"): 6,
+      Card(name: "7"): 7,
+      Card(name: "6"): 8,
+      Card(name: "5"): 9,
+      Card(name: "4"): 10,
+      Card(name: "3"): 11,
+      Card(name: "2"): 12,
+      Card(name: "J"): 13,
+    ]
+
+    let deals = lines.compactMap { parseHands($0) }
+
+    let sortedDeals = deals.sorted { lhs, rhs in
+      let leftSortValue = lhs.hand.handType(isJoking: true).sortOrder()
+      let rightSortValue = rhs.hand.handType(isJoking: true).sortOrder()
+
+      if leftSortValue < rightSortValue {
+        return true
+      } else if leftSortValue > rightSortValue {
+        return false
+      } else {
+        // Equal!
+        for (cardL, cardR) in zip(lhs.hand.cards, rhs.hand.cards) {
+          if cardL == cardR {
+            continue
+          }
+          return cardSortOrder[cardL]! < cardSortOrder[cardR]!
+        }
+      }
+      return true
+    }.reversed()
+
+    var totalWinnings = 0
+    for (rank, handInfo) in sortedDeals.enumerated() {
+      totalWinnings += (rank + 1) * handInfo.bid
+    }
+    return "\(totalWinnings)"
   }
 }
 
@@ -50,7 +121,7 @@ extension Y2023Day07 {
       OneOrMore(.any)
     } transform: { match in
       let charArray: [Character] = Array(String(match))
-      return charArray.map { String($0) }.map { Card(value: $0) }
+      return charArray.map { String($0) }.map { Card(name: $0) }
     }
     " "
     TryCapture(as: bidRef) {
@@ -82,67 +153,34 @@ fileprivate struct HandInfo {
 }
 
 
-fileprivate struct Card: Comparable, Hashable {
-  private static let sortOrder: [String: Int] = [
-    "A": 0,
-    "K": 1,
-    "Q": 2,
-    "J": 3,
-    "T": 4,
-    "9": 5,
-    "8": 6,
-    "7": 7,
-    "6": 8,
-    "5": 9,
-    "4": 10,
-    "3": 11,
-    "2": 12
-  ]
+fileprivate struct Card: Hashable {
+  let name: String
 
-  let value: String
-
-  static func < (lhs: Card, rhs: Card) -> Bool {
-    return lhs.sortOrder() < rhs.sortOrder()
-  }
-
-  func sortOrder() -> Int {
-    return Self.sortOrder[self.value, default: 99]
+  func isJoker() -> Bool {
+    return name == "J"
   }
 }
 
 
-fileprivate struct Hand: Comparable {
+fileprivate struct Hand {
   let cards: [Card]
-  let handType: HandType
 
   init(cards: [Card]) {
     self.cards = cards
-    self.handType = Self.getHandType(of: cards)
   }
 
-  // MARK: Comparable
-
-  static func < (lhs: Hand, rhs: Hand) -> Bool {
-    if lhs.handType.sortOrder() < rhs.handType.sortOrder() {
-      return true
-    } else if lhs.handType.sortOrder() > rhs.handType.sortOrder() {
-      return false
+  func handType(isJoking: Bool = false) -> HandType {
+    if isJoking {
+      return jokerHandType()
     } else {
-      // Equal!
-      for (l, r) in zip(lhs.cards, rhs.cards) {
-        if l == r {
-          continue
-        }
-        return l < r
-      }
+      return normalHandType()
     }
-    return true
   }
 
   // MARK: Private
 
-  private static func getHandType(of cards: [Card]) -> HandType {
-    let countsMap = countsCards(cards)
+  private func normalHandType() -> HandType {
+    let countsMap = Self.countsCards(self.cards)
     let cardCounts = countsMap.values.sorted()
     if cardCounts.count == 1 {
       return .fiveOfAKind
@@ -160,6 +198,59 @@ fileprivate struct Hand: Comparable {
       return .highCard
     }
   }
+
+
+  private func jokerHandType() -> HandType {
+    var nonJokerCards = cards
+    nonJokerCards.removeAll { $0.isJoker() }
+    let jokerCount = cards.count - nonJokerCards.count
+
+    let nonJokerCounts = Self.countsCards(nonJokerCards).values.sorted()
+
+    switch jokerCount {
+    case 0:
+      return normalHandType()
+    case 1:
+      if nonJokerCounts.contains([4]) {
+        return .fiveOfAKind
+      } else if nonJokerCounts.contains([1,3]) {
+        return .fourOfAKind
+      } else if nonJokerCounts.contains([2,2]) {
+        return .fullHouse
+      } else if nonJokerCounts.contains([1,1,2]) {
+        return .threeOfAKind
+      } else if nonJokerCounts.contains([1,1,1,1]) {
+        return .onePair
+      } else {
+        fatalError()
+      }
+
+    case 2:
+      if nonJokerCounts.contains([3]) {
+        return .fiveOfAKind
+      } else if nonJokerCounts.contains([1,2]) {
+        return .fourOfAKind
+      } else if nonJokerCounts.contains([1,1,1]) {
+        return .threeOfAKind
+      } else {
+        fatalError()
+      }
+
+    case 3:
+      if nonJokerCounts.contains([2]) {
+        return .fiveOfAKind
+      } else {
+        return .fourOfAKind
+      }
+
+    case 4, 5:
+      return .fiveOfAKind
+
+    default:
+      fatalError()
+    }
+  }
+
 
   private static func countsCards(_ cards: [Card]) -> [Card: Int] {
     var cardsCount: [Card: Int] = [:]
