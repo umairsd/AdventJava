@@ -26,7 +26,13 @@ class Y2023Day09: Day {
 
 
   func part2(_ lines: [String]) -> String {
-    ""
+    let sequences = lines
+      .filter { !$0.isEmpty }
+      .compactMap { parseSequence($0) }
+
+    let previousValues = sequences.map { previousValueForSequence($0) }
+    let result = previousValues.reduce(0, +)
+    return "\(result)"
   }
 
 
@@ -35,21 +41,44 @@ class Y2023Day09: Day {
       return 0
     }
 
-    var steps: [[Int]] = []
-    steps.append(sequence)
-
-    var currentSequence = sequence
-    while !currentSequence.allSatisfy({ $0 == 0 }) {
-      currentSequence = diffSequence(currentSequence)
-      steps.append(currentSequence)
-    }
-
+    let steps = processUntilAllZero(sequence)
     var nextValue = 0 // lastSequence is zero.
     for sequence in steps.reversed() {
       nextValue = nextValue + sequence.last!
     }
     return nextValue
   }
+
+
+  private func previousValueForSequence(_ sequence: [Int]) -> Int {
+    guard sequence.count >= 2 else {
+      return 0
+    }
+
+    let steps = processUntilAllZero(sequence)
+    var previousValue = 0 // lastSequence is zero.
+    for sequence in steps.reversed() {
+      previousValue = sequence.first! - previousValue
+    }
+    return previousValue
+  }
+
+
+  private func processUntilAllZero(_ sequence: [Int]) -> [[Int]] {
+    guard sequence.count >= 2 else {
+      return []
+    }
+
+    var steps: [[Int]] = []
+    steps.append(sequence)
+    var currentSequence = sequence
+    while !currentSequence.allSatisfy({ $0 == 0 }) {
+      currentSequence = diffSequence(currentSequence)
+      steps.append(currentSequence)
+    }
+    return steps
+  }
+
 
 
   /// A sequence containing the difference between each value.
