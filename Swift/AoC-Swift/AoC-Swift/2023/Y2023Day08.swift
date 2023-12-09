@@ -38,7 +38,33 @@ class Y2023Day08: Day {
 
 
   func part2(_ lines: [String]) -> String {
-    ""
+    let directions = parseDirections(lines.first!)
+    let graph = parseGraph(Array(lines.dropFirst()))
+
+    var steps = 0
+    var i = 0
+    let nodesA: [Node] = graph.nodesMap.values.filter { $0.name.last == "A" }
+    var currentNodes = nodesA
+
+    while !currentNodes.allSatisfy({ $0.name.last == "Z" }) {
+      let direction = directions[i]
+
+      switch direction {
+      case .left:
+        for i in 0..<currentNodes.count {
+          currentNodes[i] = currentNodes[i].left
+        }
+      case .right:
+        for i in 0..<currentNodes.count {
+          currentNodes[i] = currentNodes[i].right
+        }
+      }
+
+      steps += 1
+      i = (i + 1) % directions.count
+    }
+
+    return "\(steps)"
   }
 }
 
