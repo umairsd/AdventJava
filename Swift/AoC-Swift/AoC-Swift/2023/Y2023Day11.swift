@@ -16,7 +16,7 @@ class Y2023Day11: Day {
 
   func part1(_ lines: [String]) -> String {
     let image = parseImage(lines)
-    let expandedImage = expandImage(image, multiplier: 1)
+    let expandedImage = expandImage(image, multiplier: 2)
     let galaxyPositions = galaxyPositions(in: expandedImage)
 
     var distances: [Int] = []
@@ -33,7 +33,20 @@ class Y2023Day11: Day {
 
   
   func part2(_ lines: [String]) -> String {
-    ""
+    let image = parseImage(lines)
+    let expandedImage = expandImage(image, multiplier: 1000_000)
+    let galaxyPositions = galaxyPositions(in: expandedImage)
+
+    var distances: [Int] = []
+    for i in 0..<galaxyPositions.count {
+      let p1 = galaxyPositions[i]
+      for j in (i + 1)..<galaxyPositions.count {
+        distances.append(p1.distance(to: galaxyPositions[j]))
+      }
+    }
+
+    let result = distances.reduce(0, +)
+    return "\(result)"
   }
 
 
@@ -76,28 +89,22 @@ extension Y2023Day11 {
           image[r][c] = .galaxy(Position(row: verticalCount, column: c))
         }
       }
-      verticalCount += 1
-      if isRowEmpty(r, in: image) {
-        verticalCount += multiplier
-      }
+      let delta = isRowEmpty(r, in: image) ? multiplier : 1
+      verticalCount += delta
     }
 
     let columnCount = image[0].count
     var horizontalCount = 0
     for c in 0..<columnCount {
-      print("")
       for (r, row) in image.enumerated() {
-        print("")
         if case .galaxy(let maybePosition) = row[c], let oldP = maybePosition {
           let newPosition = Position(row: oldP.row, column: horizontalCount)
           image[r][c] = .galaxy(newPosition)
         }
       }
 
-      horizontalCount += 1
-      if isColumnEmpty(c, in: image) {
-        horizontalCount += multiplier
-      }
+      let delta = isColumnEmpty(c, in: image) ? multiplier : 1
+      horizontalCount += delta
     }
 
     return image
