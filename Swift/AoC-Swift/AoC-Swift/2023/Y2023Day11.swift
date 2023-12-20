@@ -15,8 +15,9 @@ class Y2023Day11: Day {
   }
 
   func part1(_ lines: [String]) -> String {
-    let image = parseAndExpandImage(lines)
-    let galaxyPositions = galaxyPositions(in: image)
+    let image = parseImage(lines)
+    let expandedImage = expandImage(image, multiplier: 1)
+    let galaxyPositions = galaxyPositions(in: expandedImage)
 
     var distances: [Int] = []
     for i in 0..<galaxyPositions.count {
@@ -40,10 +41,10 @@ class Y2023Day11: Day {
 
   private func galaxyPositions(in image: [[Pixel]]) -> [Position] {
     var positions: [Position] = []
-    for (r, row) in image.enumerated() {
-      for (c, pixel) in row.enumerated() {
-        if pixel == .galaxy {
-          positions.append(Position(row: r, column: c))
+    for row in image {
+      for pixel in row {
+        if case .galaxy(let maybePosition) = pixel, let position = maybePosition {
+          positions.append(position)
         }
       }
     }
@@ -56,44 +57,50 @@ class Y2023Day11: Day {
 
 extension Y2023Day11 {
 
-  fileprivate func parseAndExpandImage(_ lines: [String]) -> [[Pixel]] {
-    let image = parseImage(lines)
-    return expandImage(image)
-  }
-
   fileprivate func parseImage(_ lines: [String]) -> [[Pixel]] {
     let image: [[Pixel]] = lines
       .filter { !$0.isEmpty } 
       .map { l in
-        Array(l).compactMap { Pixel.init(rawValue: $0) }
+        Array(l).compactMap { Pixel.pixelFrom($0) }
       }
     return image
   }
 
 
-  fileprivate func expandImage(_ image: [[Pixel]]) -> [[Pixel]] {
-    var rowExpandedImage: [[Pixel]] = []
+  fileprivate func expandImage(_ img: [[Pixel]], multiplier: Int) -> [[Pixel]] {
+    var image = img
+    var verticalCount = 0
     for (r, row) in image.enumerated() {
-      rowExpandedImage.append(row)
-      if isRowEmpty(r, in: image) {
-        rowExpandedImage.append(row)
-      }
-    }
-
-    var columnExpandedImage: [[Pixel]] = Array(repeating: [], count: rowExpandedImage.count)
-    for c in 0..<rowExpandedImage[0].count {
-      let emptyColumn = isColumnEmpty(c, in: rowExpandedImage)
-
-      for r in 0..<rowExpandedImage.count {
-        let value = rowExpandedImage[r][c]
-        columnExpandedImage[r].append(value)
-        if emptyColumn {
-          columnExpandedImage[r].append(value)
+      for (c, pixel) in row.enumerated() {
+        if case .galaxy(_) = pixel  {
+          image[r][c] = .galaxy(Position(row: verticalCount, column: c))
         }
       }
+      verticalCount += 1
+      if isRowEmpty(r, in: image) {
+        verticalCount += multiplier
+      }
     }
 
-    return columnExpandedImage
+    let columnCount = image[0].count
+    var horizontalCount = 0
+    for c in 0..<columnCount {
+      print("")
+      for (r, row) in image.enumerated() {
+        print("")
+        if case .galaxy(let maybePosition) = row[c], let oldP = maybePosition {
+          let newPosition = Position(row: oldP.row, column: horizontalCount)
+          image[r][c] = .galaxy(newPosition)
+        }
+      }
+
+      horizontalCount += 1
+      if isColumnEmpty(c, in: image) {
+        horizontalCount += multiplier
+      }
+    }
+
+    return image
   }
 
 
@@ -116,7 +123,7 @@ extension Y2023Day11 {
 // MARK: - Helper Types
 
 
-fileprivate struct Position {
+fileprivate struct Position: Equatable {
   let row: Int
   let column: Int
 
@@ -126,7 +133,16 @@ fileprivate struct Position {
 }
 
 
-fileprivate enum Pixel: Character {
-  case empty = "."
-  case galaxy = "#"
+fileprivate enum Pixel: Equatable {
+  case empty
+  case galaxy(Position?)
+
+  static func pixelFrom(_ character: Character) -> Pixel? {
+    if character == "." {
+      return .empty
+    } else if character == "#" {
+      return .galaxy(nil)
+    }
+    return nil
+  }
 }
