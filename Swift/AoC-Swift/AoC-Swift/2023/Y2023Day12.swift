@@ -24,7 +24,15 @@ class Y2023Day12: Day {
 
 
   func part2(_ lines: [String]) -> String {
-    ""
+    let rows = lines.compactMap { parseSpringRow($0) }
+    rows.forEach { row in
+      row.springs = SpringRow.expandSprings(row.springs)
+      row.damagedBlockSizes = SpringRow.expandBlocks(row.damagedBlockSizes)
+    }
+
+    let arrangementCounts = rows.map { $0.possibleArrangements() }
+    let result = arrangementCounts.reduce(0, +)
+    return "\(result)"
   }
 
   // MARK: - Private
@@ -33,6 +41,11 @@ class Y2023Day12: Day {
 
 
 // MARK: - Helper Types
+
+fileprivate struct MemoKey: Hashable {
+  let springIndex: Int
+  let blockIndex: Int
+}
 
 fileprivate class SpringRow {
   var springs: [SpringState]
@@ -45,7 +58,14 @@ fileprivate class SpringRow {
 
 
   func possibleArrangements() -> Int {
-    let count = Self.arrangementCount(springStates: springs, springIndex: 0, damagedBlockSizes: damagedBlockSizes, blockIndex: 0)
+    var memoDict: [MemoKey: Int] = [:]
+    let count = Self.arrangementCount(
+      springStates: springs,
+      springIndex: 0,
+      damagedBlockSizes: damagedBlockSizes, 
+      blockIndex: 0,
+      using: &memoDict
+    )
     return count
   }
 
@@ -53,7 +73,8 @@ fileprivate class SpringRow {
     springStates: [SpringState],
     springIndex: Int,
     damagedBlockSizes: [Int],
-    blockIndex: Int
+    blockIndex: Int,
+    using memoDict: inout [MemoKey: Int]
   ) -> Int {
 
     // If we've run out of blocks, check the remaining springs.
@@ -73,20 +94,26 @@ fileprivate class SpringRow {
       return 0
     }
 
+    let memoKey = MemoKey(springIndex: springIndex, blockIndex: blockIndex)
+    if let v = memoDict[memoKey] {
+      return v
+    }
+
     let currentSpring = springStates[springIndex]
     let currentBlockSize = damagedBlockSizes[blockIndex]
 
-    // Closure to run when the first spring is operational.
-    let dot: () -> Int = {
+    // Inner function to run when the first spring is operational.
+    func dot() -> Int {
       arrangementCount(
         springStates: springStates,
         springIndex: springIndex + 1,
         damagedBlockSizes: damagedBlockSizes,
-        blockIndex: blockIndex)
+        blockIndex: blockIndex,
+        using: &memoDict)
     }
 
-    // Closure to run when the first spring is damaged.
-    let pound: () -> Int = {
+    // Inner function to run when the first spring is damaged.
+    func pound() -> Int {
       // If the first spring is damaged, then the entirety of the the current block
       // of size `currentBlockSize` must fit.
       var endIndex = springIndex
@@ -120,7 +147,8 @@ fileprivate class SpringRow {
             springStates: springStates,
             springIndex: endIndex + 1,
             damagedBlockSizes: damagedBlockSizes,
-            blockIndex: blockIndex + 1)
+            blockIndex: blockIndex + 1,
+            using: &memoDict)
         }
       }
 
@@ -136,7 +164,26 @@ fileprivate class SpringRow {
       dot() + pound()
     }
 
+    memoDict[memoKey] = count
     return count
+  }
+
+
+  static func expandSprings(_ springs: [SpringState]) -> [SpringState] {
+    let duplicatedSprings = Array(repeating: springs, count: 5)
+    var expandedSprings: [SpringState] = []
+    expandedSprings.append(contentsOf: duplicatedSprings.first!)
+
+    duplicatedSprings[1...].forEach { ss in
+      expandedSprings.append(.unknown)
+      expandedSprings.append(contentsOf: ss)
+    }
+    return expandedSprings
+  }
+
+  static func expandBlocks(_ blocks: [Int]) -> [Int] {
+    let duplicatedBlocks: [[Int]] = Array(repeating: blocks, count: 5)
+    return Array(duplicatedBlocks.joined())
   }
 }
 
