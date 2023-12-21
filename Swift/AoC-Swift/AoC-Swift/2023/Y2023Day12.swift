@@ -138,55 +138,6 @@ fileprivate class SpringRow {
 
     return count
   }
-
-
-//  private static func possibleArrangements(startingAt index: Int, blockIndex: Int) -> Int {
-//    guard index < springs.count else {
-//      return 0
-//    }
-//    
-////    if blockIndex == damagedBlockSizes.count {
-////      return 1
-////    }
-//
-//    var startIndex = index
-//    while startIndex < springs.count && springs[startIndex] == .operational {
-//      startIndex += 1
-//    }
-//
-//    let blockSize = damagedBlockSizes[blockIndex]
-//    // `endIndex` is the index after the block.
-//    var endIndex = startIndex
-//    while endIndex < (startIndex + blockSize), endIndex < springs.count {
-//      if springs[endIndex] == .operational {
-//        break
-//      }
-//      endIndex += 1
-//    }
-//
-//    let canPutBlock = endIndex == (startIndex + blockSize)
-//
-//    // Case 1: Put this block of damaged springs.
-//    var count1 = 0
-//    if canPutBlock {
-//      if blockIndex == damagedBlockSizes.count - 1 {
-//        // We just put the last block down. All the blocks fit, so this is a valid
-//        // arrangement.
-//        count1 = 1
-//      } else if blockIndex < damagedBlockSizes.count {
-//        while endIndex < springs.count, springs[endIndex] == .damaged {
-//          endIndex += 1
-//        }
-//
-//        count1 = possibleArrangements(startingAt: endIndex + 1, blockIndex: blockIndex + 1)
-//      }
-//    }
-//
-//    // Case 2: Don't put this block of damaged springs.
-//    let count2 = possibleArrangements(startingAt: startIndex + 1, blockIndex: blockIndex)
-//    return count1 + count2
-//  }
-
 }
 
 
