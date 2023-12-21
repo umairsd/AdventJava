@@ -174,6 +174,8 @@
 		8014210B2B1A1F5600021C97 /* y2023-day01-data2.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = "y2023-day01-data2.txt"; sourceTree = "<group>"; };
 		8014210C2B1A1F7D00021C97 /* y2023-day01-data3.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = "y2023-day01-data3.txt"; sourceTree = "<group>"; };
 		8014210E2B1A1F9900021C97 /* y2023-day01-data3.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = "y2023-day01-data3.txt"; sourceTree = "<group>"; };
+		801E9B182B34B9ED007C0917 /* y2023-day13-data1.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = "y2023-day13-data1.txt"; sourceTree = "<group>"; };
+		801E9B192B34B9ED007C0917 /* y2023-day13-data2.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = "y2023-day13-data2.txt"; sourceTree = "<group>"; };
 		802461202B348AAE001F5B45 /* y2023-day13-data1.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = "y2023-day13-data1.txt"; sourceTree = "<group>"; };
 		802461222B348AB7001F5B45 /* y2023-day13-data2.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = "y2023-day13-data2.txt"; sourceTree = "<group>"; };
 		802461242B348AE0001F5B45 /* Y2023Day13.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Y2023Day13.swift; sourceTree = "<group>"; };
@@ -379,6 +381,8 @@
 				80F6A1192B329004000D5B4E /* y2023-day11-data2.txt */,
 				80F6A1222B332EC7000D5B4E /* y2023-day12-data1.txt */,
 				80F6A1242B332ED0000D5B4E /* y2023-day12-data2.txt */,
+				801E9B182B34B9ED007C0917 /* y2023-day13-data1.txt */,
+				801E9B192B34B9ED007C0917 /* y2023-day13-data2.txt */,
 			);
 			path = 2023;
 			sourceTree = "<group>";
