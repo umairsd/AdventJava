@@ -2,6 +2,10 @@
 
 import Foundation
 
+
+/// --- Day 14: Parabolic Reflector Dish ---
+/// https://adventofcode.com/2023/day/14
+///
 class Y2023Day14: Day {
   var dayNumber: Int = 14
   var year: Int = 2023
@@ -46,40 +50,7 @@ fileprivate class Platform {
     self.cells = cells
   }
 
-  func tiltNorth() {
-    // In each column, two pointers. First open space, and first rounded rock.
-    // If we encounter a cubedRock, reset.
-    for c in 0..<cells[0].count {
-      let transposedColumn = transposeColumn(c)
-      assert(cells.count == transposedColumn.count)
-
-      // Create sub-sections separated by a `.cubedRock`.
-      let splits = Self.splitAroundCubedRock(transposedColumn)
-      // For each split, move `.roundedRock`s as far to the left as possible.
-      let tiltedSplits = splits.map { slice in
-        var result: [Cell] = Array(repeating: .empty, count: slice.count)
-        let rockCount = slice.filter { $0 == .roundedRock }.count
-        (0..<rockCount).forEach { i in
-          result[i] = .roundedRock
-        }
-        return result
-      }
-
-      var joined: [Cell] = []
-      joined.append(contentsOf: tiltedSplits.first!)
-      tiltedSplits[1...].forEach { row in
-        joined.append(.cubedRock)
-        joined.append(contentsOf: row)
-      }
-
-      assert(transposedColumn.count == joined.count)
-
-      // Undo the transpose.
-      for r in 0..<cells.count {
-        cells[r][c] = joined[r]
-      }
-    }
-  }
+  // MARK: - API
 
 
   func calculateLoad() -> Int {
@@ -91,7 +62,49 @@ fileprivate class Platform {
     return score
   }
 
+
+  func tiltNorth() {
+    // For each
+    for c in 0..<cells[0].count {
+      let column = columnAsRow(c)
+      let tilted = tiltLeft(column)
+      assert(column.count == tilted.count)
+
+      // Update the `cells` with the result of the tilt.
+      for r in 0..<cells.count {
+        cells[r][c] = tilted[r]
+      }
+    }
+  }
+
+
   // MARK: - Private
+
+  /// Tilt's the `cells` to the left (i.e. all the `roundedRock`'s are shifted to the left
+  /// within each section.
+  private func tiltLeft(_ cells: [Cell]) -> [Cell] {
+    // Create sub-sections separated by a `.cubedRock`.
+    let splits = Self.splitAroundCubedRock(cells)
+    // For each split, move `.roundedRock`s as far to the left as possible.
+    let tiltedSplits = splits.map { slice in
+      var result: [Cell] = Array(repeating: .empty, count: slice.count)
+      let rockCount = slice.filter { $0 == .roundedRock }.count
+      (0..<rockCount).forEach { i in
+        result[i] = .roundedRock
+      }
+      return result
+    }
+
+    var joined: [Cell] = []
+    joined.append(contentsOf: tiltedSplits.first!)
+    tiltedSplits[1...].forEach { row in
+      joined.append(.cubedRock)
+      joined.append(contentsOf: row)
+    }
+
+    return joined
+  }
+
 
   private static func splitAroundCubedRock(_ cells: [Cell]) -> [[Cell]] {
     var result: [[Cell]] = []
@@ -110,15 +123,14 @@ fileprivate class Platform {
   }
 
 
-  // MARK: - Private
-
-  /// Transpose a column (Top to Bottom) into a row (Left to Right).
-  private func transposeColumn(_ column: Int) -> [Cell] {
-    var transposedColumn: [Cell] = []
+  /// Convert a column (top to bottom) into a row (left to right).
+  private func columnAsRow(_ column: Int) -> [Cell] {
+    var row: [Cell] = []
     for r in 0..<cells.count {
-      transposedColumn.append(cells[r][column])
+      row.append(cells[r][column])
     }
-    return transposedColumn
+    assert(cells.count == row.count)
+    return row
   }
 }
 
