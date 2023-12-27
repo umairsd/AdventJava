@@ -11,6 +11,8 @@ class Y2023Day14: Day {
   var year: Int = 2023
   var dataFileNumber: Int
 
+  private static let totalIterations = 1_000_000_000
+
   required init(dataFileNumber: Int) {
     self.dataFileNumber = dataFileNumber
   }
@@ -25,7 +27,36 @@ class Y2023Day14: Day {
 
 
   func part2(_ lines: [String]) -> String {
-    return ""
+    let platform = parsePlatform(lines)
+
+    var statesMap: [String: Int] = [:]
+
+    var i = 1
+    while i <= Self.totalIterations {
+      platform.cycle()
+      let state = platform.description
+
+      if let previousIndex = statesMap[state] {
+        let loopLength = i - previousIndex
+        let remainingIterations = (Self.totalIterations - i)
+        let loopCount = remainingIterations / loopLength
+        // The last index of `state`.
+        let indexOfLastCycle = i + loopCount * loopLength
+        i = indexOfLastCycle + 1
+        break
+      } else {
+        statesMap[state] = i
+        i += 1
+      }
+    }
+
+    // Run the last few iterations.
+    for _ in i...Self.totalIterations {
+      platform.cycle()
+    }
+
+    let result = platform.calculateLoad()
+    return "\(result)"
   }
 }
 
@@ -63,16 +94,53 @@ fileprivate class Platform {
   }
 
 
+  func cycle() {
+    tiltNorth()
+    tiltWest()
+    tiltSouth()
+    tiltEast()
+  }
+
+
   func tiltNorth() {
-    // For each
     for c in 0..<cells[0].count {
       let column = columnAsRow(c)
       let tilted = tiltLeft(column)
-      assert(column.count == tilted.count)
-
-      // Update the `cells` with the result of the tilt.
+      // Update the column with the result of the tilt.
       for r in 0..<cells.count {
         cells[r][c] = tilted[r]
+      }
+    }
+  }
+
+
+  func tiltSouth() {
+    for c in 0..<cells[0].count {
+      let column = columnAsRow(c)
+      let tilted = tiltLeft(column.reversed())
+      // Update the column with the result of the tilt.
+      for r in 0..<cells.count {
+        cells[r][c] = tilted[tilted.count - r - 1]
+      }
+    }
+  }
+
+
+  func tiltWest() {
+    for (r, row) in cells.enumerated() {
+      let tilted = tiltLeft(row)
+      for c in 0..<row.count {
+        cells[r][c] = tilted[c]
+      }
+    }
+  }
+
+
+  func tiltEast() {
+    for (r, row) in cells.enumerated() {
+      let tilted = tiltLeft(row.reversed())
+      for c in 0..<row.count {
+        cells[r][c] = tilted[tilted.count - 1 - c]
       }
     }
   }
@@ -102,6 +170,7 @@ fileprivate class Platform {
       joined.append(contentsOf: row)
     }
 
+    assert(cells.count == joined.count)
     return joined
   }
 
@@ -131,6 +200,21 @@ fileprivate class Platform {
     }
     assert(cells.count == row.count)
     return row
+  }
+}
+
+
+extension Platform: CustomStringConvertible {
+
+  var description: String {
+    var s: String = ""
+    for row in cells {
+      for value in row {
+        s.append(value.rawValue)
+      }
+      s.append("\n")
+    }
+    return s
   }
 }
 
