@@ -17,15 +17,51 @@ class Y2023Day16: Day {
 
   func part1(_ lines: [String]) -> String {
     let grid = parseGrid(lines)
+    let startingBeam = BeamState(position: Position(row: 0, column: 0), direction: .east)
+    let result = energizedTileCount(grid, startingAt: startingBeam)
+    return "\(result)"
+  }
+
+  
+  func part2(_ lines: [String]) -> String {
+    let grid = parseGrid(lines)
+    let rowCount = grid.count
+    let columnCount = rowCount == 0 ? 0 : grid[0].count
+
+    var startingBeams: [BeamState] = []
+    for c in 0..<grid[0].count {
+      startingBeams.append(BeamState(position: Position(row: 0, column: c), direction: .south))
+      startingBeams.append(
+        BeamState(position: Position(row: rowCount - 1, column: c), direction: .north))
+    }
+    for r in 0..<grid.count {
+      startingBeams.append(BeamState(position: Position(row: r, column: 0), direction: .east))
+      startingBeams.append(
+        BeamState(position: Position(row: r, column: columnCount - 1), direction: .west))
+    }
+
+    var maxEnergizedCount = Int.min
+    for beam in startingBeams {
+      let energizedCount = energizedTileCount(grid, startingAt: beam)
+      maxEnergizedCount = max(maxEnergizedCount, energizedCount)
+    }
+
+    return "\(maxEnergizedCount)"
+  }
+
+
+  private func energizedTileCount(
+    _ grid: [[Tile]],
+    startingAt start: BeamState
+  ) -> Int {
+
     var energizedPositions = Set<Position>()
-    
     // The beams that are in progress through the grid.
-    var beams: [Beam] = []
+    var beams: [BeamState] = []
     // The set of beams that have already been handled.
-    var processedBeams = Set<Beam>()
-    let start = Beam(position: Position(row: 0, column: 0), direction: .east)
+    var seenBeams = Set<BeamState>()
     beams.append(start)
-    processedBeams.insert(start)
+    seenBeams.insert(start)
 
     while !beams.isEmpty {
       let beam = beams.removeFirst()
@@ -40,21 +76,16 @@ class Y2023Day16: Day {
         guard let p = currentPosition.nextPosition(in: nextDir, within: grid) else {
           continue
         }
-        let b = Beam(position: p, direction: nextDir)
-        if !processedBeams.contains(b) {
-          processedBeams.insert(b)
+        let b = BeamState(position: p, direction: nextDir)
+        if !seenBeams.contains(b) {
+          seenBeams.insert(b)
           beams.append(b)
         }
       }
     }
 
     let result = energizedPositions.count
-    return "\(result)"
-  }
-
-  
-  func part2(_ lines: [String]) -> String {
-    ""
+    return result
   }
 }
 
@@ -108,7 +139,7 @@ fileprivate struct Position: Hashable {
 }
 
 
-fileprivate struct Beam: Hashable {
+fileprivate struct BeamState: Hashable {
   let position: Position
   let direction: Direction
 }
