@@ -65,7 +65,6 @@ class Y2023Day16: Day {
 
     while !queue.isEmpty {
       let beam = queue.removeFirst()
-      let currentPosition = beam.position
 
       // Energize the position occupied by the beam.
       energizedPositions.insert(beam.position)
