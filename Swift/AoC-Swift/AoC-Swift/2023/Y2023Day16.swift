@@ -57,30 +57,26 @@ class Y2023Day16: Day {
 
     var energizedPositions = Set<Position>()
     // The beams that are in progress through the grid.
-    var beams: [BeamState] = []
+    var queue: [BeamState] = []
     // The set of beams that have already been handled.
     var seenBeams = Set<BeamState>()
-    beams.append(start)
+    queue.append(start)
     seenBeams.insert(start)
 
-    while !beams.isEmpty {
-      let beam = beams.removeFirst()
+    while !queue.isEmpty {
+      let beam = queue.removeFirst()
       let currentPosition = beam.position
-      let currentTile = grid[currentPosition.row][currentPosition.column]
 
       // Energize the position occupied by the beam.
       energizedPositions.insert(beam.position)
 
-      let nextDirections = currentTile.nextDirectionsWhenTravelingIn(beam.direction)
-      for nextDir in nextDirections {
-        guard let p = currentPosition.nextPosition(in: nextDir, within: grid) else {
+      let nextBeams = beam.nextStates(in: grid)
+      for nextBeam in nextBeams {
+        if seenBeams.contains(nextBeam) {
           continue
         }
-        let b = BeamState(position: p, direction: nextDir)
-        if !seenBeams.contains(b) {
-          seenBeams.insert(b)
-          beams.append(b)
-        }
+        seenBeams.insert(nextBeam)
+        queue.append(nextBeam)
       }
     }
 
@@ -106,15 +102,13 @@ extension Y2023Day16 {
   }
 }
 
-
 // MARK: - Types
-
 
 fileprivate struct Position: Hashable {
   let row: Int
   let column: Int
 
-  func nextPosition(in direction: Direction, within grid: [[Tile]]) -> Position? {
+  func nextPosition(in grid: [[Tile]], direction: Direction) -> Position? {
     let rowCount = grid.count
     let columnCount = rowCount == 0 ? 0 : grid[0].count
 
@@ -142,18 +136,12 @@ fileprivate struct Position: Hashable {
 fileprivate struct BeamState: Hashable {
   let position: Position
   let direction: Direction
-}
 
+  func nextStates(in grid: [[Tile]]) -> [BeamState] {
+    let travelDirection = direction
+    let currentTile = grid[position.row][position.column]
 
-fileprivate enum Tile: Character {
-  case empty = "."
-  case horizontalSplitter = "-"
-  case verticalSplitter = "|"
-  case forwardMirror = "/"
-  case backwardMirror = "\\"
-
-  func nextDirectionsWhenTravelingIn(_ travelDirection: Direction) -> [Direction] {
-    let next: [Direction] = switch self {
+    let nextDirections: [Direction] = switch currentTile {
     case .empty:
       [travelDirection]
 
@@ -200,9 +188,26 @@ fileprivate enum Tile: Character {
       }
     }
 
-    return next
+    var nextStates: [BeamState] = []
+    for nextDir in nextDirections {
+      guard let nextPosition = position.nextPosition(in: grid, direction: nextDir) else {
+        continue
+      }
+      nextStates.append(BeamState(position: nextPosition, direction: nextDir))
+    }
+    return nextStates
   }
 }
+
+
+fileprivate enum Tile: Character {
+  case empty = "."
+  case horizontalSplitter = "-"
+  case verticalSplitter = "|"
+  case forwardMirror = "/"
+  case backwardMirror = "\\"
+}
+
 
 fileprivate enum Direction {
   case north
