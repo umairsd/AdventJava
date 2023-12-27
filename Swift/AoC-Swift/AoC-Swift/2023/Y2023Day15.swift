@@ -16,8 +16,13 @@ class Y2023Day15: Day {
 
 
   func part1(_ lines: [String]) -> String {
-    let tokens = parseTokens(lines[0])
-    let result = tokens.map { $0.hashValue() }.reduce(0, +)
+    guard lines.count > 0 else {
+      fatalError()
+    }
+    let tokens = lines[0]
+      .split(separator: ",")
+      .map { String($0.trimmingCharacters(in: .whitespaces)).customHash() }
+    let result = tokens.map { $0 }.reduce(0, +)
     return "\(result)"
   }
 
@@ -25,22 +30,14 @@ class Y2023Day15: Day {
   func part2(_ lines: [String]) -> String {
     ""
   }
-
-
-  private func parseTokens(_ line: String) -> [Token] {
-    let t = line.split(separator: ",")
-      .map { Token(data: String($0.trimmingCharacters(in: .whitespaces))) }
-    return t
-  }
 }
 
 
-fileprivate struct Token {
-  let data: String
+extension String {
 
-  func hashValue() -> Int {
+  fileprivate func customHash() -> Int {
     var result = 0
-    for c in data {
+    for c in self {
       guard let ascii = c.asciiValue else {
         continue
       }
