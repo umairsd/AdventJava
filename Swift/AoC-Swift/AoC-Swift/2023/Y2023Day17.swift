@@ -29,18 +29,25 @@ class Y2023Day17: Day {
 
 
   private func dijkstra(_ grid: Grid) -> Int {
-    var queue: [QueueNode] = []
+//    var queue: [QueueNode] = []
+//    var queue = Heap<QueueNode>()
+
+    var queue = Heap<QueueNode> { qn1, qn2 in
+      qn1.heatLoss < qn2.heatLoss
+    }
     var seen = Set<State>()
 
-    queue.append(QueueNode(
+    queue.insert(QueueNode(
       state: State(position: grid.start, direction: .east, stepCount: 1),
       heatLoss: 0))
-    queue.append(QueueNode(
+
+    queue.insert(QueueNode(
       state: State(position: grid.start, direction: .south, stepCount: 1),
       heatLoss: 0))
 
     while !queue.isEmpty {
-      let qNode = removeCheapest(&queue)
+//      let qNode = removeCheapest(&queue)
+      let qNode = queue.remove()!
 
       if qNode.state.position == grid.destination {
         return qNode.heatLoss
@@ -58,7 +65,7 @@ class Y2023Day17: Day {
         // cost is the sum of "heat loss so far" & the heat loss for the `leftP`.
         let cost = qNode.heatLoss + grid.getValueAt(leftP)
         let node = QueueNode(state: left, heatLoss: cost)
-        queue.append(node)
+        queue.insert(node)
       }
 
       // When turning right
@@ -67,7 +74,7 @@ class Y2023Day17: Day {
       if grid.containsPosition(rightP) && !seen.contains(right) {
         let cost = qNode.heatLoss + grid.getValueAt(rightP)
         let node = QueueNode(state: right, heatLoss: cost)
-        queue.append(node)
+        queue.insert(node)
       }
 
       let forward = qNode.state.step()
@@ -75,26 +82,13 @@ class Y2023Day17: Day {
       if qNode.state.stepCount < 3 && grid.containsPosition(forwardP) && !seen.contains(forward) {
         let cost = qNode.heatLoss + grid.getValueAt(forwardP)
         let node = QueueNode(state: forward, heatLoss: cost)
-        queue.append(node)
+        queue.insert(node)
       }
     }
     fatalError("Couldn't reach destination.")
   }
 
-  private func removeCheapest(_ queue: inout [QueueNode]) -> QueueNode {
-    // Go through the queue, and remove the state with the lowest cost.
-    var lowestIndex = -1
-    var lowest = Int.max
-    for (i, qNode) in queue.enumerated() {
-      if qNode.heatLoss < lowest {
-        lowestIndex = i
-        lowest = qNode.heatLoss
-      }
-    }
-    let stateToRemove = queue.remove(at: lowestIndex)
-    return stateToRemove
-  }
-
+  // MARK: - Private
 
   private func parseGrid(_ lines: [String]) -> Grid {
     let grid: [[Int]] = lines
@@ -107,6 +101,7 @@ class Y2023Day17: Day {
   }
 }
 
+// MARK: - Helper Types
 
 fileprivate struct Grid {
   let data: [[Int]]
