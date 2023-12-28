@@ -19,7 +19,7 @@ class Y2023Day17: Day {
   func part1(_ lines: [String]) -> String {
     let grid = parseGrid(lines)
     let result = dijkstra(grid)
-    return ""
+    return "\(result)"
   }
 
 
@@ -29,66 +29,68 @@ class Y2023Day17: Day {
 
 
   private func dijkstra(_ grid: Grid) -> Int {
-    var queue: [QueueState] = []
-    var seen = Set<Position>()
+    var queue: [QueueNode] = []
+    var seen = Set<State>()
 
-    let l1 = grid.start.nextLocation(in: .east)
-    let p1 = Position(location: l1, direction: .east, stepCount: 1)
-    queue.append(QueueState(position: p1, heatLoss: grid.getValueAt(l1)))
-
-    let l2 = grid.start.nextLocation(in: .south)
-    let p2 = Position(location: l2, direction: .south, stepCount: 1)
-    queue.append(QueueState(position: p2, heatLoss: grid.getValueAt(l2)))
+    queue.append(QueueNode(
+      state: State(position: grid.start, direction: .east, stepCount: 1),
+      heatLoss: 0))
+    queue.append(QueueNode(
+      state: State(position: grid.start, direction: .south, stepCount: 1),
+      heatLoss: 0))
 
     while !queue.isEmpty {
-      let state = removeCheapest(&queue)
+      let qNode = removeCheapest(&queue)
 
-      if state.position.location == grid.destination {
-        return state.heatLoss
+      if qNode.state.position == grid.destination {
+        return qNode.heatLoss
       }
 
-      if seen.contains(state.position) {
+      guard !seen.contains(qNode.state) else {
         continue
       }
-      seen.insert(state.position)
+      seen.insert(qNode.state)
 
-      let leftP = state.position.rotateAndStep(.counterClockwise)
-      if grid.containsLocation(leftP.location) {
-        let cost = state.heatLoss + grid.getValueAt(leftP.location)
-        let s = QueueState(position: leftP, heatLoss: cost)
-        queue.append(s)
+      // When turning left.
+      let left = qNode.state.rotateLeftAndStep()
+      let leftP = left.position
+      if grid.containsPosition(leftP) && !seen.contains(left) {
+        // cost is the sum of "heat loss so far" & the heat loss for the `leftP`.
+        let cost = qNode.heatLoss + grid.getValueAt(leftP)
+        let node = QueueNode(state: left, heatLoss: cost)
+        queue.append(node)
       }
 
-      let rightP = state.position.rotateAndStep(.clockwise)
-      if grid.containsLocation(rightP.location) {
-        let cost = state.heatLoss + grid.getValueAt(rightP.location)
-        let s = QueueState(position: rightP, heatLoss: cost)
-        queue.append(s)
+      // When turning right
+      let right = qNode.state.rotateRightAndStep()
+      let rightP = right.position
+      if grid.containsPosition(rightP) && !seen.contains(right) {
+        let cost = qNode.heatLoss + grid.getValueAt(rightP)
+        let node = QueueNode(state: right, heatLoss: cost)
+        queue.append(node)
       }
 
-      let forwardP = state.position.step()
-      if state.position.stepCount <= 3 && grid.containsLocation(forwardP.location) {
-        let cost = state.heatLoss + grid.getValueAt(forwardP.location)
-        let s = QueueState(position: forwardP, heatLoss: cost)
-        queue.append(s)
+      let forward = qNode.state.step()
+      let forwardP = forward.position
+      if qNode.state.stepCount < 3 && grid.containsPosition(forwardP) && !seen.contains(forward) {
+        let cost = qNode.heatLoss + grid.getValueAt(forwardP)
+        let node = QueueNode(state: forward, heatLoss: cost)
+        queue.append(node)
       }
     }
     fatalError("Couldn't reach destination.")
   }
 
-
-  private func removeCheapest(_ queue: inout [QueueState]) -> QueueState {
+  private func removeCheapest(_ queue: inout [QueueNode]) -> QueueNode {
     // Go through the queue, and remove the state with the lowest cost.
-    var lowestIndex = 0
-    var lowestCost = Int.max
-
-    for (i, s) in queue.enumerated() {
-      if s.heatLoss < lowestCost {
+    var lowestIndex = -1
+    var lowest = Int.max
+    for (i, qNode) in queue.enumerated() {
+      if qNode.heatLoss < lowest {
         lowestIndex = i
-        lowestCost = s.heatLoss
+        lowest = qNode.heatLoss
       }
     }
-
     let stateToRemove = queue.remove(at: lowestIndex)
     return stateToRemove
   }
@@ -110,84 +112,81 @@ fileprivate struct Grid {
   let data: [[Int]]
   let rowCount: Int
   let columnCount: Int
-  let start: Location
-  let destination: Location
+  let start: Position
+  let destination: Position
 
   init(data: [[Int]]) {
     self.data = data
     self.rowCount = data.count
     self.columnCount = rowCount == 0 ? 0 : data[0].count
-    start = Location(row: 0, column: 0)
-    destination = Location(row: rowCount - 1, column: columnCount - 1)
+    start = Position(row: 0, column: 0)
+    destination = Position(row: rowCount - 1, column: columnCount - 1)
   }
 
-
-  func getValueAt(_ location: Location) -> Int {
-    data[location.row][location.column]
+  func getValueAt(_ p: Position) -> Int {
+    data[p.row][p.column]
   }
 
-
-  func containsLocation(_ location: Location) -> Bool {
-    (location.row >= 0 && location.row < rowCount)
-    && (location.column >= 0 && location.column < columnCount)
+  func containsPosition(_ p: Position) -> Bool {
+    (p.row >= 0 && p.row < rowCount) && (p.column >= 0 && p.column < columnCount)
   }
 }
 
 
-fileprivate struct Point {
-  let row: Int
-  let column: Int
-}
-
-
-fileprivate struct QueueState {
+fileprivate struct QueueNode {
   /// Current position.
-  let position: Position
-  /// The heat loss to get to the current position.
+  let state: State
+  /// The heat loss to get to the current `state` (position, direction).
   let heatLoss: Int
 }
 
 
-fileprivate struct Position: Hashable {
-  let location: Location
+fileprivate struct State: Hashable {
+  let position: Position
   let direction: Direction
   /// The number of steps needed to get to the current position.
   let stepCount: Int
 
-  /// Steps in the current direction, and returns a new `Position`.
-  func step() -> Position {
-    Position(
-      location: self.location.nextLocation(in: direction),
-      direction: direction,
-      stepCount: self.stepCount + 1
-    )
+  func step() -> State {
+    return step(in: direction)
   }
 
+  /// Steps in the given direction, and returns a new `Position`.
+  func step(in dir: Direction) -> State {
+    let p = self.position.nextPosition(in: dir)
+    return State(position: p, direction: dir, stepCount: self.stepCount + 1)
+  }
 
-  func rotateAndStep(_ rotation: Rotation) -> Position {
-    let newDirection = direction.rotate(by: rotation)
-    let location = self.location.nextLocation(in: newDirection)
-    // The stepCount resets, as we are rotating, and moving.
-    let p = Position(location: location, direction: newDirection, stepCount: 1)
-    return p
+  func rotateLeftAndStep() -> State {
+    let newDirection = direction.turnLeft()
+    let p =  self.position.nextPosition(in: newDirection)
+    let s = State(position: p, direction: newDirection, stepCount: 1)
+    return s
+  }
+
+  func rotateRightAndStep() -> State {
+    let newDirection = direction.turnRight()
+    let p =  self.position.nextPosition(in: newDirection)
+    let s = State(position: p, direction: newDirection, stepCount: 1)
+    return s
   }
 }
 
 
-fileprivate struct Location: Hashable {
+fileprivate struct Position: Hashable {
   let row: Int
   let column: Int
 
-  func nextLocation(in direction: Direction) -> Location {
+  func nextPosition(in direction: Direction) -> Position {
     switch direction {
     case .north:
-      Location(row: row - 1, column: column)
+      Position(row: row - 1, column: column)
     case .south:
-      Location(row: row + 1, column: column)
+      Position(row: row + 1, column: column)
     case .east:
-      Location(row: row, column: column + 1)
+      Position(row: row, column: column + 1)
     case .west:
-      Location(row: row, column: column - 1)
+      Position(row: row, column: column - 1)
     }
   }
 }
@@ -196,31 +195,29 @@ fileprivate struct Location: Hashable {
 fileprivate enum Direction {
   case north, south, east, west
 
-  func rotate(by rotation: Rotation) -> Direction {
-    let newDirection: Direction = switch (self, rotation) {
-    case (.north, .clockwise):
-        .east
-    case (.north, .counterClockwise):
+  func turnLeft() -> Direction {
+    return switch self {
+      case .north:
         .west
-    case (.south, .clockwise):
-        .west
-    case (.south, .counterClockwise):
+      case .south:
         .east
-    case (.east, .clockwise):
-        .south
-    case (.east, .counterClockwise):
+      case .east:
         .north
-    case (.west, .clockwise):
-        .north
-    case (.west, .counterClockwise):
+      case .west:
         .south
     }
-    return newDirection
   }
-}
 
-
-fileprivate enum Rotation {
-  case clockwise // 90 degrees.
-  case counterClockwise // -90 degrees.
+  func turnRight() -> Direction {
+    return switch self {
+      case .north:
+        .east
+      case .south:
+        .west
+      case .east:
+        .south
+      case .west:
+        .north
+    }
+  }
 }
