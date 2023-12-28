@@ -1,0 +1,14 @@
+{
+  "pins" : [
+    {
+      "identity" : "swiftalgosdatastructures",
+      "kind" : "remoteSourceControl",
+      "location" : "git@github.com:umairsd/SwiftAlgosDataStructures.git",
+      "state" : {
+        "branch" : "main",
+        "revision" : "f62cdc2150294c789f59bdeb53d294dfc62ff5c4"
+      }
+    }
+  ],
+  "version" : 2
+}
