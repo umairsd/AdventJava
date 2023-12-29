@@ -18,17 +18,19 @@ class Y2023Day17: Day {
 
   func part1(_ lines: [String]) -> String {
     let grid = parseGrid(lines)
-    let result = dijkstra(grid)
+    let result = dijkstraLowestHeatLoss(grid)
     return "\(result)"
   }
 
 
   func part2(_ lines: [String]) -> String {
-    ""
+    let grid = parseGrid(lines)
+    let result = dijkstraLowestHeatLoss(grid, minSteps: 4, maxSteps: 10)
+    return "\(result)"
   }
 
 
-  private func dijkstra(_ grid: Grid) -> Int {
+  private func dijkstraLowestHeatLoss(_ grid: Grid, minSteps: Int = 1, maxSteps: Int = 3) -> Int {
     var queue = Heap<QueueNode> { qn1, qn2 in
       qn1.heatLoss < qn2.heatLoss
     }
@@ -45,7 +47,7 @@ class Y2023Day17: Day {
     while !queue.isEmpty {
       let qNode = queue.remove()!
 
-      if qNode.state.position == grid.destination {
+      if qNode.state.position == grid.destination && qNode.state.stepCount >= minSteps {
         return qNode.heatLoss
       }
 
@@ -54,35 +56,42 @@ class Y2023Day17: Day {
       }
       seen.insert(qNode.state)
 
-      // When turning left.
-      let left = qNode.state.rotateLeftAndStep()
-      let leftP = left.position
-      if grid.containsPosition(leftP) && !seen.contains(left) {
-        // cost is the sum of "heat loss so far" & the heat loss for the `leftP`.
-        let cost = qNode.heatLoss + grid.getValueAt(leftP)
-        let node = QueueNode(state: left, heatLoss: cost)
-        queue.insert(node)
+      // Turning left. Need to go a minimum of `minSteps` before turning.
+      if qNode.state.stepCount >= minSteps {
+        let left = qNode.state.rotateLeftAndStep()
+        let leftP = left.position
+        if grid.containsPosition(leftP) && !seen.contains(left) {
+          // cost is the sum of "heat loss so far" & the heat loss for the `leftP`.
+          let cost = qNode.heatLoss + grid.getValueAt(leftP)
+          let node = QueueNode(state: left, heatLoss: cost)
+          queue.insert(node)
+        }
       }
 
-      // When turning right
-      let right = qNode.state.rotateRightAndStep()
-      let rightP = right.position
-      if grid.containsPosition(rightP) && !seen.contains(right) {
-        let cost = qNode.heatLoss + grid.getValueAt(rightP)
-        let node = QueueNode(state: right, heatLoss: cost)
-        queue.insert(node)
+      // Turning right. Need to go a minimum of `minSteps` before turning.
+      if qNode.state.stepCount >= minSteps {
+        let right = qNode.state.rotateRightAndStep()
+        let rightP = right.position
+        if grid.containsPosition(rightP) && !seen.contains(right) {
+          let cost = qNode.heatLoss + grid.getValueAt(rightP)
+          let node = QueueNode(state: right, heatLoss: cost)
+          queue.insert(node)
+        }
       }
 
       let forward = qNode.state.step()
       let forwardP = forward.position
-      if qNode.state.stepCount < 3 && grid.containsPosition(forwardP) && !seen.contains(forward) {
+      if qNode.state.stepCount < maxSteps &&
+          grid.containsPosition(forwardP) &&
+          !seen.contains(forward)
+      {
         let cost = qNode.heatLoss + grid.getValueAt(forwardP)
         let node = QueueNode(state: forward, heatLoss: cost)
         queue.insert(node)
       }
     }
 
-    fatalError("Couldn't reach destination.")
+    return -1
   }
 
 
