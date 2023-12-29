@@ -18,7 +18,7 @@ class Y2023Day17: Day {
 
   func part1(_ lines: [String]) -> String {
     let grid = parseGrid(lines)
-    let result = dijkstraLowestHeatLoss(grid)
+    let result = dijkstraLowestHeatLoss(grid, minSteps: 0, maxSteps: 3)
     return "\(result)"
   }
 
@@ -30,18 +30,18 @@ class Y2023Day17: Day {
   }
 
 
-  private func dijkstraLowestHeatLoss(_ grid: Grid, minSteps: Int = 1, maxSteps: Int = 3) -> Int {
+  private func dijkstraLowestHeatLoss(_ grid: Grid, minSteps: Int, maxSteps: Int) -> Int {
     var queue = Heap<QueueNode> { qn1, qn2 in
       qn1.heatLoss < qn2.heatLoss
     }
-    var seen = Set<State>()
+    var seen = Set<CrucibleState>()
 
     queue.insert(QueueNode(
-      state: State(position: grid.start, direction: .east, stepCount: 1),
+      state: CrucibleState(position: grid.start, direction: .east, stepCount: 0),
       heatLoss: 0))
 
     queue.insert(QueueNode(
-      state: State(position: grid.start, direction: .south, stepCount: 1),
+      state: CrucibleState(position: grid.start, direction: .south, stepCount: 0),
       heatLoss: 0))
 
     while !queue.isEmpty {
@@ -137,7 +137,7 @@ fileprivate struct Grid {
 
 fileprivate struct QueueNode: Comparable {
   /// Current position.
-  let state: State
+  let state: CrucibleState
   /// The heat loss to get to the current `state` (position, direction).
   let heatLoss: Int
 
@@ -147,33 +147,33 @@ fileprivate struct QueueNode: Comparable {
 }
 
 
-fileprivate struct State: Hashable {
+fileprivate struct CrucibleState: Hashable {
   let position: Position
   let direction: Direction
-  /// The number of steps needed to get to the current position.
+  /// The number of steps taken so far.
   let stepCount: Int
 
-  func step() -> State {
+  func step() -> CrucibleState {
     return step(in: direction)
   }
 
   /// Steps in the given direction, and returns a new `Position`.
-  func step(in dir: Direction) -> State {
+  func step(in dir: Direction) -> CrucibleState {
     let p = self.position.nextPosition(in: dir)
-    return State(position: p, direction: dir, stepCount: self.stepCount + 1)
+    return CrucibleState(position: p, direction: dir, stepCount: self.stepCount + 1)
   }
 
-  func rotateLeftAndStep() -> State {
+  func rotateLeftAndStep() -> CrucibleState {
     let newDirection = direction.turnLeft()
     let p =  self.position.nextPosition(in: newDirection)
-    let s = State(position: p, direction: newDirection, stepCount: 1)
+    let s = CrucibleState(position: p, direction: newDirection, stepCount: 1)
     return s
   }
 
-  func rotateRightAndStep() -> State {
+  func rotateRightAndStep() -> CrucibleState {
     let newDirection = direction.turnRight()
     let p =  self.position.nextPosition(in: newDirection)
-    let s = State(position: p, direction: newDirection, stepCount: 1)
+    let s = CrucibleState(position: p, direction: newDirection, stepCount: 1)
     return s
   }
 }
