@@ -18,36 +18,47 @@ class Y2023Day17: Day {
 
   func part1(_ lines: [String]) -> String {
     let grid = parseGrid(lines)
-    let result = dijkstraLowestHeatLoss(grid, minSteps: 0, maxSteps: 3)
+    let result = dijkstraLowestHeatLoss(
+      in: grid, startingAt: grid.topLeft, endingAt: grid.bottomRight, minSteps: 0, maxSteps: 3)
     return "\(result)"
   }
 
 
   func part2(_ lines: [String]) -> String {
     let grid = parseGrid(lines)
-    let result = dijkstraLowestHeatLoss(grid, minSteps: 4, maxSteps: 10)
+    let result = dijkstraLowestHeatLoss(
+      in: grid, startingAt: grid.topLeft, endingAt: grid.bottomRight, minSteps: 4, maxSteps: 10)
     return "\(result)"
   }
 
 
-  private func dijkstraLowestHeatLoss(_ grid: Grid, minSteps: Int, maxSteps: Int) -> Int {
+  private func dijkstraLowestHeatLoss(
+    in grid: Grid<Int>,
+    startingAt start: Position,
+    endingAt destination: Position,
+    minSteps: Int,
+    maxSteps: Int
+  ) -> Int {
+    assert(grid.containsPosition(start))
+    assert(grid.containsPosition(destination))
+
     var queue = Heap<QueueNode> { qn1, qn2 in
       qn1.heatLoss < qn2.heatLoss
     }
     var seen = Set<CrucibleState>()
 
     queue.insert(QueueNode(
-      state: CrucibleState(position: grid.start, direction: .east, stepCount: 0),
+      state: CrucibleState(position: start, direction: .east, stepCount: 0),
       heatLoss: 0))
 
     queue.insert(QueueNode(
-      state: CrucibleState(position: grid.start, direction: .south, stepCount: 0),
+      state: CrucibleState(position: start, direction: .south, stepCount: 0),
       heatLoss: 0))
 
     while !queue.isEmpty {
       let qNode = queue.remove()!
 
-      if qNode.state.position == grid.destination && qNode.state.stepCount >= minSteps {
+      if qNode.state.position == destination && qNode.state.stepCount >= minSteps {
         return qNode.heatLoss
       }
 
@@ -97,7 +108,7 @@ class Y2023Day17: Day {
 
   // MARK: - Private
 
-  private func parseGrid(_ lines: [String]) -> Grid {
+  private func parseGrid(_ lines: [String]) -> Grid<Int> {
     let grid: [[Int]] = lines
       .filter { !$0.trimmingCharacters(in: .whitespaces).isEmpty }
       .map {
@@ -109,31 +120,6 @@ class Y2023Day17: Day {
 }
 
 // MARK: - Helper Types
-
-fileprivate struct Grid {
-  let data: [[Int]]
-  let rowCount: Int
-  let columnCount: Int
-  let start: Position
-  let destination: Position
-
-  init(data: [[Int]]) {
-    self.data = data
-    self.rowCount = data.count
-    self.columnCount = rowCount == 0 ? 0 : data[0].count
-    start = Position(row: 0, column: 0)
-    destination = Position(row: rowCount - 1, column: columnCount - 1)
-  }
-
-  func getValueAt(_ p: Position) -> Int {
-    data[p.row][p.column]
-  }
-
-  func containsPosition(_ p: Position) -> Bool {
-    (p.row >= 0 && p.row < rowCount) && (p.column >= 0 && p.column < columnCount)
-  }
-}
-
 
 fileprivate struct QueueNode: Comparable {
   /// Current position.
