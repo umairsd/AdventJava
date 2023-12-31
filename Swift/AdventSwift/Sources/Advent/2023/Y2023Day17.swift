@@ -179,9 +179,7 @@ fileprivate struct CrucibleState: Hashable {
 }
 
 
-fileprivate struct Position: Hashable {
-  let row: Int
-  let column: Int
+fileprivate extension Position {
 
   func nextPosition(in direction: Direction) -> Position {
     switch direction {

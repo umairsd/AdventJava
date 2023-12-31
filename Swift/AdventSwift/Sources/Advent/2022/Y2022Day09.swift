@@ -112,9 +112,7 @@ fileprivate struct Move {
   let distance: Int
 }
 
-fileprivate struct Position: Hashable {
-  let row: Int
-  let column: Int
+fileprivate extension Position {
 
   func translatePosition(to p: Position) -> Position {
     // Case-1: `p` is one unit away in any direction. No need to move.

@@ -23,7 +23,7 @@ class Y2023Day11: Day {
     for i in 0..<galaxyPositions.count {
       let p1 = galaxyPositions[i]
       for j in (i + 1)..<galaxyPositions.count {
-        distances.append(p1.distance(to: galaxyPositions[j]))
+        distances.append(p1.manhattanDistance(to: galaxyPositions[j]))
       }
     }
 
@@ -41,7 +41,7 @@ class Y2023Day11: Day {
     for i in 0..<galaxyPositions.count {
       let p1 = galaxyPositions[i]
       for j in (i + 1)..<galaxyPositions.count {
-        distances.append(p1.distance(to: galaxyPositions[j]))
+        distances.append(p1.manhattanDistance(to: galaxyPositions[j]))
       }
     }
 
@@ -128,17 +128,6 @@ extension Y2023Day11 {
 }
 
 // MARK: - Helper Types
-
-
-fileprivate struct Position: Equatable {
-  let row: Int
-  let column: Int
-
-  func distance(to: Position) -> Int {
-    return abs(row - to.row) + abs(column - to.column)
-  }
-}
-
 
 fileprivate enum Pixel: Equatable {
   case empty

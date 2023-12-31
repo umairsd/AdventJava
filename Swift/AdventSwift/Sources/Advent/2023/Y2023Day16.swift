@@ -103,9 +103,7 @@ extension Y2023Day16 {
 
 // MARK: - Types
 
-fileprivate struct Position: Hashable {
-  let row: Int
-  let column: Int
+fileprivate extension Position {
 
   func nextPosition(in grid: [[Tile]], direction: Direction) -> Position? {
     let rowCount = grid.count

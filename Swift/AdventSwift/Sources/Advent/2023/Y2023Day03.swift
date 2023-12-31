@@ -101,7 +101,7 @@ class Y2023Day03: Day {
 
         let p = Position(row: r, column: c)
         // Get the neighbors that contains part numbers.
-        let neighboringPositions = p.neighbors().filter {
+        let neighboringPositions = p.allNeighbors().filter {
           isValid($0, in: grid) && grid[$0.row][$0.column].isNumber
         }
 
@@ -131,7 +131,7 @@ class Y2023Day03: Day {
     var neighbors = Set<Position>()
     for p in positions {
       // Valid neighbor that's not one of the positions in the positions set.
-      let validNeighbors = p.neighbors().filter { isValid($0, in: grid) && !positions.contains($0) }
+      let validNeighbors = p.allNeighbors().filter { isValid($0, in: grid) && !positions.contains($0) }
       validNeighbors.forEach { neighbors.insert($0) }
     }
     return Array(neighbors)
@@ -153,24 +153,4 @@ class Y2023Day03: Day {
 fileprivate struct PartNumber: Hashable {
   let number: Int
   let positions: Set<Position>
-}
-
-
-fileprivate struct Position: Hashable {
-  let row: Int
-  let column: Int
-
-  fileprivate func neighbors() -> [Position] {
-    let neighbors = [
-      Position(row: row - 1, column: column - 1),
-      Position(row: row - 1, column: column),
-      Position(row: row - 1, column: column + 1),
-      Position(row: row, column: column - 1),
-      Position(row: row, column: column + 1),
-      Position(row: row + 1, column: column - 1),
-      Position(row: row + 1, column: column),
-      Position(row: row + 1, column: column + 1),
-    ]
-    return neighbors
-  }
 }
