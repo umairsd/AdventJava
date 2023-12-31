@@ -16,25 +16,38 @@ class Y2023Day18: Day {
   }
 
   func part1(_ lines: [String]) -> String {
-    let instructions = lines.compactMap { parseInstruction($0) }
+    let instructions = lines.compactMap { parseInstructions($0) }
+    // Create the offset for the start position so that we don't have to deal with negative
+    // coordinates. This is not required though. I'm merely doing it to make debugging easier.
     let (_, _, minX, minY) = getMinMaxXY(instructions)
 
-    // Create the offset for the start position so that we don't have to deal with negative
-    // coordinates.
     let start = Position(row: (0 - minY), column: (0 - minX))
-    let path = pathFormedBy(instructions, startingAt: start)
-    let polygonOutline = path.removingDuplicates()
+    let moves = instructions.map { Move(direction: $0.moveDirection, distance: $0.distance) }
+    let polygonOutline = pathFormedBy(moves, startingAt: start).removingDuplicates()
     let result = numPointsInPolygon(polygonOutline)
     return "\(result)"
   }
 
 
   func part2(_ lines: [String]) -> String {
-    ""
+    let instructions = lines.compactMap { parseInstructions($0) }
+    let start = Position(row: 0, column: 0)
+
+    let moves: [Move] = instructions.compactMap{ instruction in
+      guard let d = instruction.distanceFromColor(),
+            let direction = instruction.directionFromColor()
+      else {
+        return nil
+      }
+      return Move(direction: direction, distance: d)
+    }
+
+    let polygonOutline = pathFormedBy(moves, startingAt: start).removingDuplicates()
+    let result = numPointsInPolygon(polygonOutline)
+    return "\(result)"
   }
 
   // MARK: - Private
-
 
   // Gets the total number of points inside the polygon, and the points on the path that make up
   // the polygon.
@@ -60,18 +73,17 @@ class Y2023Day18: Day {
 
 
   private func pathFormedBy(
-    _ instructions: [Instruction],
+    _ moves: [Move],
     startingAt start: Position
   ) -> [Position] {
 
-    var vertices: [Position] = []
-    vertices.append(start)
-
+    var positions: [Position] = [start]
     var currentR = start.row
     var currentC = start.column
-    for instruction in instructions {
-      (0..<instruction.distance).forEach { _ in
-        switch instruction.moveDirection {
+
+    for move in moves {
+      (0..<move.distance).forEach { _ in
+        switch move.direction {
         case .up:
           currentR -= 1
         case .down:
@@ -81,10 +93,10 @@ class Y2023Day18: Day {
         case .right:
           currentC += 1
         }
-        vertices.append(Position(row: currentR, column: currentC))
+        positions.append(Position(row: currentR, column: currentC))
       }
     }
-    return vertices
+    return positions
   }
 
 
@@ -123,11 +135,42 @@ class Y2023Day18: Day {
 
 // MARK: - Types
 
+
+fileprivate struct Move: Hashable {
+  let direction: Direction
+  let distance: Int
+}
+
+
 fileprivate struct Instruction: Hashable {
   let moveDirection: Direction
   let distance: Int
-  let color: Color
+  let color: String
+
+  func distanceFromColor() -> Int? {
+    let hex = Array(color).dropLast().reduce("") { partialResult, c in
+      partialResult + String(c)
+    }
+    return Int(hex, radix: 16)
+  }
+
+  func directionFromColor() -> Direction? {
+    let d = Array(color).last
+    return switch d {
+    case "0":
+      Direction.right
+    case "1":
+      Direction.down
+    case "2":
+      Direction.left
+    case "3":
+      Direction.up
+    default:
+      nil
+    }
+  }
 }
+
 
 fileprivate enum Direction: String {
   case up = "U"
@@ -156,10 +199,6 @@ fileprivate struct Color: Hashable {
 fileprivate extension Y2023Day18 {
   private static let directionRef = Reference(Direction.self)
   private static let distanceRef = Reference(Int.self)
-  private static let redColorRef = Reference(String.self)
-  private static let greenColorRef = Reference(String.self)
-  private static let blueColorRef = Reference(String.self)
-
   private static let colorRef = Reference(String.self)
 
   private static let instructionRegex = Regex {
@@ -175,22 +214,8 @@ fileprivate extension Y2023Day18 {
       Int(w)
     }
     " (#"
-    TryCapture(as: redColorRef) {
-      Repeat(1...2) {
-        One(.hexDigit)
-      }
-    } transform: { w in
-      String(w)
-    }
-    TryCapture(as: greenColorRef) {
-      Repeat(1...2) {
-        One(.hexDigit)
-      }
-    } transform: { w in
-      String(w)
-    }
-    TryCapture(as: blueColorRef) {
-      Repeat(1...2) {
+    TryCapture(as: colorRef) {
+      Repeat(1...6) {
         One(.hexDigit)
       }
     } transform: { w in
@@ -200,20 +225,13 @@ fileprivate extension Y2023Day18 {
   }
 
 
-  func parseInstruction(_ line: String) -> Instruction? {
+  func parseInstructions(_ line: String) -> Instruction? {
     guard let match = line.firstMatch(of: Self.instructionRegex) else {
       return nil
     }
-
     let direction = match[Self.directionRef]
     let distance = match[Self.distanceRef]
-
-    let red = match[Self.redColorRef]
-    let green = match[Self.greenColorRef]
-    let blue = match[Self.blueColorRef]
-
-    let color = Color(red: red, green: green, blue: blue)
-
-    return Instruction(moveDirection: direction, distance: distance, color: color)
+    let colorString = match[Self.colorRef]
+    return Instruction(moveDirection: direction, distance: distance, color: colorString)
   }
 }
