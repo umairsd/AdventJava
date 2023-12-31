@@ -28,7 +28,7 @@ class Y2023Day18: Day {
     return "\(result)"
   }
 
-  
+
   func part2(_ lines: [String]) -> String {
     ""
   }
@@ -39,7 +39,7 @@ class Y2023Day18: Day {
   // Gets the total number of points inside the polygon, and the points on the path that make up
   // the polygon.
   private func numPointsInPolygon(_ outline: [Position]) -> Int {
-    let pairs: [(Position, Position)] = pairwise(outline + [outline.first!])
+    let pairs: [(Position, Position)] = (outline + [outline.first!]).pairwise()
 
     // Step 1: Determine the area using the Shoelace formula.
     let sum = pairs.reduce(0) { (partialResult, pair) in
@@ -56,22 +56,6 @@ class Y2023Day18: Day {
     // Step 3: The total number of points for this polygon
     let totalPoints = numPointsInside + outline.count
     return totalPoints
-  }
-
-
-  private func pairwise<T>(_ list: [T]) -> [(T, T)] {
-    guard !list.isEmpty else {
-      return []
-    }
-
-    var result: [(T, T)] = []
-    for r in 1..<list.count {
-      let e1 = list[r - 1]
-      let e2 = list[r]
-      result.append((e1, e2))
-    }
-    result.append((list.last!, list.first!))
-    return result
   }
 
 
