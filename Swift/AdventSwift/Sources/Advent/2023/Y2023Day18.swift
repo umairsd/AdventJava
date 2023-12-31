@@ -18,13 +18,15 @@ class Y2023Day18: Day {
   func part1(_ lines: [String]) -> String {
     let instructions = lines.compactMap { parseInstructions($0) }
     // Create the offset for the start position so that we don't have to deal with negative
-    // coordinates. This is not required though. I'm merely doing it to make debugging easier.
+    // coordinates. 
+    // Note: This is not required. I'm merely doing it to make debugging easier.
     let (_, _, minX, minY) = getMinMaxXY(instructions)
 
     let start = Position(row: (0 - minY), column: (0 - minX))
     let moves = instructions.map { Move(direction: $0.moveDirection, distance: $0.distance) }
-    let polygonOutline = pathFormedBy(moves, startingAt: start).removingDuplicates()
-    let result = numPointsInPolygon(polygonOutline)
+    let polygonOutlinePath = pathFormedBy(moves, startingAt: start).removingDuplicates()
+
+    let result = numPointsInPolygon(polygonOutlinePath, perimeterLength: polygonOutlinePath.count)
     return "\(result)"
   }
 
@@ -34,24 +36,26 @@ class Y2023Day18: Day {
     let start = Position(row: 0, column: 0)
 
     let moves: [Move] = instructions.compactMap{ instruction in
-      guard let d = instruction.distanceFromColor(),
+      guard let distance = instruction.distanceFromColor(),
             let direction = instruction.directionFromColor()
       else {
         return nil
       }
-      return Move(direction: direction, distance: d)
+      return Move(direction: direction, distance: distance)
     }
 
-    let polygonOutline = pathFormedBy(moves, startingAt: start).removingDuplicates()
-    let result = numPointsInPolygon(polygonOutline)
+    let polygonOutline = verticesFormedBy(moves, startingAt: start).removingDuplicates()
+    let perimeter = moves.map { $0.distance }.reduce(0, +)
+
+    let result = numPointsInPolygon(polygonOutline, perimeterLength: perimeter)
     return "\(result)"
   }
 
   // MARK: - Private
 
-  // Gets the total number of points inside the polygon, and the points on the path that make up
-  // the polygon.
-  private func numPointsInPolygon(_ outline: [Position]) -> Int {
+  // Gets the total number of points that make up this polygon. This is the sum of the
+  // number of points inside the polygon, and the number of points on its border (i.e. perimeter)
+  private func numPointsInPolygon(_ outline: [Position], perimeterLength: Int) -> Int {
     let pairs: [(Position, Position)] = (outline + [outline.first!]).pairwise()
 
     // Step 1: Determine the area using the Shoelace formula.
@@ -64,19 +68,36 @@ class Y2023Day18: Day {
 
     // Step 2: Use the Pick's theorem to find the number of points inside a given shape given
     // its area.
-    let numPointsInside = Int(abs(area) - 0.5 * Double(outline.count) + 1)
+    let numPointsInside = Int(abs(area) - 0.5 * Double(perimeterLength) + 1)
 
     // Step 3: The total number of points for this polygon
-    let totalPoints = numPointsInside + outline.count
+    let totalPoints = numPointsInside + perimeterLength
     return totalPoints
   }
 
 
-  private func pathFormedBy(
-    _ moves: [Move],
-    startingAt start: Position
-  ) -> [Position] {
+  private func verticesFormedBy(_ moves: [Move], startingAt start: Position) -> [Position] {
+    var positions: [Position] = [start]
+    var currentR = start.row
+    var currentC = start.column
+    for move in moves {
+      switch move.direction {
+      case .up:
+        currentR -= move.distance
+      case .down:
+        currentR += move.distance
+      case .left:
+        currentC -= move.distance
+      case .right:
+        currentC += move.distance
+      }
+      positions.append(Position(row: currentR, column: currentC))
+    }
+    return positions
+  }
 
+
+  private func pathFormedBy(_ moves: [Move], startingAt start: Position) -> [Position] {
     var positions: [Position] = [start]
     var currentR = start.row
     var currentC = start.column
@@ -177,20 +198,6 @@ fileprivate enum Direction: String {
   case down = "D"
   case left = "L"
   case right = "R"
-}
-
-fileprivate struct Color: Hashable {
-  let red: String
-  let green: String
-  let blue: String
-
-  func parseRGBColorComponent(_ input: String) -> CGFloat {
-    guard let component = UInt32(input, radix: 16) else {
-      fatalError()
-    }
-    let componentF = CGFloat( CGFloat(component) / 255.0)
-    return componentF
-  }
 }
 
 
