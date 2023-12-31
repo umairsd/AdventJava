@@ -12,6 +12,8 @@ class Y2023Day19: Day {
   var year: Int = 2023
   var dataFileNumber: Int
 
+  private static let startingWorkflowName = "in"
+
   required init(dataFileNumber: Int) {
     self.dataFileNumber = dataFileNumber
   }
@@ -19,14 +21,36 @@ class Y2023Day19: Day {
   func part1(_ lines: [String]) -> String {
     let splits = lines.split(separator: "")
     assert(splits.count == 2)
-
     let workflowsMap = parseWorkflows(Array(splits[0]))
     let parts = splits[1].compactMap { parsePart($0) }
 
+    var acceptedParts: [Part] = []
+    var i = 0
 
+    var currentWorkflowName = Self.startingWorkflowName
+    while i < parts.count {
+      let part = parts[i]
+      let currentWorkflow = workflowsMap[currentWorkflowName]!
 
-    return ""
+      let result = currentWorkflow.processPart(part)
+      switch result {
+
+      case .accepted:
+        acceptedParts.append(part)
+        i += 1 // handle the next part.
+        currentWorkflowName = Self.startingWorkflowName
+      case .rejected:
+        i += 1 // handle the next part.
+        currentWorkflowName = Self.startingWorkflowName
+      case .routed(let name):
+        currentWorkflowName = name
+      }
+    }
+
+    let result = acceptedParts.map { $0.ratingsTotal() }.reduce(0, +)
+    return "\(result)"
   }
+
 
   func part2(_ lines: [String]) -> String {
     ""
@@ -38,12 +62,50 @@ class Y2023Day19: Day {
 fileprivate struct Workflow {
   let name: String
   let rules: [Rule]
+
+  func processPart(_ part: Part) -> RuleResult {
+    for rule in rules {
+      guard let condition = rule.condition else {
+        return rule.result
+      }
+
+      if condition.holds(for: part) {
+        return rule.result
+      }
+    }
+
+    fatalError()
+  }
 }
 
 fileprivate struct Condition {
   let property: Property
   let operation: Operation
   let value: Int
+
+  func holds(for part: Part) -> Bool {
+    switch (property, operation) {
+    case (.pX, .lt):
+      return part.x < value
+    case (.pX, .gt):
+      return part.x > value
+
+    case (.pM, .lt):
+      return part.m < value
+    case (.pM, .gt):
+      return part.m > value
+
+    case (.pA, .lt):
+      return part.a < value
+    case (.pA, .gt):
+      return part.a > value
+
+    case (.pS, .lt):
+      return part.s < value
+    case (.pS, .gt):
+      return part.s > value
+    }
+  }
 }
 
 fileprivate struct Rule {
@@ -90,6 +152,10 @@ fileprivate struct Part {
   let m: Int
   let a: Int
   let s: Int
+
+  func ratingsTotal() -> Int {
+    x + m + a + s
+  }
 }
 
 // MARK: - Parsing
