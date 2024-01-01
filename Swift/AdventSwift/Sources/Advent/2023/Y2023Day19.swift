@@ -59,6 +59,7 @@ class Y2023Day19: Day {
 
 // MARK: - Types
 
+
 fileprivate struct Workflow {
   let name: String
   let rules: [Rule]
@@ -68,12 +69,10 @@ fileprivate struct Workflow {
       guard let condition = rule.condition else {
         return rule.result
       }
-
       if condition.holds(for: part) {
         return rule.result
       }
     }
-
     fatalError()
   }
 }
@@ -85,25 +84,25 @@ fileprivate struct Condition {
 
   func holds(for part: Part) -> Bool {
     switch (property, operation) {
-    case (.pX, .lt):
-      return part.x < value
-    case (.pX, .gt):
-      return part.x > value
+    case (.x, .lt):
+      return part.getValue(.x) < value
+    case (.x, .gt):
+      return part.getValue(.x) > value
 
-    case (.pM, .lt):
-      return part.m < value
-    case (.pM, .gt):
-      return part.m > value
+    case (.m, .lt):
+      return part.getValue(.m) < value
+    case (.m, .gt):
+      return part.getValue(.m) > value
 
-    case (.pA, .lt):
-      return part.a < value
-    case (.pA, .gt):
-      return part.a > value
+    case (.a, .lt):
+      return part.getValue(.a) < value
+    case (.a, .gt):
+      return part.getValue(.a) > value
 
-    case (.pS, .lt):
-      return part.s < value
-    case (.pS, .gt):
-      return part.s > value
+    case (.s, .lt):
+      return part.getValue(.s) < value
+    case (.s, .gt):
+      return part.getValue(.s) > value
     }
   }
 }
@@ -123,11 +122,11 @@ fileprivate enum Operation: String {
   case gt = ">"
 }
 
-fileprivate enum Property: String {
-  case pX = "x"
-  case pM = "m"
-  case pA = "a"
-  case pS = "s"
+fileprivate enum Property: String, CaseIterable {
+  case x = "x"
+  case m = "m"
+  case a = "a"
+  case s = "s"
 }
 
 fileprivate enum RuleResult {
@@ -148,46 +147,60 @@ fileprivate enum RuleResult {
 }
 
 fileprivate struct Part {
-  let x: Int
-  let m: Int
-  let a: Int
-  let s: Int
+  let properties: [Property: Int]
+
+  func getValue(_ p: Property) -> Int {
+    return properties[p, default: 0]
+  }
 
   func ratingsTotal() -> Int {
-    x + m + a + s
+    return (
+      getValue(.x) +
+      getValue(.m) +
+      getValue(.a) +
+      getValue(.s))
   }
 }
 
 // MARK: - Parsing
 
 fileprivate extension Y2023Day19 {
-  private static let partXRef = Reference(Int.self)
-  private static let partMRef = Reference(Int.self)
-  private static let partARef = Reference(Int.self)
-  private static let partSRef = Reference(Int.self)
+  private static let partValueXRef = Reference(Int.self)
+  private static let partValueMRef = Reference(Int.self)
+  private static let partValueARef = Reference(Int.self)
+  private static let partValueSRef = Reference(Int.self)
+
+  private static let workflowNameRef = Reference(String.self)
+  private static let rulesLineRef = Reference(String.self)
+
+  private static let propertyRef = Reference(Property.self)
+  private static let conditionOperationRef = Reference(Operation.self)
+  private static let conditionValueRef = Reference(Int.self)
+  
+  private static let ruleResultRef = Reference(RuleResult.self)
 
   /// E.g. To parse `"{x=787,m=2655,a=1222,s=2876}"`
   private static let partRegex = Regex {
     "{x="
-    TryCapture(as: partXRef) {
+    TryCapture(as: partValueXRef) {
       OneOrMore(.digit)
     } transform: { w in
       Int(w)
     }
     ",m="
-    TryCapture(as: partMRef) {
+    TryCapture(as: partValueMRef) {
       OneOrMore(.digit)
     } transform: { w in
       Int(w)
     }
     ",a="
-    TryCapture(as: partARef) {
+    TryCapture(as: partValueARef) {
       OneOrMore(.digit)
     } transform: { w in
       Int(w)
     }
     ",s="
-    TryCapture(as: partSRef) {
+    TryCapture(as: partValueSRef) {
       OneOrMore(.digit)
     } transform: { w in
       Int(w)
@@ -195,8 +208,6 @@ fileprivate extension Y2023Day19 {
     "}"
   }
 
-  private static let workflowNameRef = Reference(String.self)
-  private static let rulesLineRef = Reference(String.self)
 
   /// E.g. To parse `"px{a<2006:qkq,m>2090:A,rfg}"`
   private static let workflowRegex = Regex {
@@ -214,14 +225,11 @@ fileprivate extension Y2023Day19 {
     "}"
   }
 
-  private static let conditionPropertyRef = Reference(Property.self)
-  private static let conditionOperationRef = Reference(Operation.self)
-  private static let conditionValueRef = Reference(Int.self)
-  private static let ruleResultRef = Reference(RuleResult.self)
+
 
   /// E.g. To parse `"a<1231:aba"`
   private static let ruleRegex1 = Regex {
-    TryCapture(as: conditionPropertyRef) {
+    TryCapture(as: propertyRef) {
       OneOrMore(.word)
     } transform: { w in
       Property.init(rawValue: String(w))
@@ -288,7 +296,7 @@ fileprivate extension Y2023Day19 {
   func parseRule(_ line: String) -> Rule? {
     if let match = line.firstMatch(of: Self.ruleRegex1) {
       let condition = Condition(
-        property: match[Self.conditionPropertyRef],
+        property: match[Self.propertyRef],
         operation: match[Self.conditionOperationRef],
         value: match[Self.conditionValueRef])
       let result = match[Self.ruleResultRef]
@@ -308,11 +316,13 @@ fileprivate extension Y2023Day19 {
     guard let match = line.firstMatch(of: Self.partRegex) else {
       return nil
     }
-    let part = Part(
-      x: match[Self.partXRef],
-      m: match[Self.partMRef],
-      a: match[Self.partARef],
-      s: match[Self.partSRef])
+    let properties: [Property: Int] = [
+      .x: match[Self.partValueXRef],
+      .m: match[Self.partValueMRef],
+      .a: match[Self.partValueARef],
+      .s: match[Self.partValueSRef]
+    ]
+    let part = Part(properties: properties)
     return part
   }
 }
