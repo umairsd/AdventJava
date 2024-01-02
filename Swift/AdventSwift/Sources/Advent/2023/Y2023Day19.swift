@@ -34,7 +34,6 @@ class Y2023Day19: Day {
 
       let result = currentWorkflow.processPart(part)
       switch result {
-
       case .accepted:
         acceptedParts.append(part)
         i += 1 // handle the next part.
@@ -53,11 +52,42 @@ class Y2023Day19: Day {
 
 
   func part2(_ lines: [String]) -> String {
-    return ""
+    let splits = lines.split(separator: "")
+    assert(splits.count == 2)
+    let workflowsMap = parseWorkflows(Array(splits[0]))
+
+    var workItems: [WorkItem] = [WorkItem(workflowName: "in", rangedPart: RangedPart())]
+    var acceptedParts: [RangedPart] = []
+
+    while !workItems.isEmpty {
+      let workItem = workItems.removeFirst()
+      let currentWorkflow = workflowsMap[workItem.workflowName]!
+
+      let results = currentWorkflow.processRangedPart(workItem.rangedPart)
+      for (result, rangedPart) in results {
+        switch result {
+        case .accepted:
+          acceptedParts.append(rangedPart)
+        case .rejected:
+          break
+        case .routed(let name):
+          let workItem = WorkItem(workflowName: name, rangedPart: rangedPart)
+          workItems.append(workItem)
+        }
+      }
+    }
+
+    let total = acceptedParts.map { $0.ratingsTotal() }.reduce(0, +)
+    return "\(total)"
   }
 }
 
 // MARK: - Types
+
+fileprivate struct WorkItem {
+  let workflowName: String
+  let rangedPart: RangedPart
+}
 
 
 fileprivate struct Workflow {
@@ -74,6 +104,52 @@ fileprivate struct Workflow {
       }
     }
     fatalError()
+  }
+
+
+  func processRangedPart(
+    _ rangedPart: RangedPart
+  ) -> [(ruleResult: RuleResult, part: RangedPart)] {
+
+    var results: [(ruleResult: RuleResult, part: RangedPart)] = []
+    var currentPart = rangedPart
+
+    for rule in rules {
+      guard let condition = rule.condition else {
+        results.append((rule.result, currentPart))
+        break
+      }
+
+      // For each property of the part, check if it matches the current `rule`.
+      for (property, range) in currentPart.properties {
+        guard property == condition.property else {
+          // Try the next rule.
+          continue
+        }
+
+        switch condition.operation {
+        case .lt:
+          let (lower, upper) = range.bisectingRange(at: condition.value)
+          // The lower half of the range matches the condition, so add it to `results`
+          // so that it could be (a) sent to the next workflow, (b) accepted, or (c) rejected.
+          results.append((rule.result, currentPart.partByApplying([property: lower])))
+          // The upper half is the remaining part that wasn't handled by this rule. Let's
+          // apply the next rule.
+          currentPart = currentPart.partByApplying([property: upper])
+
+        case .gt:
+          let (lower, upper) = range.bisectingRange(at: condition.value + 1)
+          // The upper half of the range matches the condition, so add it to `results`
+          // so that it could be (a) sent to the next workflow, (b) accepted, or (c) rejected.
+          results.append((rule.result, currentPart.partByApplying([property: upper])))
+          // The lower half is the remaining part that wasn't handled by this rule. Let's
+          // apply the next rule.
+          currentPart = currentPart.partByApplying([property: lower])
+        }
+      }
+    }
+
+    return results
   }
 }
 
@@ -143,6 +219,42 @@ fileprivate enum RuleResult {
     default:
       RuleResult.routed(input)
     }
+  }
+}
+
+
+fileprivate struct RangedPart {
+  private static let defaultProperties: [Property: ClosedRange] = [
+    .x: 1...4000,
+    .m: 1...4000,
+    .a: 1...4000,
+    .s: 1...4000,
+  ]
+  let properties: [Property: ClosedRange<Int>]
+
+
+  init(_ properties: [Property : ClosedRange<Int>] = Self.defaultProperties) {
+    var internalProperties = Self.defaultProperties
+    for (p, v) in properties {
+      internalProperties[p] = v
+    }
+    self.properties = internalProperties
+  }
+
+  func partByApplying(_ properties: [Property : ClosedRange<Int>]) -> RangedPart {
+    var internalProperties = self.properties
+    for (p, v) in properties {
+      internalProperties[p] = v
+    }
+    return RangedPart(internalProperties)
+  }
+
+  func ratingsTotal() -> Int {
+    var total = 1
+    for property in Property.allCases {
+      total *= properties[property]!.count
+    }
+    return total
   }
 }
 
