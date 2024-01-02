@@ -53,7 +53,7 @@ class Y2023Day19: Day {
 
 
   func part2(_ lines: [String]) -> String {
-    ""
+    return ""
   }
 }
 
@@ -85,24 +85,24 @@ fileprivate struct Condition {
   func holds(for part: Part) -> Bool {
     switch (property, operation) {
     case (.x, .lt):
-      return part.getValue(.x) < value
+      return part.x < value
     case (.x, .gt):
-      return part.getValue(.x) > value
+      return part.x > value
 
     case (.m, .lt):
-      return part.getValue(.m) < value
+      return part.m < value
     case (.m, .gt):
-      return part.getValue(.m) > value
+      return part.m > value
 
     case (.a, .lt):
-      return part.getValue(.a) < value
+      return part.a < value
     case (.a, .gt):
-      return part.getValue(.a) > value
+      return part.a > value
 
     case (.s, .lt):
-      return part.getValue(.s) < value
+      return part.s < value
     case (.s, .gt):
-      return part.getValue(.s) > value
+      return part.s > value
     }
   }
 }
@@ -146,19 +146,15 @@ fileprivate enum RuleResult {
   }
 }
 
-fileprivate struct Part {
-  let properties: [Property: Int]
 
-  func getValue(_ p: Property) -> Int {
-    return properties[p, default: 0]
-  }
+fileprivate struct Part {
+  let x: Int
+  let m: Int
+  let a: Int
+  let s: Int
 
   func ratingsTotal() -> Int {
-    return (
-      getValue(.x) +
-      getValue(.m) +
-      getValue(.a) +
-      getValue(.s))
+    return x + m + a + s
   }
 }
 
@@ -316,13 +312,11 @@ fileprivate extension Y2023Day19 {
     guard let match = line.firstMatch(of: Self.partRegex) else {
       return nil
     }
-    let properties: [Property: Int] = [
-      .x: match[Self.partValueXRef],
-      .m: match[Self.partValueMRef],
-      .a: match[Self.partValueARef],
-      .s: match[Self.partValueSRef]
-    ]
-    let part = Part(properties: properties)
+    let part = Part(
+      x: match[Self.partValueXRef],
+      m: match[Self.partValueMRef],
+      a: match[Self.partValueARef],
+      s: match[Self.partValueSRef])
     return part
   }
 }
