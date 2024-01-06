@@ -25,3 +25,58 @@ class Y2023Day20: Day {
     return ""
   }
 }
+
+
+// MARK: - Types
+
+
+fileprivate enum FlipFlopState {
+  case on, off
+
+  func toggle() -> FlipFlopState {
+    return switch self {
+    case .on: .off
+    case .off: .on
+    }
+  }
+}
+
+
+fileprivate enum Pulse {
+  case high, low
+}
+
+/**
+
+ ```
+ // connection
+ Edge(Module, Module)
+
+ // module
+ Node {
+   incomingEdges: [Edge]
+   outgoingEdges: [Edge]
+   state: ModuleState
+
+   func pulse(_ pulse: Pulse, from connection: Edge)
+ }
+
+ FlipFlopState: ModuleState {
+   updateState(_ pulse, incomingEdge) {
+   }
+ }
+
+ ConjunctionState: ModuleState {
+   incomingEdgePulseStates: [Edge: Pulse] = [.low]
+
+   updateState(_ pulse) {
+     // 1. update memory of the given incoming edge.
+     // 2. if all states are `.high`
+     //      send out a .low pulse to all outgoing edges.
+     //    else: send out a .high pulse to all outgoing edges.
+
+   }
+ }
+
+ ```
+ */
