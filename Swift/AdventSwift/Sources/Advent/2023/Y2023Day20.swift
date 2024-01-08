@@ -20,7 +20,6 @@ class Y2023Day20: Day {
 
   func part1(_ lines: [String]) -> String {
     let graph = parseGraph(lines)
-
     var totalLow = 0
     var totalHigh = 0
 
@@ -29,7 +28,6 @@ class Y2023Day20: Day {
       totalLow += low
       totalHigh += high
     }
-
     let result = totalLow * totalHigh
     return "\(result)"
   }
@@ -39,9 +37,9 @@ class Y2023Day20: Day {
     return ""
   }
 
+  // MARK: - Private
 
   private func pressButton(_ graph: [Module: [Module]]) -> (lowPulses: Int, highPulses: Int) {
-
     guard let broadcaster = graph.keys.first(where: { $0.name == Self.broadcastModuleName }) else {
       fatalError()
     }
@@ -76,82 +74,10 @@ class Y2023Day20: Day {
 }
 
 
-// MARK: - Parsing
-
-fileprivate extension Y2023Day20 {
-
-  func parseGraph(_ lines: [String]) -> [Module: [Module]] {
-    var nameToModuleMap: [String: Module] = [:]
-    var moduleNeighborNames: [Module: [String]] = [:]
-    var graph: [Module: [Module]] = [:]
-
-    // Go through each line, and first, create a (name, Module) mapping for each LHS entity.
-    for line in lines.filter({ !$0.isEmpty }) {
-      let tokens = line.split(separator: "->")
-      assert(tokens.count == 2)
-      let m = parseModule(String(tokens[0]))!
-      nameToModuleMap[m.name] = m
-      moduleNeighborNames[m] = tokens[1]
-        .split(separator: ",")
-        .map { $0.trimmingCharacters(in: .whitespaces) }
-    }
-
-    // Go through each line again, to build the graph.
-    for (module, neighborNames) in moduleNeighborNames {
-      var neighbors: [Module] = []
-
-      for name in neighborNames {
-//        if nameToModuleMap[name] == nil {
-//          nameToModuleMap[name] =
-//        }
-//        guard let neighbor = nameToModuleMap[name, default: Module(name)] else {
-//          // No module has been constructed for this neighbor, so we can ignore it.
-////          continue
-//          fatalError()
-//        }
-
-        let neighbor = nameToModuleMap[name, default: Module(name)]
-        neighbor.addParent(module)
-        module.addChild(neighbor)
-        neighbors.append(neighbor)
-
-        // In case this neighbor was just created, add it back to the map.
-        nameToModuleMap[name] = neighbor
-      }
-
-      graph[module] = neighbors
-    }
-
-    return graph
-  }
-
-
-  private func parseModule(_ token: String) -> Module? {
-    let t = token.trimmingCharacters(in: .whitespaces)
-    assert(!t.isEmpty)
-    if t == Self.broadcastModuleName {
-      return Broadcast(t)
-    }
-
-    var i = t.startIndex
-    let first = t[i]
-    i = t.index(after: i)
-    let remaining = String(t[i...])
-
-    switch first {
-    case "%":
-      return FlipFlop(remaining)
-    case "&":
-      return Conjunction(remaining)
-    default:
-      fatalError()
-    }
-  }
-}
-
-
 // MARK: - Types
 
+
+/// Represents the sending of one pulse.
 fileprivate struct QNode {
   /// The receiver of the pulse (i.e. the destination)
   let receiver: Module
@@ -177,7 +103,8 @@ fileprivate class Module: Hashable, Equatable {
     self.name = name
   }
 
-  /// Receives the pulse, and returns the list of (module, pulse) that need to be handled.
+  /// Receives the pulse, and returns the list of (module, pulse) that need to be handled. These
+  /// represent the next states.
   func receivePulse(_ pulse: Pulse, from module: Module) -> [(module: Module, pulse: Pulse)] {
     // The default module has no rules about how to handle the pulses, so simply return an
     // empty list.
@@ -224,8 +151,9 @@ fileprivate class FlipFlop: Module {
   /// Flip flop properties.
   private var state: FlipFlop.State = .off
 
-  /// Receives the pulse, and returns the list of (module, pulse) that need to be handled.
-  override func receivePulse(_ pulse: Pulse, from module: Module) -> [(module: Module, pulse: Pulse)] {
+  override func receivePulse(
+    _ pulse: Pulse, from module: Module
+  ) -> [(module: Module, pulse: Pulse)] {
     switch pulse {
     case .high:
       return []
@@ -259,9 +187,9 @@ fileprivate class Conjunction: Module {
     pulsesReceived[p] = .low
   }
 
-
-  /// Receives the pulse, and returns the list of (module, pulse) that need to be handled.
-  override func receivePulse(_ pulse: Pulse, from module: Module) -> [(module: Module, pulse: Pulse)] {
+  override func receivePulse(
+    _ pulse: Pulse, from module: Module
+  ) -> [(module: Module, pulse: Pulse)] {
     pulsesReceived[module] = pulse
 
     let areAllHighPulses = pulsesReceived.values.allSatisfy { $0 == .high }
@@ -272,8 +200,74 @@ fileprivate class Conjunction: Module {
 
 fileprivate class Broadcast: Module {
 
-  override func receivePulse(_ pulse: Pulse, from module: Module) -> [(module: Module, pulse: Pulse)] {
+  override func receivePulse(
+    _ pulse: Pulse, from module: Module
+  ) -> [(module: Module, pulse: Pulse)] {
     return generatePulsesForChildren(pulse)
   }
 }
 
+
+// MARK: - Parsing
+
+fileprivate extension Y2023Day20 {
+
+  func parseGraph(_ lines: [String]) -> [Module: [Module]] {
+    var nameToModuleMap: [String: Module] = [:]
+    var moduleNeighborNames: [Module: [String]] = [:]
+    var graph: [Module: [Module]] = [:]
+
+    // Go through each line, and first, create a (name, Module) mapping for each LHS entity.
+    for line in lines.filter({ !$0.isEmpty }) {
+      let tokens = line.split(separator: "->")
+      assert(tokens.count == 2)
+      let m = parseModule(String(tokens[0]))!
+      nameToModuleMap[m.name] = m
+      moduleNeighborNames[m] = tokens[1]
+        .split(separator: ",")
+        .map { $0.trimmingCharacters(in: .whitespaces) }
+    }
+
+    // Go through each line again, to build the graph.
+    for (module, neighborNames) in moduleNeighborNames {
+      var neighbors: [Module] = []
+
+      for name in neighborNames {
+        let neighbor = nameToModuleMap[name, default: Module(name)]
+        neighbor.addParent(module)
+        module.addChild(neighbor)
+        neighbors.append(neighbor)
+
+        // In case this neighbor was just created, add it back to the map.
+        nameToModuleMap[name] = neighbor
+      }
+
+      graph[module] = neighbors
+    }
+
+    return graph
+  }
+
+
+  private func parseModule(_ token: String) -> Module? {
+    let t = token.trimmingCharacters(in: .whitespaces)
+    assert(!t.isEmpty)
+    if t == Self.broadcastModuleName {
+      return Broadcast(t)
+    }
+
+    var i = t.startIndex
+    let first = t[i]
+    i = t.index(after: i)
+    let remaining = String(t[i...])
+
+    switch first {
+    case "%":
+      return FlipFlop(remaining)
+    case "&":
+      return Conjunction(remaining)
+    default:
+      fatalError()
+    }
+  }
+}
