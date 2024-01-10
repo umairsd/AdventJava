@@ -34,23 +34,57 @@ class Y2023Day20: Day {
 
 
   func part2(_ lines: [String]) -> String {
-    return ""
+    /**
+     Post:
+     https://github.com/mebeim/aoc/blob/master/2023/README.md#day-20---pulse-propagation
+     Visualization:
+     https://www.reddit.com/r/adventofcode/comments/18mypla/2023_day_20_input_data_plot/
+
+     Based on the visualization, 3 items stand out:
+     (1) There's only one `rx` module.
+     (2) There's only one input to `rx` module, and it's a conjuction module. Let's call it `A`.
+     (3) All the inputs to `A` are also conjuction modules. Let's call them `B1`, `B2`, ...
+
+     Given the behavior of the modules,
+     - `A` will send a low pulse to `rx` as soon as all the remembered pulses from its input 
+       (`B_i`) are high.
+     - Each `B_i` will send a high pulse to `A` every time it receives a low pulse.
+
+     So, we need to find the period for each `B_i` receiving a low pulse. Then take the LCM.
+     */
+
+    var graph = parseGraph(lines)
+
+    let rxSources = findSourcesToModuleNamed("rx", in: graph)
+    assert(rxSources.count == 1)
+
+    // In the input, this module is named, "vd".
+    let moduleA = rxSources.first!
+    // In the input, these are, "fv", "pr", "bt", "rd"
+    let modulesB = findSourcesToModuleNamed(moduleA.name, in: graph)
+
+    let periods: [Int] = modulesB.map { module in
+      resetGraph(&graph)
+      return buttonPressCountForLowPulseTo(module, in: graph)
+    }
+
+    let result = lcm(periods)
+    return "\(result)"
   }
 
-  // MARK: - Private
 
+  // MARK: - Private (Part 1)
+
+  
   private func pressButton(_ graph: [Module: [Module]]) -> (lowPulses: Int, highPulses: Int) {
     guard let broadcaster = graph.keys.first(where: { $0.name == Self.broadcastModuleName }) else {
       fatalError()
     }
-    let button = Module("button")
-    button.addChild(broadcaster)
 
     var queue: [QNode] = []
-    queue.append(QNode(receiver: broadcaster, sender: button, pulse: .low))
-
     var totalLow = 0
     var totalHigh = 0
+    queue.append(QNode(receiver: broadcaster, sender: Module("button"), pulse: .low))
 
     while !queue.isEmpty {
       let current = queue.removeFirst()
@@ -61,8 +95,7 @@ class Y2023Day20: Day {
       case .low: totalLow += 1
       }
 
-      let nextSteps: [(module: Module, pulse: Pulse)] = current.receiver.receivePulse(current.pulse, from: current.sender)
-
+      let nextSteps = current.receiver.receivePulse(current.pulse, from: current.sender)
       for (nextReceiver, nextPulse) in nextSteps {
         let qNode = QNode(receiver: nextReceiver, sender: current.receiver, pulse: nextPulse)
         queue.append(qNode)
@@ -70,6 +103,61 @@ class Y2023Day20: Day {
     }
 
     return (totalLow, totalHigh)
+  }
+
+
+  // MARK: - Private (Part 2)
+
+  private func resetGraph(_ graph: inout [Module: [Module]]) {
+    for (sender, receivers) in graph {
+      sender.resetState()
+      for r in receivers {
+        r.resetState()
+      }
+    }
+  }
+
+  private func findSourcesToModuleNamed(_ name: String, in graph: [Module: [Module]]) -> Set<Module> {
+    var result = Set<Module>()
+    for (source, receivers) in graph {
+      if receivers.contains(where: { $0.name == name }) {
+        result.insert(source)
+      }
+    }
+    return result
+  }
+
+  private func buttonPressCountForLowPulseTo(
+    _ module: Module,
+    in graph: [Module: [Module]]
+  ) -> Int {
+    
+    guard let broadcaster = graph.keys.first(where: { $0.name == Self.broadcastModuleName }) else {
+      fatalError()
+    }
+    var count = 0
+
+    outerLoop: while true {
+      count += 1
+      var queue: [QNode] = []
+      queue.append(QNode(receiver: broadcaster, sender: Module("button"), pulse: .low))
+
+      while !queue.isEmpty {
+        let current = queue.removeFirst()
+
+        if current.pulse == .low && current.receiver == module {
+          break outerLoop
+        }
+
+        let nextSteps = current.receiver.receivePulse(current.pulse, from: current.sender)
+        for (nextReceiver, nextPulse) in nextSteps {
+          let qNode = QNode(receiver: nextReceiver, sender: current.receiver, pulse: nextPulse)
+          queue.append(qNode)
+        }
+      }
+    }
+
+    return count
   }
 }
 
@@ -124,6 +212,8 @@ fileprivate class Module: Hashable, Equatable {
     return result
   }
 
+  func resetState() {}
+
   // MARK: Protocol (Hashable, Equatable)
 
   func hash(into hasher: inout Hasher) {
@@ -165,6 +255,10 @@ fileprivate class FlipFlop: Module {
     }
   }
 
+  override func resetState() {
+    state = .off
+  }
+
   private func nextPulse(for state: FlipFlop.State) -> Pulse {
     return switch state {
     case .on: Pulse.high
@@ -196,7 +290,14 @@ fileprivate class Conjunction: Module {
     let nextPulse = areAllHighPulses ? Pulse.low : Pulse.high
     return generatePulsesForChildren(nextPulse)
   }
+
+  override func resetState() {
+    for (k, _) in pulsesReceived {
+      pulsesReceived[k] = .low
+    }
+  }
 }
+
 
 fileprivate class Broadcast: Module {
 

@@ -24,15 +24,10 @@ final class Y2023Day20Test: XCTestCase {
     XCTAssertEqual(day.part1(lines), "788848550")
   }
 
-  func testPart2_Example() throws {
-    let day = DayType(dataFileNumber: 1)
-    let lines = day.readData(from: day.dataFilename())
-    XCTAssertEqual(day.part2(lines), "")
-  }
-
+  
   func testPart2_Full() throws {
     let day = DayType(dataFileNumber: 2)
     let lines = day.readData(from: day.dataFilename())
-    XCTAssertEqual(day.part2(lines), "")
+    XCTAssertEqual(day.part2(lines), "228300182686739")
   }
 }
