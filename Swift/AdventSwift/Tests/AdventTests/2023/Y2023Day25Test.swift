@@ -6,6 +6,13 @@ import XCTest
 final class Y2023Day25Test: XCTestCase {
   private typealias DayType = Y2023Day25
 
+  func testPart1_ExampleA() throws {
+    let day = DayType(dataFileNumber: 3)
+    let lines = day.readData(from: day.dataFilename())
+    XCTAssertEqual(day.part1(lines), "")
+  }
+
+
   func testPart1_Example() throws {
     let day = DayType(dataFileNumber: 1)
     let lines = day.readData(from: day.dataFilename())
