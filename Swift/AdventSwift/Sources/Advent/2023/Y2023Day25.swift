@@ -17,10 +17,11 @@ class Y2023Day25: Day {
 
 
   func part1(_ lines: [String]) -> String {
-//    let graph = parseGraph(lines)
-    let graph = buildSampleGraph()
+    let graph = parseGraph(lines)
+//    let graph = buildSampleGraph()
     let minCut = Graph.minimumCut(graph)
-    return ""
+    let result = minCut.first.vertices.count * minCut.second.vertices.count
+    return "\(result)"
   }
 
 
@@ -127,13 +128,27 @@ fileprivate extension Y2023Day25 {
 
 // MARK: - Types
 
+fileprivate class Vertex: Hashable {
+  let id: String
+  var metadata: [String]
+
+  init(id: String, metadata: [String] = []) {
+    self.id = id
+    self.metadata = metadata
+  }
+
+  static func == (lhs: Vertex, rhs: Vertex) -> Bool {
+    lhs.id == rhs.id
+  }
+
+  func hash(into hasher: inout Hasher) {
+    hasher.combine(id)
+  }
+}
+
 fileprivate struct Edge: Hashable {
   let source: String
   let destination: String
-
-  func reversed() -> Edge {
-    return Edge(source: destination, destination: source)
-  }
 }
 
 
@@ -142,16 +157,13 @@ fileprivate struct Graph {
   private var adjacencyList: [String: [Edge]] = [:]
   private var allVertices = Set<String>()
   private var weights: [Edge: Int] = [:]
+  private var vertexMetadata: [String: [String]] = [:]
 
   // MARK: Properties
 
   // Returns all the vertices in the graph.
   var vertices: Set<String> {
     allVertices
-  }
-
-  var vertexCount: Int {
-    allVertices.count
   }
 
   func weightFor(_ e: Edge) -> Int {
@@ -162,6 +174,13 @@ fileprivate struct Graph {
   mutating func addEdge(from source: String, to destination: String, weight: Int) {
     allVertices.insert(source)
     allVertices.insert(destination)
+
+    if vertexMetadata[source] == nil {
+      vertexMetadata[source] = [source]
+    }
+    if vertexMetadata[destination] == nil {
+      vertexMetadata[destination] = [destination]
+    }
 
     let e = Edge(source: source, destination: destination)
     var edges = adjacencyList[source, default: []]
@@ -191,6 +210,11 @@ fileprivate struct Graph {
     let originalGraph = self
     var newGraph = Graph()
     var adjacencyList = originalGraph.adjacencyList
+    
+    var metadata = originalGraph.vertexMetadata
+    metadata[s] = metadata[s, default: []] + metadata[t, default: []]
+    newGraph.vertexMetadata = metadata
+
 
     // 1. Remove the edge from s-t, and t-s.
     for (source, edges) in adjacencyList {
@@ -356,40 +380,21 @@ fileprivate extension Graph {
   static func minimumCut(_ originalGraph: Graph) -> MinCutResult {
     var graph = originalGraph
 
-    var bestPhase = 0
     var bestCutWeight = Int.max
-    var contractions: [(String, String)] = []
+    var partitionT: [String] = [] 
 
-    while graph.vertexCount > 1 {
+    while graph.allVertices.count > 1 {
       let currentCut = minimumCutPhase(graph)
+      graph = graph.graphByMergingVertex(currentCut.vertexT, into: currentCut.vertexS)
 
       if currentCut.weight < bestCutWeight {
         bestCutWeight = currentCut.weight
+        partitionT = graph.vertexMetadata[currentCut.vertexT, default: []]
       }
-
-      contractions.append((currentCut.vertexS, currentCut.vertexT))
-      graph = graph.graphByMergingVertex(currentCut.vertexT, into: currentCut.vertexS)
     }
 
-
-//    var currentPartition = Set<String>()
-//    var bestPartition: Set<String>!
-//    var bestCut: CutPhaseResult!
-//
-//    while graph.vertexCount > 1 {
-//      let cutResult = minimumCutPhase(graph)
-//
-//      if bestCut == nil || bestCut.weight < cutResult.weight {
-//        bestCut = cutResult
-//        bestPartition = Set(currentPartition)
-//        bestPartition.insert(cutResult.vertexT)
-//      }
-//
-//      currentPartition.insert(cutResult.vertexT)
-//      graph = graph.graphByMergingVertex(cutResult.vertexT, into: cutResult.vertexS)
-//    }
-
-    fatalError()
+    let r = constructMinCutResult(originalGraph, partition: Set(partitionT))
+    return r
   }
 
 
@@ -436,11 +441,12 @@ fileprivate extension Graph {
       }
     }
 
+    // Note: `cuttingEdges` counts each edge twice, as this is a bidirectional graph.
     return MinCutResult(
       first: first,
       second: second,
       edgesOnTheCut: cuttingEdges,
-      cutWeight: cutWeight)
+      cutWeight: cutWeight / 2)
   }
 
 }
