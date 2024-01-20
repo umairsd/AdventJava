@@ -23,7 +23,7 @@ protocol Day: AnyObject {
 
   func fullDataFilename() -> String
 
-  func exampleFilename(_ fileNumber: Int) -> String
+  func exampleFile(number fileNumber: Int) -> String
 
   func readData(from filename: String) -> [String]
 
@@ -35,30 +35,30 @@ extension Day {
     return String(format: "y%04d-day%02d-fulldata", year, dayNumber)
   }
 
-  func exampleFilename(_ fileNumber: Int = 1) -> String {
+  func exampleFile(number fileNumber: Int = 1) -> String {
     return String(format: "y%04d-day%02d-example%d", year, dayNumber, fileNumber)
   }
 
   func solvePart1Example() -> String {
-    let lines = readData(from: exampleFilename(1))
+    let lines = readData(from: exampleFile(number: 1))
     let result = part1(lines)
     return result
   }
 
   func solvePart2Example() -> String {
-    let lines = readData(from: exampleFilename(1))
+    let lines = readData(from: exampleFile(number: 1))
     let result = part1(lines)
     return result
   }
 
   func solvePart1() -> String {
-    let lines = readData(from: exampleFilename(2))
+    let lines = readData(from: exampleFile(number: 2))
     let result = part1(lines)
     return result
   }
 
   func solvePart2() -> String {
-    let lines = readData(from: exampleFilename(2))
+    let lines = readData(from: exampleFile(number: 2))
     let result = part2(lines)
     return result
   }

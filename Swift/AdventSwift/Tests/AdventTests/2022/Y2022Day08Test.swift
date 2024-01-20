@@ -7,7 +7,7 @@ final class Y2022Day08Test: XCTestCase {
 
   func testPart1_Example() throws {
     let day = Y2022Day08()
-    let lines = day.readData(from: day.exampleFilename())
+    let lines = day.readData(from: day.exampleFile())
     XCTAssertEqual(day.part1(lines), "21")
   }
 
@@ -19,7 +19,7 @@ final class Y2022Day08Test: XCTestCase {
 
   func testPart2_Example() throws {
     let day = Y2022Day08()
-    let lines = day.readData(from: day.exampleFilename())
+    let lines = day.readData(from: day.exampleFile())
     XCTAssertEqual(day.part2(lines), "8")
   }
 
