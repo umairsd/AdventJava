@@ -9,12 +9,8 @@ import RegexBuilder
 class Y2023Day07: Day {
   var dayNumber: Int = 07
   var year: Int = 2023
-  var dataFileNumber: Int
 
-  required init(dataFileNumber: Int) {
-    self.dataFileNumber = dataFileNumber
-  }
-
+  required init() {}
 
   func part1(_ lines: [String]) -> String {
     let cardSortOrder: [Card: Int] = [

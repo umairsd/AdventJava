@@ -6,11 +6,8 @@ import RegexBuilder
 class Y2022Day02: Day {
   var dayNumber: Int = 2
   var year: Int = 2022
-  var dataFileNumber: Int
 
-  required init(dataFileNumber: Int) {
-    self.dataFileNumber = dataFileNumber
-  }
+  required init() {}
 
   func part1(_ lines: [String]) -> String {
     let gameRounds = lines.compactMap(parseSpecificMoveStrategy(from:))

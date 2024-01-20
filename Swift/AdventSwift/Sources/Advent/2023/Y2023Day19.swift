@@ -10,13 +10,12 @@ import RegexBuilder
 class Y2023Day19: Day {
   var dayNumber: Int = 19
   var year: Int = 2023
-  var dataFileNumber: Int
 
   private static let startingWorkflowName = "in"
 
-  required init(dataFileNumber: Int) {
-    self.dataFileNumber = dataFileNumber
-  }
+
+  required init() {}
+
 
   func part1(_ lines: [String]) -> String {
     let splits = lines.split(separator: "")

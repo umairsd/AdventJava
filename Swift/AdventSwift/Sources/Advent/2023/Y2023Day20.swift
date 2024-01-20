@@ -9,15 +9,13 @@ import Foundation
 class Y2023Day20: Day {
   var dayNumber: Int = 20
   var year: Int = 2023
-  var dataFileNumber: Int
-
+  
   fileprivate static let broadcastModuleName = "broadcaster"
 
-  required init(dataFileNumber: Int) {
-    self.dataFileNumber = dataFileNumber
-  }
 
+  required init() {}
 
+  
   func part1(_ lines: [String]) -> String {
     let graph = parseGraph(lines)
     var totalLow = 0

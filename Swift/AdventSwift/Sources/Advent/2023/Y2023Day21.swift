@@ -8,11 +8,9 @@ import Foundation
 class Y2023Day21: Day {
   var dayNumber: Int = 21
   var year: Int = 2023
-  var dataFileNumber: Int
+  
+  required init() {}
 
-  required init(dataFileNumber: Int) {
-    self.dataFileNumber = dataFileNumber
-  }
 
   func part1Example(_ lines: [String]) -> String {
     let garden = parseGarden(lines)

@@ -9,15 +9,12 @@ import Foundation
 class Y2023Day14: Day {
   var dayNumber: Int = 14
   var year: Int = 2023
-  var dataFileNumber: Int
-
+  
   private static let totalIterations = 1_000_000_000
 
-  required init(dataFileNumber: Int) {
-    self.dataFileNumber = dataFileNumber
-  }
-
   
+  required init() {}
+
   func part1(_ lines: [String]) -> String {
     let platform = parsePlatform(lines)
     platform.tiltNorth()

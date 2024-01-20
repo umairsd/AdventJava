@@ -7,14 +7,12 @@ import RegexBuilder
 class Y2022Day10: Day {
   var dayNumber: Int = 10
   var year: Int = 2022
-  var dataFileNumber: Int = 2
+  
+  required init() {}
 
   private static let maxCycles = 240
   private static let crtRowCount = 6
 
-  required init(dataFileNumber: Int) {
-    self.dataFileNumber = dataFileNumber
-  }
 
   func part1(_ lines: [String]) -> String {
     let instructions = parseInstructions(from: lines)

@@ -5,11 +5,8 @@ import Foundation
 class Y2022Day08: Day {
   var dayNumber: Int = 8
   var year: Int = 2022
-  var dataFileNumber: Int = 2
 
-  required init(dataFileNumber: Int) {
-    self.dataFileNumber = dataFileNumber
-  }
+  required init() {}
 
   func part1(_ lines: [String]) -> String {
     let trees = parseTrees(lines)

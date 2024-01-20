@@ -9,11 +9,8 @@ class Y2022Day06: Day {
   
   var dayNumber: Int = 6
   var year: Int = 2022
-  var dataFileNumber: Int = 2
 
-  required init(dataFileNumber: Int) {
-    self.dataFileNumber = dataFileNumber
-  }
+  required init() {}
 
   func part1(_ lines: [String]) -> String {
     guard let i = endIndexOfUniqueBlock(in: lines[0], width: Self.startOfPacketMarkerWidth) else {

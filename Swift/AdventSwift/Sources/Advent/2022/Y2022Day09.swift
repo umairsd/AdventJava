@@ -7,11 +7,9 @@ import RegexBuilder
 class Y2022Day09: Day {
   var dayNumber: Int = 9
   var year: Int = 2022
-  var dataFileNumber: Int = 2
 
-  required init(dataFileNumber: Int) {
-    self.dataFileNumber = dataFileNumber
-  }
+  required init() {}
+
 
   func part1(_ lines: [String]) -> String {
     let moves = parseMoves(from: lines)

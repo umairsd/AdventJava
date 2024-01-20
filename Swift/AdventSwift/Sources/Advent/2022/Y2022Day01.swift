@@ -5,11 +5,8 @@ import Foundation
 class Y2022Day01: Day {
   var dayNumber: Int = 1
   var year: Int = 2022
-  var dataFileNumber: Int
 
-  required init(dataFileNumber: Int) {
-    self.dataFileNumber = dataFileNumber
-  }
+  required init() {}
 
   /** Find the elf carrying the most calories. */
   func part1(_ lines: [String]) -> String {

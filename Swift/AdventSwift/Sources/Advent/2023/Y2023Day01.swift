@@ -7,11 +7,9 @@ import Foundation
 class Y2023Day01: Day {
   var dayNumber: Int = 1
   var year: Int = 2023
-  var dataFileNumber: Int
 
-  required init(dataFileNumber: Int) {
-    self.dataFileNumber = dataFileNumber
-  }
+  required init() {}
+
 
   func part1(_ lines: [String]) -> String {
     let result = lines.reduce(0) { partialResult, s in

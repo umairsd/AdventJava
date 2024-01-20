@@ -6,11 +6,9 @@ import RegexBuilder
 class Y2022Day04: Day {
   var dayNumber: Int = 4
   var year: Int = 2022
-  var dataFileNumber: Int
+  
+  required init() {}
 
-  required init(dataFileNumber: Int) {
-    self.dataFileNumber = dataFileNumber
-  }
 
   func part1(_ lines: [String]) -> String {
     let ranges: [ClosedRangePair] = lines.compactMap(parseRangePair(from:))

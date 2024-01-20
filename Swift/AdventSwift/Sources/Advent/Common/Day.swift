@@ -6,9 +6,12 @@ protocol Day: AnyObject {
 
   var dayNumber: Int { get }
   var year: Int { get }
-  var dataFileNumber: Int { get }
 
-  init(dataFileNumber: Int)
+  init()
+
+  func solvePart1Example() -> String
+
+  func solvePart2Example() -> String
 
   func solvePart1() -> String
 
@@ -18,7 +21,9 @@ protocol Day: AnyObject {
 
   func part2(_ lines: [String]) -> String
 
-  func dataFilename() -> String
+  func fullDataFilename() -> String
+
+  func exampleFilename(_ fileNumber: Int) -> String
 
   func readData(from filename: String) -> [String]
 
@@ -26,22 +31,34 @@ protocol Day: AnyObject {
 
 extension Day {
 
-  init(dataFileNumber: Int = 2) {
-    self.init(dataFileNumber: 2)
+  func fullDataFilename() -> String {
+    return String(format: "y%04d-day%02d-fulldata", year, dayNumber)
   }
 
-  func dataFilename() -> String {
-    return String(format: "y%04d-day%02d-data%d", year, dayNumber, dataFileNumber)
+  func exampleFilename(_ fileNumber: Int = 1) -> String {
+    return String(format: "y%04d-day%02d-example%d", year, dayNumber, fileNumber)
+  }
+
+  func solvePart1Example() -> String {
+    let lines = readData(from: exampleFilename(1))
+    let result = part1(lines)
+    return result
+  }
+
+  func solvePart2Example() -> String {
+    let lines = readData(from: exampleFilename(1))
+    let result = part1(lines)
+    return result
   }
 
   func solvePart1() -> String {
-    let lines = readData(from: dataFilename())
+    let lines = readData(from: exampleFilename(2))
     let result = part1(lines)
     return result
   }
 
   func solvePart2() -> String {
-    let lines = readData(from: dataFilename())
+    let lines = readData(from: exampleFilename(2))
     let result = part2(lines)
     return result
   }

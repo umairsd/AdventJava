@@ -5,12 +5,11 @@ import Foundation
 class Y2021Day01: Day {
   var dayNumber: Int = 1
   var year: Int = 2021
-  var dataFileNumber: Int
 
-  required init(dataFileNumber: Int) {
-    self.dataFileNumber = dataFileNumber
-  }
-  
+
+  required init() {}
+
+
   func part1(_ lines: [String]) -> String {
     guard !lines.isEmpty else {
       return "Constants.emptyInput"

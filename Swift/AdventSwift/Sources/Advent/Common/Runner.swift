@@ -24,7 +24,7 @@ struct Runner {
       }
 
       print("\n-- Tests for day \(day)")
-      let dayInstance = dayClass.init(dataFileNumber: 2)
+      let dayInstance = dayClass.init()
       print("Part 1: \(dayInstance.solvePart1())")
       print("Part 2: \(dayInstance.solvePart2())")
     }
