@@ -13,7 +13,7 @@ final class Y2023Day25Test: XCTestCase {
   }
 
   func testPart1_Full() throws {
-    // Very, very slow.
+    // Very, very slow.  192.494 seconds
     let day = DayType(dataFileNumber: 2)
     let lines = day.readData(from: day.dataFilename())
     XCTAssertEqual(day.part1(lines), "543834")

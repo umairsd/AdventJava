@@ -268,7 +268,6 @@ fileprivate extension Graph {
     let cutWeight: Int
   }
 
-
   /// MinimumCutPhase, aka "maximum adjacency search", which results in finding two
   /// vertices `s` and `t`, which are the last two vertices that were found during the
   /// search. In addition, we return the sum of the weights of the edges connecting
@@ -295,7 +294,95 @@ fileprivate extension Graph {
   ///         then store the cut-of-the-phase as the current minimum cut
   /// ```
   ///
-  static func minimumCutPhase_Legacy(_ graph: Graph) -> CutPhaseResult {
+  static func minimumCutPhase(_ graph: Graph) -> CutPhaseResult {
+    return minimumCutPhase_HeapOptimized(graph)
+  }
+
+
+  static func minimumCut(_ originalGraph: Graph) -> MinCutResult {
+    var graph = originalGraph
+
+    var bestCutWeight = Int.max
+    var partitionT: [String] = []
+
+    while graph.allVertices.count > 1 {
+      let currentCut = minimumCutPhase(graph)
+      graph = graph.graphByMergingVertex(currentCut.vertexT, into: currentCut.vertexS)
+
+      if currentCut.weight < bestCutWeight {
+        bestCutWeight = currentCut.weight
+        partitionT = graph.vertexMetadata[currentCut.vertexT, default: []]
+      }
+    }
+
+    let r = constructMinCutResult(originalGraph, partition: Set(partitionT))
+    return r
+  }
+
+  /// Given the original graph, and a partition, build the two subgraphs and return
+  /// the edges that make up the minimum cut.
+  static func constructMinCutResult(
+    _ originalGraph: Graph,
+    partition: Set<String>
+  ) -> MinCutResult {
+
+    var first = Graph()
+    var firstVertices = Set<String>()
+    var second = Graph()
+    var secondVertices = Set<String>()
+
+    var cuttingEdges: [Edge] = []
+    var cutWeight = 0
+
+    for v in originalGraph.allVertices {
+      if partition.contains(v) {
+        firstVertices.insert(v)
+      } else {
+        secondVertices.insert(v)
+      }
+    }
+
+    for (_, edges) in originalGraph.adjacencyList {
+      for edge in edges {
+        let w = originalGraph.weightFor(edge)
+
+        if firstVertices.contains(edge.source) && firstVertices.contains(edge.destination) {
+          first.addEdge(from: edge.source, to: edge.destination, weight: w)
+          first.addEdge(from: edge.destination, to: edge.source, weight: w)
+
+        } else if secondVertices.contains(edge.source) && secondVertices.contains(edge.destination) {
+          second.addEdge(from: edge.source, to: edge.destination, weight: w)
+          second.addEdge(from: edge.destination, to: edge.source, weight: w)
+
+        } else {
+          cuttingEdges.append(edge)
+          cutWeight += w
+        }
+      }
+    }
+
+    // Note: `cuttingEdges` counts each edge twice, as this is a bidirectional graph.
+    return MinCutResult(
+      first: first,
+      second: second,
+      edgesOnTheCut: cuttingEdges,
+      cutWeight: cutWeight / 2)
+  }
+}
+
+
+// MARK: - Graph (MinimumCutPhase)
+
+extension Graph {
+
+  private struct HeapNode {
+    let vertex: String
+    let weightSum: Int
+  }
+
+  /// Brute force implementation for finding the most-tightly connected vertex.
+  /// This takes a very long time on the full input. I didn't wait for it to finish.
+  static func minimumCutPhase_BruteForce(_ graph: Graph) -> CutPhaseResult {
     guard let start = graph.vertices.first else {
       fatalError()
     }
@@ -346,10 +433,15 @@ fileprivate extension Graph {
     return result
   }
 
-  static func minimumCutPhase(_ graph: Graph) -> CutPhaseResult {
+
+  /// Uses a priority queue to find the "most tightly conntected vertex".
+  /// This works for the full input, but takes **192.5** seconds!
+  static func minimumCutPhase_Heap(_ graph: Graph) -> CutPhaseResult {
     var foundSet: [String] = [] // Set A
+
+    // Use a priority queue to maintain the "most tightly connected vertex".
     var maxHeap = Heap<HeapNode> { hn1, hn2 in
-      hn1 > hn2
+      hn1.weightSum > hn2.weightSum
     }
     for v in graph.vertices {
       maxHeap.insert(HeapNode(vertex: v, weightSum: 0))
@@ -390,88 +482,58 @@ fileprivate extension Graph {
   }
 
 
-  private struct HeapNode: Comparable {
-    static func < (lhs: Graph.HeapNode, rhs: Graph.HeapNode) -> Bool {
-      lhs.weightSum < rhs.weightSum
+  /// Uses a priority queue to find the "most tightly connected vertex".
+  /// Instead of adding all the vertices to the heap upfront, it only adds them to the heap
+  /// as it adds vertices to the `foundSet`.
+  static func minimumCutPhase_HeapOptimized(_ graph: Graph) -> CutPhaseResult {
+    guard let start = graph.vertices.first else {
+      fatalError()
     }
 
-    let vertex: String
-    let weightSum: Int
-  }
+    // Need a list to track the order in which the vertices are found, and a
+    // set to speed up look-up.
+    var foundVertices: [String] = [] // Set A
+    var foundSet = Set<String>()
+    var cutWeight: [Int] = []
 
+    var maxHeap = Heap<HeapNode> { $0.weightSum > $1.weightSum }
+    maxHeap.insert(HeapNode(vertex: start, weightSum: 0))
 
-  static func minimumCut(_ originalGraph: Graph) -> MinCutResult {
-    var graph = originalGraph
+    while !maxHeap.isEmpty {
+      let current = maxHeap.remove()!
+      let vertex = current.vertex
 
-    var bestCutWeight = Int.max
-    var partitionT: [String] = []
+      foundVertices.append(vertex)
+      foundSet.insert(vertex)
+      cutWeight.append(current.weightSum)
 
-    while graph.allVertices.count > 1 {
-      let currentCut = minimumCutPhase(graph)
-      graph = graph.graphByMergingVertex(currentCut.vertexT, into: currentCut.vertexS)
+      // For all edges from `vertex` to other nodes `x` that are not in `foundSet`, update the
+      // priority of these vertices, or add them if they don't exist.
+      let edges = graph.adjacencyList[vertex, default: []]
+        .filter { !foundSet.contains($0.destination) }
 
-      if currentCut.weight < bestCutWeight {
-        bestCutWeight = currentCut.weight
-        partitionT = graph.vertexMetadata[currentCut.vertexT, default: []]
-      }
-    }
-
-    let r = constructMinCutResult(originalGraph, partition: Set(partitionT))
-    return r
-  }
-
-
-  // we do a two-pass algorithm to reconstruct the sub-graphs:
-  // - first we distribute the vertices into their respective graph
-  // - second we align edges: if they cross graphs they will end in the list.
-  static func constructMinCutResult(
-    _ originalGraph: Graph,
-    partition: Set<String>
-  ) -> MinCutResult {
-
-    var first = Graph()
-    var firstVertices = Set<String>()
-    var second = Graph()
-    var secondVertices = Set<String>()
-
-    var cuttingEdges: [Edge] = []
-    var cutWeight = 0
-
-    for v in originalGraph.allVertices {
-      if partition.contains(v) {
-        firstVertices.insert(v)
-      } else {
-        secondVertices.insert(v)
-      }
-    }
-
-    for (_, edges) in originalGraph.adjacencyList {
       for edge in edges {
-        let w = originalGraph.weightFor(edge)
-
-        if firstVertices.contains(edge.source) && firstVertices.contains(edge.destination) {
-          first.addEdge(from: edge.source, to: edge.destination, weight: w)
-          first.addEdge(from: edge.destination, to: edge.source, weight: w)
-
-        } else if secondVertices.contains(edge.source) && secondVertices.contains(edge.destination) {
-          second.addEdge(from: edge.source, to: edge.destination, weight: w)
-          second.addEdge(from: edge.destination, to: edge.source, weight: w)
-
-        } else {
-          cuttingEdges.append(edge)
-          cutWeight += w
+        var totalVertexWeight = graph.weightFor(edge)
+        // Find the index of edge.destination in the maxHeap, and update.
+        if let index = maxHeap.index(where: { $0.vertex == edge.destination }),
+           let previousHeapNode = maxHeap.remove(at: index) {
+          totalVertexWeight += previousHeapNode.weightSum
         }
+
+        maxHeap.insert(HeapNode(vertex: edge.destination, weightSum: totalVertexWeight))
       }
     }
 
-    // Note: `cuttingEdges` counts each edge twice, as this is a bidirectional graph.
-    return MinCutResult(
-      first: first,
-      second: second,
-      edgesOnTheCut: cuttingEdges,
-      cutWeight: cutWeight / 2)
-  }
 
+    assert(foundVertices.count >= 2)
+    let n = foundVertices.count
+    // Take the last two vertices and their weight as a cut of the phase.
+    let result = CutPhaseResult(
+      vertexS: foundVertices[n - 2],
+      vertexT: foundVertices[n - 1],
+      weight: cutWeight.last!)
+    return result
+  }
 }
 
 
