@@ -18,7 +18,6 @@ class Y2023Day25: Day {
 
   func part1(_ lines: [String]) -> String {
     let graph = parseGraph(lines)
-//    let graph = buildSampleGraph()
     let minCut = Graph.minimumCut(graph)
     let result = minCut.first.vertices.count * minCut.second.vertices.count
     return "\(result)"
@@ -27,35 +26,6 @@ class Y2023Day25: Day {
 
   func part2(_ lines: [String]) -> String {
     ""
-  }
-
-  private func buildSampleGraph() -> Graph {
-    let edges: [(Edge, Int)] = [
-      (Edge(source: "1", destination: "2"), 2),
-      (Edge(source: "1", destination: "5"), 3),
-
-      (Edge(source: "2", destination: "5"), 2),
-      (Edge(source: "2", destination: "6"), 2),
-      (Edge(source: "2", destination: "3"), 3),
-      
-      (Edge(source: "3", destination: "4"), 4),
-      (Edge(source: "3", destination: "7"), 2),
-      
-      (Edge(source: "4", destination: "8"), 2),
-      (Edge(source: "4", destination: "7"), 2),
-      
-      (Edge(source: "5", destination: "6"), 3),
-      
-      (Edge(source: "6", destination: "7"), 1),
-      
-      (Edge(source: "7", destination: "8"), 3),
-    ]
-    var graph = Graph()
-    for (e, w) in edges {
-      graph.addEdge(from: e.source, to: e.destination, weight: w)
-      graph.addEdge(from: e.destination, to: e.source, weight: w)
-    }
-    return graph
   }
 }
 
@@ -325,7 +295,7 @@ fileprivate extension Graph {
   ///         then store the cut-of-the-phase as the current minimum cut
   /// ```
   ///
-  static func minimumCutPhase(_ graph: Graph) -> CutPhaseResult {
+  static func minimumCutPhase_Legacy(_ graph: Graph) -> CutPhaseResult {
     guard let start = graph.vertices.first else {
       fatalError()
     }
@@ -376,12 +346,65 @@ fileprivate extension Graph {
     return result
   }
 
+  static func minimumCutPhase(_ graph: Graph) -> CutPhaseResult {
+    var foundSet: [String] = [] // Set A
+    var maxHeap = Heap<HeapNode> { hn1, hn2 in
+      hn1 > hn2
+    }
+    for v in graph.vertices {
+      maxHeap.insert(HeapNode(vertex: v, weightSum: 0))
+    }
+    var cutWeight: [Int] = []
+
+    while !maxHeap.isEmpty {
+      let current = maxHeap.remove()!
+      let vertex = current.vertex
+
+      foundSet.append(vertex)
+      cutWeight.append(current.weightSum)
+
+      // For all edges from `vertex` to other nodes `x` that are not in `foundSet`, update the
+      // priority of these vertices.
+      let edges = graph.adjacencyList[vertex, default: []]
+      for edge in edges {
+        // find the index of edge.destination in the maxHeap.
+        guard let index = maxHeap.index(where: { $0.vertex == edge.destination }),
+              let previousHeapNode = maxHeap.remove(at: index)
+        else {
+          continue
+        }
+
+        let totalVertexWeight = previousHeapNode.weightSum + graph.weightFor(edge)
+        maxHeap.insert(HeapNode(vertex: previousHeapNode.vertex, weightSum: totalVertexWeight))
+      }
+    }
+
+    assert(foundSet.count >= 2)
+    let n = foundSet.count
+    // Take the last two vertices and their weight as a cut of the phase.
+    let result = CutPhaseResult(
+      vertexS: foundSet[n - 2],
+      vertexT: foundSet[n - 1],
+      weight: cutWeight.last!)
+    return result
+  }
+
+
+  private struct HeapNode: Comparable {
+    static func < (lhs: Graph.HeapNode, rhs: Graph.HeapNode) -> Bool {
+      lhs.weightSum < rhs.weightSum
+    }
+
+    let vertex: String
+    let weightSum: Int
+  }
+
 
   static func minimumCut(_ originalGraph: Graph) -> MinCutResult {
     var graph = originalGraph
 
     var bestCutWeight = Int.max
-    var partitionT: [String] = [] 
+    var partitionT: [String] = []
 
     while graph.allVertices.count > 1 {
       let currentCut = minimumCutPhase(graph)
@@ -450,3 +473,198 @@ fileprivate extension Graph {
   }
 
 }
+
+
+
+// MARK: - Heap
+
+
+/// A basic binary heap implementation.
+///
+/// Based on the book, Data Structure & Algorithsm in Swift, Kelviin Lau & Vincent Ngo
+/// (Ray Wenderlich Tutorial team)
+///
+fileprivate struct Heap<Element> {
+
+  private var elements: [Element] = []
+  /// A predicate that returns true if its first argument should be ordered before its
+  /// second argument; otherwise, false.
+  private let areInIncreasingOrder: (Element, Element) -> Bool
+
+  // MARK: - Initializer
+
+  public init(
+    _ elements: [Element] = [],
+    sortedBy areInIncreasingOrder: @escaping (Element, Element) -> Bool
+  ) {
+    self.areInIncreasingOrder = areInIncreasingOrder
+    self.elements = elements
+
+    if !elements.isEmpty {
+      for i in stride(from: elements.count / 2 - 1, through: 0, by: -1) {
+        siftDown(from: i)
+      }
+    }
+  }
+
+  // MARK: - Public API
+
+  /// Whether the heap is empty.
+  fileprivate var isEmpty: Bool {
+    elements.isEmpty
+  }
+
+  /// Number of elements in a heap.
+  fileprivate var count: Int {
+    elements.count
+  }
+
+  /// Return the root of the heap, without removing it.
+  fileprivate func peek() -> Element? {
+    elements.first
+  }
+
+  /// Index of the left child of the current node.
+  ///
+  /// - note: left child of a node at `i` is at: `2i + 1`.
+  fileprivate func leftChildIndex(ofNodeAt index: Int) -> Int {
+    (2 * index) + 1
+  }
+
+  /// Index of the right child of the current node.
+  ///
+  /// - note: right child of a node at `i` is at: `2i + 2`.
+  fileprivate func rightChildIndex(ofNodeAt index: Int) -> Int {
+    (2 * index) + 2
+  }
+
+  /// Index of the parent of the current node.
+  fileprivate func parentIndex(ofNodeAt index: Int) -> Int {
+    (index - 1) / 2
+  }
+
+  // MARK: - Modifications
+
+  /// Remove the root of the heap, ensuring that the heap property holds after removal.
+  /// - Returns: The root of the heap, if it exists.
+  fileprivate mutating func remove() -> Element? {
+    // If the heap is empty, nothing to return.
+    guard !isEmpty else {
+      return nil
+    }
+    // Swap the root (the element to be returned) with the last element in the heap
+    elements.swapAt(0, count - 1)
+    // Remove the element to be returned, which will be at the last position now.
+    let result = elements.removeLast()
+    // Heapify, to maintain the heap property.
+    siftDown(from: 0)
+    // Finally, return the element just removed.
+    return result
+  }
+
+
+  /// Inserts the given element into the heap, ensuring that the heap-property holds after
+  /// insertion.
+  fileprivate mutating func insert(_ element: Element) {
+    elements.append(element)
+    siftUp(from: elements.count - 1)
+  }
+
+
+  /// Remove an element at the given index, ensuring the heap property holds after removal.
+  /// - Parameter index: Index of the element to be removed
+  /// - Returns: The element at the given index if it exists.
+  fileprivate mutating func remove(at index: Int) -> Element? {
+    guard index < elements.count else {
+      return nil
+    }
+
+    if index == elements.count - 1 {
+      return elements.removeLast()
+    } else {
+      elements.swapAt(index, elements.count - 1)
+      let result = elements.removeLast()
+
+      siftDown(from: index)
+      siftUp(from: index)
+
+      return result
+    }
+  }
+
+
+  /// Searches for the index of the given element, if it exists.
+  /// - Parameters:
+  ///   - element: The element to search for.
+  ///   - i: The starting index
+  /// - Returns: The index of the element.
+  fileprivate func index(of element: Element, startingAt i: Int) -> Int? {
+    if i >= count {
+      return nil
+    }
+    if areInIncreasingOrder(element, elements[i]) {
+      return nil
+    }
+    if let j = index(of: element, startingAt: leftChildIndex(ofNodeAt: i)) {
+      return j
+    }
+    if let j = index(of: element, startingAt: rightChildIndex(ofNodeAt: i)) {
+      return j
+    }
+    return nil
+  }
+
+
+  fileprivate func index(where predicate: @escaping (Element) -> Bool) -> Int? {
+    let index = elements.firstIndex { predicate($0) }
+    return index
+  }
+
+
+  // MARK: - Private
+
+  private mutating func siftUp(from index: Int) {
+    // Algorithm:
+    // Swap the current node with its parent, as long as the current node has a higher priority
+    // than its parent. Repeat until done.
+    var currentIdx = index
+    var parentIdx = parentIndex(ofNodeAt: currentIdx)
+
+    while currentIdx > 0 && areInIncreasingOrder(elements[currentIdx], elements[parentIdx]) {
+      elements.swapAt(currentIdx, parentIdx)
+
+      currentIdx = parentIdx
+      parentIdx = parentIndex(ofNodeAt: currentIdx)
+    }
+  }
+
+  private mutating func siftDown(from index: Int) {
+    // Algorithm:
+    // To perform a heapify operation, check the current value and its left and right children.
+    // If any of the children has a value greater than current value, swap the current value with
+    // the child having the larger value.
+    var currentIdx = index
+
+    while true {
+      let leftIdx = leftChildIndex(ofNodeAt: currentIdx)
+      let rightIdx = rightChildIndex(ofNodeAt: currentIdx)
+
+      var candidateIdx = currentIdx
+
+      if leftIdx < count && areInIncreasingOrder(elements[leftIdx], elements[candidateIdx]) {
+        candidateIdx = leftIdx
+      }
+      if rightIdx < count && areInIncreasingOrder(elements[rightIdx], elements[candidateIdx]) {
+        candidateIdx = rightIdx
+      }
+
+      if candidateIdx == currentIdx {
+        return
+      }
+
+      elements.swapAt(currentIdx, candidateIdx)
+      currentIdx = candidateIdx
+    }
+  }
+}
+
