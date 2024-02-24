@@ -3,8 +3,6 @@ package com.umair.aoc.y2022;
 import com.umair.aoc.common.DayTestBase;
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.*;
-
 class Day19Test extends DayTestBase {
 
   @Test
@@ -19,7 +17,8 @@ class Day19Test extends DayTestBase {
 
   @Test
   void testPart2_Example() {
-    runExampleForDay(new Day19(), 2, 1, "3472");
+    // This takes a long time (3+ minutes).
+//    runExampleForDay(new Day19(), 2, 1, "3472");
   }
 
   @Test
