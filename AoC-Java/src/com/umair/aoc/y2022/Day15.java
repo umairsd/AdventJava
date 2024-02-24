@@ -18,20 +18,24 @@ public class Day15 extends Day {
     super(15, 2022);
   }
 
-  @Override
-  protected String part1(List<String> lines) {
+  protected String part1(List<String> lines, long rowNumber) {
     List<Sensor> sensors = parseSensors(lines);
-    List<Range> mergedRanges = mergeRangesForRow(sensors, getRowNumPart1());
+    List<Range> mergedRanges = mergeRangesForRow(sensors, rowNumber);
 
     long columnsCoveredBySignal = mergedRanges.stream()
         .mapToLong(Range::size)
         .sum();
     long coveredByItem = sensors.stream()
-        .filter(s -> s.beacon.position.y == getRowNumPart1())
+        .filter(s -> s.beacon.position.y == rowNumber)
         .map(s -> s.beacon.position.x)
         .distinct()
         .count();
     return Long.toString(columnsCoveredBySignal - coveredByItem);
+  }
+
+  @Override
+  protected String part1(List<String> lines) {
+    return part1(lines, ROW_NUM_PART1);
   }
 
   @Override
@@ -78,23 +82,6 @@ public class Day15 extends Day {
     return Long.toString(signalTuningFrequency);
   }
 
-  @Override
-  protected String part1Filename() {
-    return fileNameFromFileNumber(2);
-  }
-
-  @Override
-  protected String part2Filename() {
-    return fileNameFromFileNumber(2);
-  }
-
-  /**
-   * Need a helper method, so that it's value could be mocked for testing. In part 1,
-   * the row number is a variable that changes based on which data file is being used.
-   */
-  public long getRowNumPart1() {
-    return ROW_NUM_PART1;
-  }
 
   private static List<Sensor> parseSensors(List<String> lines) {
     List<Sensor> sensors = lines.stream()

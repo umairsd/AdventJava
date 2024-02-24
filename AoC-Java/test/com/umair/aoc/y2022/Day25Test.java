@@ -11,12 +11,12 @@ class Day25Test extends DayTestBase {
 
   @Test
   void testPart1_Example() {
-    runPartForDayWithFileNumber(1, new Day25(), 1, "2=-1=0");
+    runExampleForDay(new Day25(), 1, 1, "2=-1=0");
   }
 
   @Test
   void testPart1_Full() {
-    runPartForDayWithFileNumber(1, new Day25(), 2, "20=2-02-0---02=22=21");
+    runForDay(new Day25(), 1, "20=2-02-0---02=22=21");
   }
 
   @Test

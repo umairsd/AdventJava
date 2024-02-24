@@ -64,15 +64,4 @@ public class Day01 extends Day {
 
     return Integer.toString(count);
   }
-
-  @Override
-  protected String part1Filename() {
-    // E.g. day01-data1.txt
-    return fileNameFromFileNumber(2);
-  }
-
-  @Override
-  protected String part2Filename() {
-    return fileNameFromFileNumber(2);
-  }
 }

@@ -88,15 +88,7 @@ public class Day09 extends Day {
     );
   }
 
-  @Override
-  protected String part1Filename() {
-    return fileNameFromFileNumber(2);
-  }
 
-  @Override
-  protected String part2Filename() {
-    return fileNameFromFileNumber(2);
-  }
 
   private static void move(Point point, Direction direction) {
     switch (direction) {

@@ -7,21 +7,21 @@ class Day09Test extends DayTestBase {
 
   @Test
   void testPart1_Example() {
-    runPartForDayWithFileNumber(1, new Day09(), 1, "15");
+    runExampleForDay(new Day09(), 1, 1, "15");
   }
 
   @Test
   void testPart1_Full() {
-    runPartForDayWithFileNumber(1, new Day09(), 2, "468");
+    runForDay(new Day09(), 1, "468");
   }
 
   @Test
   void testPart2_Example() {
-    runPartForDayWithFileNumber(2, new Day09(), 1, "1134");
+    runExampleForDay(new Day09(), 2, 1, "1134");
   }
 
   @Test
   void testPart2_Full() {
-    runPartForDayWithFileNumber(2, new Day09(), 2, "1280496");
+    runForDay(new Day09(), 2, "1280496");
   }
 }

@@ -58,15 +58,7 @@ public class Day19 extends Day {
     return Integer.toString(result);
   }
 
-  @Override
-  protected String part1Filename() {
-    return fileNameFromFileNumber(2);
-  }
 
-  @Override
-  protected String part2Filename() {
-    return fileNameFromFileNumber(2);
-  }
 
   private static int findMostGeodes(
       Blueprint blueprint,

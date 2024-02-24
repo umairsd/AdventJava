@@ -138,15 +138,7 @@ public class Day17 extends Day {
     return Long.toString(result);
   }
 
-  @Override
-  protected String part1Filename() {
-    return fileNameFromFileNumber(2);
-  }
 
-  @Override
-  protected String part2Filename() {
-    return fileNameFromFileNumber(2);
-  }
 
   /**
    * Applies the jet, and moves the rock if possible. If not possible to move the rock to the new

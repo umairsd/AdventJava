@@ -42,15 +42,7 @@ public class Day20 extends Day {
     return Long.toString(result);
   }
 
-  @Override
-  protected String part1Filename() {
-    return fileNameFromFileNumber(2);
-  }
 
-  @Override
-  protected String part2Filename() {
-    return fileNameFromFileNumber(2);
-  }
 
   private static long groveCoordinates(List<IndexedNumber> numbers) {
     int indexOfZero = IntStream.range(0, numbers.size())

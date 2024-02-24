@@ -44,15 +44,6 @@ public class Day12 extends Day {
     return Integer.toString(pathCount);
   }
 
-  @Override
-  protected String part1Filename() {
-    return fileNameFromFileNumber(4);
-  }
-
-  @Override
-  protected String part2Filename() {
-    return fileNameFromFileNumber(4);
-  }
 
   private static int dfsVisit(
       CaveVertex caveVertex,

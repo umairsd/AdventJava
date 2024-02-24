@@ -91,15 +91,6 @@ public class Day05 extends Day {
     return Integer.toString(dangerousAreas);
   }
 
-  @Override
-  protected String part1Filename() {
-    return fileNameFromFileNumber(2);
-  }
-
-  @Override
-  protected String part2Filename() {
-    return fileNameFromFileNumber(2);
-  }
 
   private static int countDangerousAreas(int[][] grid) {
     int dangerousAreas = 0;

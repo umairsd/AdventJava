@@ -66,15 +66,7 @@ public class Day23 extends Day {
     return Integer.toString(round);
   }
 
-  @Override
-  protected String part1Filename() {
-    return fileNameFromFileNumber(2);
-  }
 
-  @Override
-  protected String part2Filename() {
-    return fileNameFromFileNumber(2);
-  }
 
   /**
    * Return value indicates if any elves moved in the round.

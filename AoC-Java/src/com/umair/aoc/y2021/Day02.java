@@ -65,16 +65,6 @@ public class Day02 extends Day {
     return Long.toString(result);
   }
 
-  @Override
-  protected String part1Filename() {
-    return fileNameFromFileNumber(2);
-  }
-
-  @Override
-  protected String part2Filename() {
-    return fileNameFromFileNumber(2);
-  }
-
   private static Movement parseLine(String line) {
     String[] tokens = line.split(" ");
     Movement m = new Movement();

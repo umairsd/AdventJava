@@ -57,15 +57,7 @@ public class Day05 extends Day {
     return getTopsOfAllStacks(stackMap);
   }
 
-  @Override
-  protected String part1Filename() {
-    return fileNameFromFileNumber(2);
-  }
 
-  @Override
-  protected String part2Filename() {
-    return fileNameFromFileNumber(2);
-  }
 
   private static String getTopsOfAllStacks(Map<Integer, List<String>> stackMap) {
     StringBuilder sb = new StringBuilder();

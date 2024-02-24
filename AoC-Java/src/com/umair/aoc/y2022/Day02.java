@@ -31,15 +31,6 @@ public class Day02 extends Day {
     return Long.toString(totalScore);
   }
 
-  @Override
-  protected String part1Filename() {
-    return fileNameFromFileNumber(2);
-  }
-
-  @Override
-  protected String part2Filename() {
-    return fileNameFromFileNumber(2);
-  }
 
   private static List<SpecificMoveStrategy> parseLinesToSpecificMoveStrategies(List<String> lines) {
     List<SpecificMoveStrategy> strategies = lines

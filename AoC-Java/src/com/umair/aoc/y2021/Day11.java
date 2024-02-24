@@ -97,16 +97,6 @@ public class Day11 extends Day {
     return totalFlashes;
   }
 
-  @Override
-  protected String part1Filename() {
-    return fileNameFromFileNumber(2);
-  }
-
-  @Override
-  protected String part2Filename() {
-    return fileNameFromFileNumber(2);
-  }
-
   /**
    * For the given octopus, returns its valid neighbors that have not flashed yet.
    */

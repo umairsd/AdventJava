@@ -78,15 +78,7 @@ public class Day22 extends Day {
     return Integer.toString(password);
   }
 
-  @Override
-  protected String part1Filename() {
-    return fileNameFromFileNumber(2);
-  }
 
-  @Override
-  protected String part2Filename() {
-    return fileNameFromFileNumber(2);
-  }
 
   private static class Board {
     private final char[][] grid;

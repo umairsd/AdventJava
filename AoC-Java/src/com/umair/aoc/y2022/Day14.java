@@ -101,15 +101,7 @@ public class Day14 extends Day {
     return Integer.toString(depositedParticleCount);
   }
 
-  @Override
-  protected String part1Filename() {
-    return fileNameFromFileNumber(2);
-  }
 
-  @Override
-  protected String part2Filename() {
-    return fileNameFromFileNumber(2);
-  }
 
   /**
    * Attempts to move the particle. If the return value is:

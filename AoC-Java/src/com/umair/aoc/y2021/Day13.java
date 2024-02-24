@@ -38,15 +38,6 @@ public class Day13 extends Day {
     return paper.toString();
   }
 
-  @Override
-  protected String part1Filename() {
-    return fileNameFromFileNumber(2);
-  }
-
-  @Override
-  protected String part2Filename() {
-    return fileNameFromFileNumber(2);
-  }
 
   private static void foldPaper(Paper paper, Instruction instruction) {
     switch(instruction.foldDirection) {

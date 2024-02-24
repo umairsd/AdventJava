@@ -28,15 +28,6 @@ public class Day25 extends Day {
     return null;
   }
 
-  @Override
-  protected String part1Filename() {
-    return fileNameFromFileNumber(2);
-  }
-
-  @Override
-  protected String part2Filename() {
-    return fileNameFromFileNumber(1);
-  }
 
   public static long snafuToDecimal(String line) {
     long number = 0;

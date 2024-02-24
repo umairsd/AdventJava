@@ -11,23 +11,48 @@ import java.util.stream.Collectors;
 public class FileUtils {
   private static final String RESOURCES_PATH_PREFIX = "./resources";
   private static final String PATH_SEPARATOR = "/";
-  private static final String FILE_NAME_PREFIX = "day";
-  private static final String FILE_NAME_SUFFIX = "-data";
+  private static final String YEAR_PREFIX = "y";
+  private static final String FILE_NAME_DAY = "-day";
+
+  private static final String DATA_FILE_SUFFIX = "-fulldata";
+  private static final String EXAMPLE_FILE_SUFFIX = "-example";
   private static final String FILE_EXTENSION = ".txt";
 
-  public static String filenameForDayAndFileNumber(Day d, int part) {
+  public static String exampleFilenameForDay(Day d, int fileNumber) {
     DecimalFormat dayFormat = new DecimalFormat("00");
     DecimalFormat yearFormat = new DecimalFormat("0000");
 
-    // year/day<dayNumber>-part2.txt
+    // year/y<year>-day<dayNumber>-example<fileNumber>.txt
     String result = RESOURCES_PATH_PREFIX +
         PATH_SEPARATOR +
         yearFormat.format(d.getYear()) +
         PATH_SEPARATOR +
-        FILE_NAME_PREFIX +
+        YEAR_PREFIX +
+        yearFormat.format(d.getYear()) +
+        FILE_NAME_DAY +
         dayFormat.format(d.getDayNumber()) +
-        FILE_NAME_SUFFIX +
-        part +
+        EXAMPLE_FILE_SUFFIX +
+        fileNumber +
+        FILE_EXTENSION;
+
+    return result;
+  }
+
+
+  public static String dataFilenameForDay(Day d) {
+    DecimalFormat dayFormat = new DecimalFormat("00");
+    DecimalFormat yearFormat = new DecimalFormat("0000");
+
+    // year/y<year>-day<dayNumber>-fulldata.txt
+    String result = RESOURCES_PATH_PREFIX +
+        PATH_SEPARATOR +
+        yearFormat.format(d.getYear()) +
+        PATH_SEPARATOR +
+        YEAR_PREFIX +
+        yearFormat.format(d.getYear()) +
+        FILE_NAME_DAY +
+        dayFormat.format(d.getDayNumber()) +
+        DATA_FILE_SUFFIX +
         FILE_EXTENSION;
 
     return result;

@@ -5,7 +5,7 @@ import java.text.DecimalFormat;
 
 import static java.lang.System.out;
 
-@SuppressWarnings("rawtypes")
+@SuppressWarnings("ALL")
 public class Runner {
   private static final DecimalFormat dayFormat = new DecimalFormat("00");
   private static final DecimalFormat yearFormat = new DecimalFormat("0000");

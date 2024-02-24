@@ -82,15 +82,7 @@ public class Day08 extends Day {
     return Integer.toString(maxScenicScore);
   }
 
-  @Override
-  protected String part1Filename() {
-    return fileNameFromFileNumber(2);
-  }
 
-  @Override
-  protected String part2Filename() {
-    return fileNameFromFileNumber(2);
-  }
 
   private static int scenicScore(int[][] treeGrid, int row, int column) {
     int rowCount = treeGrid.length;

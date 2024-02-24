@@ -83,15 +83,6 @@ public class Day11 extends Day {
     return activityLevel;
   }
 
-  @Override
-  protected String part1Filename() {
-    return fileNameFromFileNumber(1);
-  }
-
-  @Override
-  protected String part2Filename() {
-    return fileNameFromFileNumber(1);
-  }
 
   private static Monkey parseMonkey(List<String> lines) {
     assert (lines.size() == 6);

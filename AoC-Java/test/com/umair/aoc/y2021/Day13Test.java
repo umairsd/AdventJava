@@ -7,12 +7,12 @@ class Day13Test extends DayTestBase {
 
   @Test
   void testPart1_Example() {
-    runPartForDayWithFileNumber(1, new Day13(), 1, "17");
+    runExampleForDay(new Day13(), 1, 1, "17");
   }
 
   @Test
   void testPart1_Full() {
-    runPartForDayWithFileNumber(1, new Day13(), 2, "942");
+    runForDay(new Day13(), 1, "942");
   }
 
   @Test
@@ -26,7 +26,7 @@ class Day13Test extends DayTestBase {
         "#####\n" +
         ".....\n" +
         ".....\n";
-    runPartForDayWithFileNumber(2, new Day13(), 1, expected);
+    runExampleForDay(new Day13(), 2, 1, expected);
   }
 
   @Test
@@ -39,6 +39,6 @@ class Day13Test extends DayTestBase {
         "...#..#...#.##.#..#.####.###..###..#..#.\n" +
         "#..#.#....#..#.#..#.#..#.#....#.#..#..#.\n" +
         ".##..####..###..##..#..#.#....#..#.###..\n";
-    runPartForDayWithFileNumber(2, new Day13(), 2, expected);
+    runForDay(new Day13(), 2, expected);
   }
 }

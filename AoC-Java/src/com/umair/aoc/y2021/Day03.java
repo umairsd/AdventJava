@@ -102,16 +102,6 @@ public class Day03 extends Day {
     return Long.toString(lifeSupportRating);
   }
 
-  @Override
-  protected String part1Filename() {
-    return fileNameFromFileNumber(2);
-  }
-
-  @Override
-  protected String part2Filename() {
-    return fileNameFromFileNumber(2);
-  }
-
   /**
    * Counts the *net* count of the 1 bit at each position. Net count of 1s in a position is
    * obtained by the (total count of 1s - total count of 0s).

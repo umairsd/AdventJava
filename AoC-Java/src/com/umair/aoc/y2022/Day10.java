@@ -62,15 +62,6 @@ public class Day10 extends Day {
     return sb.toString();
   }
 
-  @Override
-  protected String part1Filename() {
-    return fileNameFromFileNumber(3);
-  }
-
-  @Override
-  protected String part2Filename() {
-    return fileNameFromFileNumber(3);
-  }
 
   /**
    * The value at each index i represents the value of the register X at the end of the cycle i.

@@ -45,15 +45,7 @@ public class Day24 extends Day {
     return Integer.toString(totalSteps);
   }
 
-  @Override
-  protected String part1Filename() {
-    return fileNameFromFileNumber(2);
-  }
 
-  @Override
-  protected String part2Filename() {
-    return fileNameFromFileNumber(2);
-  }
 
 
   private static BFSResult bfsFromStartToEnd(MapState initial) {

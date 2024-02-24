@@ -46,15 +46,19 @@ public abstract class Day {
 
   protected abstract String part2(List<String> lines);
 
-  protected abstract String part1Filename();
+  protected String part1Filename() {
+    return FileUtils.dataFilenameForDay(this);
+  }
 
-  protected abstract String part2Filename();
+  protected String part2Filename() {
+    return FileUtils.dataFilenameForDay(this);
+  }
 
   public List<String> readData(String filename) {
     return FileUtils.readAllLinesFromFile(filename);
   }
 
-  public String fileNameFromFileNumber(int number) {
-    return FileUtils.filenameForDayAndFileNumber(this, number);
-  }
+//  public String fileNameFromFileNumber(int number) {
+//    return FileUtils.filenameForDayAndFileNumber(this, number);
+//  }
 }

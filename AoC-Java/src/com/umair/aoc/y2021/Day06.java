@@ -83,15 +83,6 @@ public class Day06 extends Day {
     return Long.toString(totalFish);
   }
 
-  @Override
-  protected String part1Filename() {
-    return fileNameFromFileNumber(2);
-  }
-
-  @Override
-  protected String part2Filename() {
-    return fileNameFromFileNumber(2);
-  }
 
   private static class Lanternfish {
     private int timer;

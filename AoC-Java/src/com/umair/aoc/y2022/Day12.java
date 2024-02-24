@@ -55,15 +55,7 @@ public class Day12 extends Day {
     return minPathLength;
   }
 
-  @Override
-  protected String part1Filename() {
-    return fileNameFromFileNumber(2);
-  }
 
-  @Override
-  protected String part2Filename() {
-    return fileNameFromFileNumber(2);
-  }
 
   /**
    * Uses BFS to find the shortest path.

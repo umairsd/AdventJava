@@ -41,15 +41,7 @@ public class Day04 extends Day {
     return Integer.toString(overlappingIntervals);
   }
 
-  @Override
-  protected String part1Filename() {
-    return fileNameFromFileNumber(2);
-  }
 
-  @Override
-  protected String part2Filename() {
-    return fileNameFromFileNumber(2);
-  }
 
   private static boolean isOverlap(Interval i1, Interval i2) {
     Interval earlierStart = (i1.start <= i2.start ? i1 : i2);

@@ -63,15 +63,7 @@ public class Day16 extends Day {
     return Integer.toString(result);
   }
 
-  @Override
-  protected String part1Filename() {
-    return fileNameFromFileNumber(2);
-  }
 
-  @Override
-  protected String part2Filename() {
-    return fileNameFromFileNumber(2);
-  }
 
   /**
    * From the `start` node, go through each valve from the list of valves to open. For each such

@@ -7,21 +7,21 @@ class Day20Test extends DayTestBase {
 
   @Test
   void testPart1_Example() {
-    runPartForDayWithFileNumber(1, new Day20(), 1, "3");
+    runExampleForDay(new Day20(), 1, 1, "3");
   }
 
   @Test
   void testPart1_Full() {
-    runPartForDayWithFileNumber(1, new Day20(), 2, "3700");
+    runForDay(new Day20(), 1, "3700");
   }
 
   @Test
   void testPart2_Example() {
-    runPartForDayWithFileNumber(2, new Day20(), 1, "1623178306");
+    runExampleForDay(new Day20(), 2, 1, "1623178306");
   }
 
   @Test
   void testPart2_Full() {
-    runPartForDayWithFileNumber(2, new Day20(), 2, "10626948369382");
+    runForDay(new Day20(), 2, "10626948369382");
   }
 }

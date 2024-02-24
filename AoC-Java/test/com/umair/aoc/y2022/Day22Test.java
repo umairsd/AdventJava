@@ -1,8 +1,8 @@
 package com.umair.aoc.y2022;
 
 import com.umair.aoc.common.DayTestBase;
+import com.umair.aoc.util.FileUtils;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mockito;
 
 import java.util.List;
 
@@ -12,22 +12,21 @@ class Day22Test extends DayTestBase {
 
   @Test
   void testPart1_Example() {
-    runPartForDayWithFileNumber(1, new Day22(), 1, "6032");
+    runExampleForDay(new Day22(), 1, 1, "6032");
   }
 
   @Test
   void testPart1_Full() {
-    runPartForDayWithFileNumber(1, new Day22(), 2, "136054");
+    runForDay(new Day22(), 1, "136054");
   }
 
   @Test
   void testPart1Alternate_Full() {
-    Day22 dSpy = Mockito.spy(new Day22());
-    String fileName = dSpy.fileNameFromFileNumber(2);
-    List<String> lines = dSpy.readData(fileName);
+    Day22 day = new Day22();
+    String fileName = FileUtils.dataFilenameForDay(day);
+    List<String> lines = day.readData(fileName);
 
-    Mockito.when(dSpy.readData(fileName)).thenReturn(lines);
-    assertEquals("136054", dSpy.part1Alternate(lines));
+    assertEquals("136054", day.part1Alternate(lines));
   }
 
   @Test
@@ -36,6 +35,6 @@ class Day22Test extends DayTestBase {
 
   @Test
   void testPart2_Full() {
-    runPartForDayWithFileNumber(1, new Day22(), 2, "122153");
+    runForDay(new Day22(), 2, "122153");
   }
 }

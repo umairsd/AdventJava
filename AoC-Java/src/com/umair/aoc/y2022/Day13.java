@@ -65,15 +65,7 @@ public class Day13 extends Day {
     return Integer.toString(i * j);
   }
 
-  @Override
-  protected String part1Filename() {
-    return fileNameFromFileNumber(2);
-  }
 
-  @Override
-  protected String part2Filename() {
-    return fileNameFromFileNumber(2);
-  }
 
   private static Packet buildDecoderPacket(int value) {
     Packet result = new Packet(new Packet(new Packet(value)));

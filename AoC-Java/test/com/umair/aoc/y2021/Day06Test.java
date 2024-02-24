@@ -7,21 +7,21 @@ class Day06Test extends DayTestBase {
 
   @Test
   void testPart1_Example() {
-    runPartForDayWithFileNumber(1, new Day06(), 1, "5934");
+    runExampleForDay(new Day06(), 1, 1, "5934");
   }
 
   @Test
   void testPart1_Full() {
-    runPartForDayWithFileNumber(1, new Day06(), 2, "362346");
+    runForDay(new Day06(), 1, "362346");
   }
 
   @Test
   void testPart2_Example() {
-    runPartForDayWithFileNumber(2, new Day06(), 1, "26984457539");
+    runExampleForDay(new Day06(), 2, 1, "26984457539");
   }
 
   @Test
   void testPart2_Full() {
-    runPartForDayWithFileNumber(2, new Day06(), 2, "1639643057051");
+    runForDay(new Day06(), 2, "1639643057051");
   }
 }

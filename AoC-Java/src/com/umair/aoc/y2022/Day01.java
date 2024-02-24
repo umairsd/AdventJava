@@ -54,15 +54,6 @@ public class Day01 extends Day {
     return Long.toString(topThree);
   }
 
-  @Override
-  protected String part1Filename() {
-    return fileNameFromFileNumber(2);
-  }
-
-  @Override
-  protected String part2Filename() {
-    return fileNameFromFileNumber(2);
-  }
 
   private static PriorityQueue<Long> parseToPerElfCalories(List<String> lines) {
     PriorityQueue<Long> elfCalories = new PriorityQueue<>(Collections.reverseOrder());

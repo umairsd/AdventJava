@@ -38,15 +38,7 @@ public class Day07 extends Day {
     return Long.toString(sizes.get(0));
   }
 
-  @Override
-  protected String part1Filename() {
-    return fileNameFromFileNumber(2);
-  }
 
-  @Override
-  protected String part2Filename() {
-    return fileNameFromFileNumber(2);
-  }
 
   /**
    * Traversal of the tree to collect all directory sizes above the given threshold.

@@ -60,14 +60,4 @@ public class Day07 extends Day {
 
     return Long.toString(minFuelNeeded);
   }
-
-  @Override
-  protected String part1Filename() {
-    return fileNameFromFileNumber(2);
-  }
-
-  @Override
-  protected String part2Filename() {
-    return fileNameFromFileNumber(2);
-  }
 }
