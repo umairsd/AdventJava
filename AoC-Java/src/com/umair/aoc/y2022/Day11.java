@@ -39,6 +39,25 @@ public class Day11 extends Day {
         .map(Day11::parseMonkey)
         .collect(Collectors.toMap(Monkey::getName, Function.identity()));
 
+    /*
+     If you take the remainder of a number n dividing by some product `p * q` and then
+     take the result of that and calculate the remainder dividing by one of the divisors
+     of the product (e.g. `q`) the result will be the same as the remainder of `n` after
+     dividing by `q`. i.e.:
+
+     ```
+     (n % pq) % q == n % q
+     ```
+
+     This is easily proven by expressing `n` as `xpq + (yq + z)` where `yq + z < pq`
+     and `z < q`.
+
+     For the LHS, after the first remainder operation, `% (pq)`, the remaining value is
+     `y*q + z`. After the second remainder operation, `% q`, the remainder is `z`.
+
+     For the RHS, we can rewrite `n` as: `q(xp + y) + z`. After the remainder operation
+     `% q`, the result is `z`, the same as LHS.
+     */
     long lcm = monkeyMap.values().stream().map(m -> m.testDivisor).reduce(1L, (a, b) -> a * b);
     long activityLevel = runSimulation(monkeyMap, 10_000, (worryLevel -> worryLevel % lcm));
     return Long.toString(activityLevel);
